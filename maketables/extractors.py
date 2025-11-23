@@ -802,6 +802,7 @@ class GlumExtractor:
         "n_iter": "n_iter_",
         "family": "family",
         "link": "link",
+        "se_type": lambda m: "robust" if getattr(m, "robust", None) is True else ("iid" if getattr(m, "robust", None) is False else None),
     }
 
     def stat(self, model: Any, key: str) -> Any:
