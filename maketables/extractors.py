@@ -34,6 +34,14 @@ except Exception:
     HAS_LINEARMODELS = False
     PanelOLSResults = RandomEffectsResults = IV2SLSResults = IVGMMResults = ()  # type: ignore
 
+try:
+    from doubleml.double_ml import DoubleML
+
+    HAS_DOUBLEML = True
+except ImportError:
+    HAS_DOUBLEML = False
+    DoubleML = ()  # type: ignore
+
 
 @runtime_checkable
 class ModelExtractor(Protocol):
@@ -715,8 +723,145 @@ class LinearmodelsExtractor:
             k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
         }
 
+
+class DoubleMLExtractor:
+    """
+    Extractor for DoubleML causal machine learning models.
+
+    Handles all DoubleML model types including:
+    - PLM: DoubleMLPLR, DoubleMLLPLR, DoubleMLPLIV
+    - IRM: DoubleMLIRM, DoubleMLAPO, DoubleMLAPOS, DoubleMLIIVM, DoubleMLPQ,
+           DoubleMLLPQ, DoubleMLCVAR, DoubleMLQTE, DoubleMLSSM
+    - DID: DoubleMLDID, DoubleMLDIDCS, DoubleMLDIDBinary, DoubleMLDIDMulti
+    - RDD: RDFlex
+
+    DoubleML models estimate causal parameters using double/debiased machine learning.
+    After fitting, results are available via coef, se, t_stat, pval, and summary attributes.
+    """
+
+    def can_handle(self, model: Any) -> bool:
+        """Check if model is a DoubleML model type."""
+        if DoubleML == ():
+            return False
+        try:
+            return isinstance(model, DoubleML)
+        except Exception:
+            return False
+
+    def coef_table(self, model: Any) -> pd.DataFrame:
+        """
+        Extract coefficient table from DoubleML model.
+
+        Uses the model's summary attribute if available, otherwise constructs
+        the table from coef, se, t_stat, and pval arrays.
+
+        Returns
+        -------
+            DataFrame with columns: Estimate, Std. Error, t value, Pr(>|t|).
+        """
+        # Get treatment variable names for index
+        dml_data = getattr(model, "_dml_data", None)
+        if dml_data is not None and hasattr(dml_data, "d_cols"):
+            index = list(dml_data.d_cols)
+        else:
+            # Fallback: use generic names based on number of coefficients
+            n_coef = len(model.coef) if hasattr(model, "coef") else 1
+            index = [f"d{i}" for i in range(n_coef)]
+
+        # Build coefficient table from arrays
+        coef = np.atleast_1d(model.coef)
+        se = np.atleast_1d(model.se)
+        t_stat = np.atleast_1d(model.t_stat)
+        pval = np.atleast_1d(model.pval)
+
+        df = pd.DataFrame(
+            {
+                "Estimate": coef,
+                "Std. Error": se,
+                "t value": t_stat,
+                "Pr(>|t|)": pval,
+            },
+            index=index,
+        )
+        df.index.name = "Coefficient"
+        return df
+
+    def depvar(self, model: Any) -> str:
+        """
+        Extract dependent variable name from DoubleML model.
+
+        Returns
+        -------
+            Dependent variable name or "y" if not found.
+        """
+        dml_data = getattr(model, "_dml_data", None)
+        if dml_data is not None:
+            y_col = getattr(dml_data, "y_col", None)
+            if y_col is not None:
+                return y_col
+        return "y"
+
+    def fixef_string(self, model: Any) -> str | None:
+        """DoubleML models don't use fixed effects in the traditional sense."""
+        return None
+
+    # Unified stat keys -> DoubleML attributes/callables
+    STAT_MAP: ClassVar[dict[str, Any]] = {
+        "N": "n_obs",
+        "n_rep": "n_rep",
+        "n_folds": "n_folds",
+    }
+
+    def stat(self, model: Any, key: str) -> Any:
+        """
+        Extract a specific statistic from the DoubleML model.
+
+        Args:
+            model: DoubleML model object.
+            key: Statistic key (e.g., "N", "n_rep", "n_folds").
+
+        Returns
+        -------
+            The requested statistic value, or None if not available.
+        """
+        spec = self.STAT_MAP.get(key)
+        if spec is None:
+            return None
+        val = _get_attr(model, spec)
+        if key == "N" and val is not None:
+            try:
+                return int(val)
+            except Exception:
+                return val
+        return val
+
+    def vcov_info(self, model: Any) -> dict[str, Any]:
+        """
+        Extract variance-covariance information from DoubleML model.
+
+        Returns information about the DML estimation approach.
+        """
+        return {
+            "vcov_type": "boot",
+        }
+
+    def var_labels(self, model: Any) -> dict[str, str] | None:
+        """
+        Extract variable labels from DoubleML model's data.
+        """
+        
+        return None
+
+    def supported_stats(self, model: Any) -> set[str]:
+        """Return set of statistics available for the given DoubleML model."""
+        return {
+            k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
+        }
+
+
 # Register built-ins
 clear_extractors()
 register_extractor(PyFixestExtractor())
 register_extractor(LinearmodelsExtractor())
+register_extractor(DoubleMLExtractor())
 register_extractor(StatsmodelsExtractor())
