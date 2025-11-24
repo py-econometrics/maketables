@@ -793,7 +793,10 @@ class GlumExtractor:
         return "y"
 
     def fixef_string(self, model: Any) -> str | None:
-        """GLUM doesn't typically have fixed effects notation."""
+        """
+        GLUM does not sweep out fixed effects during estimation and therefore
+        fixed effects are (efficiently) estimated as 'regular' coefficients.
+        """
         return None
 
     # Unified stat keys -> glum attributes/callables
