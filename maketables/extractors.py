@@ -34,6 +34,13 @@ except Exception:
     HAS_LINEARMODELS = False
     PanelOLSResults = RandomEffectsResults = IV2SLSResults = IVGMMResults = ()  # type: ignore
 
+try:
+    from glum import GeneralizedLinearRegressor, GeneralizedLinearRegressorCV
+    HAS_GLUM = True
+except Exception:
+    HAS_GLUM = False
+    GeneralizedLinearRegressor = GeneralizedLinearRegressorCV = ()  # type: ignore
+
 
 @runtime_checkable
 class ModelExtractor(Protocol):
@@ -715,8 +722,130 @@ class LinearmodelsExtractor:
             k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
         }
 
+
+class GlumExtractor:
+    """
+    Extractor for glum regression results.
+
+    Handles GeneralizedLinearRegressor and GeneralizedLinearRegressorCV from glum.
+    GLUM shares the same API as statsmodels for fitted model results.
+    """
+
+    def can_handle(self, model: Any) -> bool:
+        """Check if model is a glum fitted result."""
+        if GeneralizedLinearRegressor == ():
+            return False
+        try:
+            return isinstance(model, (GeneralizedLinearRegressor, GeneralizedLinearRegressorCV))
+        except Exception:
+            return False
+
+    def coef_table(self, model: Any) -> pd.DataFrame:
+        """
+        Extract coefficient table from glum result.
+
+        Constructs standardized DataFrame from params, bse, pvalues, and
+        optionally tvalues attributes of the glum result.
+
+        Returns
+        -------
+            DataFrame with columns: Estimate, Std. Error, Pr(>|t|), and optionally t value.
+        """
+
+        coef_table = model.coef_table()
+        if isinstance(coef_table, pd.Series): 
+            # no inference stored / computed
+            k = len(coef_table)
+            coef = coef_table
+            se = pd.Series(['n.c.'] * k)
+            t_value = pd.Series(['n.c.'] * k)
+            p_value = pd.Series(['n.c.'] * k)
+        else: 
+            coef = coef_table.coef
+            se = coef_table.se
+            t_value = coef_table.t_value
+            p_value = coef_table.p_value
+            #ci_lower = coef_table.ci_lower
+            #ci_upper = coef_table.ci_upper
+
+        df = pd.DataFrame({
+            "Estimate": coef, 
+            "Std. Error": se, 
+            "Pr(>|t|)": p_value,
+            "t value": t_value
+        })
+
+        return df
+        
+
+    def depvar(self, model: Any) -> str:
+        """
+        Try to extract dependent variable from formula attribute.
+
+        Returns
+        -------
+            Dependent variable name or "y" if not found.
+        """
+
+        formula = getattr(model, 'formula', None)
+        if formula and isinstance(formula, str) and '~' in formula:
+            return formula.split('~')[0].strip()
+        return "y"
+
+    def fixef_string(self, model: Any) -> str | None:
+        """
+        GLUM does not sweep out fixed effects during estimation and therefore
+        fixed effects are (efficiently) estimated as 'regular' coefficients.
+        """
+        return None
+
+    # Unified stat keys -> glum attributes/callables
+    STAT_MAP: ClassVar[dict[str, Any]] = {
+        "N": "_num_obs",
+        "n_iter": "n_iter_",
+        "family": "family",
+        "link": "link",
+        "se_type": lambda m: "robust" if getattr(m, "robust", None) is True else ("iid" if getattr(m, "robust", None) is False else None),
+    }
+
+    def stat(self, model: Any, key: str) -> Any:
+        """Extract a specific statistic from a glum fitted model."""
+        spec = self.STAT_MAP.get(key)
+        if spec is None:
+            return None
+        val = _get_attr(model, spec)
+        if key == "N" and val is not None:
+            try:
+                return int(val)
+            except Exception:
+                return val
+        return val
+
+    def vcov_info(self, model: Any) -> dict[str, Any]:
+        """Extract variance-covariance information from a glum fitted model."""
+        robust = getattr(model, "robust", None)
+        if robust is True:
+            vcov_type = "robust"
+        elif robust is False:
+            vcov_type = "iid"
+        else:
+            vcov_type = None
+        return {"vcov_type": vcov_type, "clustervar": None}
+
+    def var_labels(self, model: Any) -> dict[str, str] | None:
+        """Extract variable labels from a glum fitted model."""
+        pass
+
+    def supported_stats(self, model: Any) -> set[str]:
+        """Return set of statistics available for the given glum model."""
+        return {
+            k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
+        }
+
+
 # Register built-ins
 clear_extractors()
 register_extractor(PyFixestExtractor())
 register_extractor(LinearmodelsExtractor())
+register_extractor(GlumExtractor())
 register_extractor(StatsmodelsExtractor())
