@@ -63,6 +63,12 @@ class ETable(MTable):
         applying keep.
     exact_match : bool, default False
         If True, treat keep/drop patterns as exact names (no regex).
+    order : list[str], optional
+        Explicit order for coefficients in the output table. Provide a list of 
+        coefficient names (after keep/drop filtering) to specify the exact order.
+        Any coefficients not in the list will appear at the end in their original order.
+        This is applied after keep/drop filtering.
+        Example: order=['age', 'female', 'education'] will place these first.
     labels : dict, optional
         Variable labels for relabeling dependent vars, regressors, and (if not
         provided in felabels) fixed effects. If None, labels are collected from
@@ -163,6 +169,7 @@ class ETable(MTable):
         keep: list | str | None = None,
         drop: list | str | None = None,
         exact_match: bool | None = False,
+        order: list[str] | None = None,
         labels: dict | None = None,
         cat_template: str | None = None,
         show_fe: bool | None = None,
@@ -251,6 +258,7 @@ class ETable(MTable):
             custom_stats=custom_stats,
             keep=keep,
             drop=drop,
+            order=order,
             exact_match=exact_match,
             labels=labels,
             cat_template=cat_template,
@@ -422,6 +430,7 @@ class ETable(MTable):
         custom_stats: dict[str, list[list]],
         keep: list[str],
         drop: list[str],
+        order: list[str],
         exact_match: bool,
         labels: dict[str, str],
         cat_template: str,
@@ -478,8 +487,8 @@ class ETable(MTable):
 
         # keep/drop ordering on the index (no reset)
         idxs = (
-            _select_order_coefs(res.index.tolist(), keep, drop, exact_match)
-            if (keep or drop)
+            _select_order_coefs(res.index.tolist(), keep, drop, exact_match, order)
+            if (keep or drop or order)
             else res.index.tolist()
         )
         res = res.loc[idxs]
@@ -819,6 +828,7 @@ def _select_order_coefs(
     keep: list | str | None = None,
     drop: list | str | None = None,
     exact_match: bool | None = False,
+    order: list[str] | None = None,
 ):
     r"""
     Select and order the coefficients based on the pattern.
@@ -844,6 +854,12 @@ def _select_order_coefs(
         Whether to use exact match for `keep` and `drop`. Default is False.
         If True, the pattern will be matched exactly to the coefficient name
         instead of using regular expressions.
+    order: list[str], optional
+        Explicit order for coefficients in the output table. Provide a list of 
+        coefficient names (after keep/drop filtering) to specify the exact order.
+        Any coefficients not in the list will appear at the end in their original order.
+        This is applied after keep/drop filtering.
+        Example: order=['age', 'female', 'education'] will place these first.
 
     Returns
     -------
@@ -862,6 +878,8 @@ def _select_order_coefs(
 
     coefs = list(coefs)
     res = [] if keep else coefs[:]  # Store matched coefs
+    
+    # Apply keep patterns
     for pattern in keep:
         _coefs = []  # Store remaining coefs
         for coef in coefs:
@@ -873,6 +891,7 @@ def _select_order_coefs(
                 _coefs.append(coef)
         coefs = _coefs
 
+    # Apply drop patterns
     for pattern in drop:
         _coefs = []
         for coef in res:  # Remove previously matched coefs that match the drop pattern
@@ -883,6 +902,20 @@ def _select_order_coefs(
             else:
                 _coefs.append(coef)
         res = _coefs
+
+    # Apply explicit ordering if provided
+    if order is not None:
+        ordered_res = []
+        remaining = list(res)
+        
+        for coef_name in order:
+            if coef_name in remaining:
+                ordered_res.append(coef_name)
+                remaining.remove(coef_name)
+        
+        # Append any remaining coefficients not in order list
+        ordered_res.extend(remaining)
+        res = ordered_res
 
     return res
 
