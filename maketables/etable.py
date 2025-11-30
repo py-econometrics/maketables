@@ -33,6 +33,7 @@ class ETable(MTable):
     coef_fmt : str, optional
         Cell layout for each coefficient. Tokens:
           - 'b' (estimate), 'se' (std. error), 't' (t value), 'p' (p-value),
+          - further tokens extracted from the model's coef_table() (e.g., 'ci95l', 'ci95u'),
           - whitespace, ',', parentheses '(', ')', brackets '[', ']', and
           - '\\n' for line breaks.
         You may also reference keys from custom_stats to inject custom values.
@@ -437,8 +438,14 @@ class ETable(MTable):
         cat_template: str,
     ) -> tuple[pd.DataFrame, str]:
         lbcode = self.DEFAULT_LINEBREAK
-        coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(coef_fmt, custom_stats)
-
+        
+        # Get column names from first model to validate tokens
+        first_tidy = self._extract_tidy_df(models[0])
+        available_columns = set(first_tidy.columns)
+        coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(
+            coef_fmt, custom_stats, available_columns
+        )
+        
         cols_per_model = []
         for i, model in enumerate(models):
             tidy = self._extract_tidy_df(model)
@@ -449,6 +456,7 @@ class ETable(MTable):
                 token = element["token"]
                 format_spec = element["format"]
 
+                # Handle standard tokens with backward compatibility
                 if token == "b":
                     cell += (
                         tidy["Estimate"].apply(_format_number, format_spec=format_spec)
@@ -468,13 +476,18 @@ class ETable(MTable):
                         _format_number, format_spec=format_spec
                     )
                 elif token in custom_stats:
+                    # Custom stats from user
                     assert len(custom_stats[token][i]) == len(tidy["Estimate"])
                     cell += pd.Series(custom_stats[token][i], index=tidy.index).apply(
                         _format_number, format_spec=format_spec
                     )
                 elif token == "\n":
                     cell += lbcode
+                elif token in tidy.columns:
+                    # NEW: Any column from tidy dataframe can be used
+                    cell += tidy[token].apply(_format_number, format_spec=format_spec)
                 else:
+                    # Literal character
                     cell += token
 
             # one column per model, indexed by 'Coefficient'
@@ -716,7 +729,7 @@ def _relabel_index(index, labels=None, stats_labels=None):
     return index
 
 
-def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
+def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     """
     Parse the coef_fmt string with format specifiers.
 
@@ -724,10 +737,12 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
     ----------
     coef_fmt: str
         The coef_fmt string. Supports format specifiers like 'b:.3f', 'se:.2e', etc.
+        Can also use any column name from the dataframe extracted with coef_table().
     custom_stats: dict
-        A dictionary of custom statistics. Key should be lowercased (e.g., simul_intv).
-        If you provide "b", "se", "t", or "p" as a key, it will overwrite the default
-        values.
+        A dictionary of custom statistics.
+    available_columns: set
+        Set of available column names from from the dataframe extracted with coef_table(). Used to validate
+        tokens in the coef_fmt string.
 
     Returns
     -------
@@ -736,21 +751,51 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
     coef_fmt_title: str
         The title for the coef_fmt string.
     """
+    # Reserved tokens that cannot be overridden
+    reserved_tokens = ["b", "se", "t", "p"]
+    
+    # Validate custom_stats don't use reserved tokens
     custom_elements = list(custom_stats.keys())
-    if any(x in ["b", "se", "t", "p"] for x in custom_elements):
+    if any(x in reserved_tokens for x in custom_elements):
         raise ValueError(
-            "You cannot use 'b', 'se', 't', or 'p' as a key in custom_stats."
+            f"Custom stats cannot use reserved tokens: {reserved_tokens}"
         )
+    
+    # Validate custom_stats don't conflict with available columns
+    if available_columns:
+        conflicting = [x for x in custom_elements if x in available_columns]
+        if conflicting:
+            raise ValueError(
+                f"Custom stats cannot use column names from tidy dataframe: {conflicting}. "
+                f"These columns are already available: {sorted(available_columns)}"
+            )
 
+    # Title mappings
     title_map = {
         "b": "Coefficient",
         "se": "Std. Error",
         "t": "t-stats",
         "p": "p-value",
+        "ci95l": "95% CI Lower",
+        "ci95u": "95% CI Upper",
+        "ci90l": "90% CI Lower",
+        "ci90u": "90% CI Upper",
     }
 
-    # All possible tokens (base + custom)
-    all_tokens = ["b", "se", "t", "p"] + custom_elements
+    # Build list of all valid tokens
+    # Priority: reserved > available columns > custom_stats
+    all_tokens = reserved_tokens.copy()
+    
+    if available_columns:
+        # Add tidy columns that aren't reserved
+        tidy_tokens = [
+            col for col in available_columns 
+            if col not in reserved_tokens
+        ]
+        all_tokens.extend(tidy_tokens)
+    
+    # Add custom stats last (lowest priority, already validated for conflicts)
+    all_tokens.extend(custom_elements)
 
     coef_fmt_elements = []
     title_parts = []
@@ -760,7 +805,8 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
         found_token = False
 
         # Check for tokens with potential format specifiers
-        for token in all_tokens:
+        # Sort by length descending to match longer tokens first (e.g., "Std. Error" before "Std")
+        for token in sorted(all_tokens, key=len, reverse=True):
             if coef_fmt[i:].startswith(token):
                 # Check if followed by format specifier
                 after_token_pos = i + len(token)
@@ -768,11 +814,10 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
                     # Find the end of the format specifier
                     format_start = after_token_pos + 1
                     format_end = format_start
-                    # Read until we hit a delimiter or token (but allow comma in format spec)
+                    # Stop at delimiters: space, newline, brackets, backslash, comma
                     while (
                         format_end < len(coef_fmt)
-                        and coef_fmt[format_end]
-                        not in [" ", "\n", "(", ")", "[", "]", "\\"]
+                        and coef_fmt[format_end] not in [" ", "\n", "(", ")", "[", "]", "\\", ","]
                         and not any(
                             coef_fmt[format_end:].startswith(t) for t in all_tokens
                         )
@@ -797,21 +842,10 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
                 coef_fmt_elements.append({"token": "\n", "format": None})
                 title_parts.append("\n")
                 i += 2
-            elif coef_fmt[i : i + 2] == "\\(":
-                coef_fmt_elements.append({"token": r"\(", "format": None})
-                title_parts.append("(")
-                i += 2
-            elif coef_fmt[i : i + 2] == "\\)":
-                coef_fmt_elements.append({"token": r"\)", "format": None})
-                title_parts.append(")")
-                i += 2
-            elif coef_fmt[i : i + 2] == "\\[":
-                coef_fmt_elements.append({"token": r"\[", "format": None})
-                title_parts.append("[")
-                i += 2
-            elif coef_fmt[i : i + 2] == "\\]":
-                coef_fmt_elements.append({"token": r"\]", "format": None})
-                title_parts.append("]")
+            elif coef_fmt[i : i + 2] in ["\\(", "\\)", "\\[", "\\]"]:
+                escaped_char = coef_fmt[i+1]
+                coef_fmt_elements.append({"token": coef_fmt[i:i+2], "format": None})
+                title_parts.append(escaped_char)
                 i += 2
             else:
                 # Single character literal

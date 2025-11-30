@@ -51,11 +51,22 @@ class ModelExtractor(Protocol):
 
     def coef_table(self, model: Any) -> pd.DataFrame:
         """
-        Extract coefficient table with columns: Estimate, Std. Error, Pr(>|t|), and t value.
+        Extract a standardized coefficient table.
+
+        General principle
+        - Any column returned by this DataFrame can be referenced as a token
+          in ETable's coef_fmt string.
+        - Reserved shorthand tokens remain supported for backward compatibility:
+          "b" → Estimate, "se" → Std. Error, "t" → t value, "p" → Pr(>|t|)".
+
+        Requirements
+        - Must include at least: "Estimate", "Std. Error", "Pr(>|t|)".
+        - May include optional columns like "t value", "ci95l", "ci95u", "ci90l", "ci90u",
+          or any other model-specific metrics.
 
         Returns
         -------
-            DataFrame with coefficient estimates, standard errors, p-values, and t-statistics.
+            DataFrame indexed by coefficient names with the columns described above.
         """
         ...
 
@@ -286,10 +297,10 @@ class PyFixestExtractor:
             )
         if "Pr(>|t|)" not in df.columns:
             raise ValueError("PyFixestExtractor: tidy() must contain 'Pr(>|t|)'.")
-        keep = ["Estimate", "Std. Error", "Pr(>|t|)"]
-        if "t value" in df.columns:
-            keep.insert(2, "t value")
-        return df[keep]
+        # Rename confidence interval columns if present
+        if "2.5%" in df.columns and "97.5%" in df.columns:
+            df=df.rename(columns={'2.5%': 'ci95l', '97.5%': 'ci95u'})
+        return df
 
     def depvar(self, model: Any) -> str:
         """Extract dependent variable name from pyfixest model."""
@@ -394,7 +405,7 @@ class StatsmodelsExtractor:
 
         Returns
         -------
-            DataFrame with columns: Estimate, Std. Error, Pr(>|t|), and optionally t value.
+            DataFrame with columns: Estimate, Std. Error, Pr(>|t|), t value, ci95l, ci95u.
         """
         params = pd.Series(model.params)
         params.index.name = "Coefficient"
@@ -410,11 +421,47 @@ class StatsmodelsExtractor:
             },
             index=params.index,
         )
+        
         if tvalues is not None:
             df["t value"] = pd.to_numeric(
                 pd.Series(tvalues, index=params.index), errors="coerce"
             )
-            df = df[["Estimate", "Std. Error", "t value", "Pr(>|t|)"]]
+        
+        # Extract confidence intervals if available
+        if hasattr(model, "conf_int"):
+            try:
+                # conf_int() returns a DataFrame with columns [0, 1] for lower and upper bounds
+                ci = model.conf_int(alpha=0.05)  # 95% CI
+                df["ci95l"] = pd.to_numeric(ci.iloc[:, 0], errors="coerce")
+                df["ci95u"] = pd.to_numeric(ci.iloc[:, 1], errors="coerce")
+            except Exception:
+                # If conf_int() fails, compute from estimate and SE
+                df["ci95l"] = df["Estimate"] - 1.96 * df["Std. Error"]
+                df["ci95u"] = df["Estimate"] + 1.96 * df["Std. Error"]
+        else:
+            # Fallback: compute from estimate and SE
+            df["ci95l"] = df["Estimate"] - 1.96 * df["Std. Error"]
+            df["ci95u"] = df["Estimate"] + 1.96 * df["Std. Error"]
+        
+        # Also add 90% CI
+        if hasattr(model, "conf_int"):
+            try:
+                ci90 = model.conf_int(alpha=0.10)  # 90% CI
+                df["ci90l"] = pd.to_numeric(ci90.iloc[:, 0], errors="coerce")
+                df["ci90u"] = pd.to_numeric(ci90.iloc[:, 1], errors="coerce")
+            except Exception:
+                df["ci90l"] = df["Estimate"] - 1.645 * df["Std. Error"]
+                df["ci90u"] = df["Estimate"] + 1.645 * df["Std. Error"]
+        else:
+            df["ci90l"] = df["Estimate"] - 1.645 * df["Std. Error"]
+            df["ci90u"] = df["Estimate"] + 1.645 * df["Std. Error"]
+        
+        # Reorder columns
+        if tvalues is not None:
+            df = df[["Estimate", "Std. Error", "t value", "Pr(>|t|)", "ci95l", "ci95u", "ci90l", "ci90u"]]
+        else:
+            df = df[["Estimate", "Std. Error", "Pr(>|t|)", "ci95l", "ci95u", "ci90l", "ci90u"]]
+        
         return df
 
     def depvar(self, model: Any) -> str:
@@ -552,11 +599,47 @@ class LinearmodelsExtractor:
             },
             index=params.index,
         )
+        
         if tstats is not None:
             df["t value"] = pd.to_numeric(
                 pd.Series(tstats, index=params.index), errors="coerce"
             )
-            df = df[["Estimate", "Std. Error", "t value", "Pr(>|t|)"]]
+        
+        # Extract confidence intervals if available
+        if hasattr(model, "conf_int"):
+            try:
+                # conf_int() returns a DataFrame with columns ['lower', 'upper']
+                ci95 = model.conf_int(level=0.95)
+                df["ci95l"] = pd.to_numeric(ci95.iloc[:, 0], errors="coerce")
+                df["ci95u"] = pd.to_numeric(ci95.iloc[:, 1], errors="coerce")
+            except Exception:
+                # Fallback: compute from estimate and SE
+                df["ci95l"] = df["Estimate"] - 1.96 * df["Std. Error"]
+                df["ci95u"] = df["Estimate"] + 1.96 * df["Std. Error"]
+        else:
+            # Fallback: compute from estimate and SE
+            df["ci95l"] = df["Estimate"] - 1.96 * df["Std. Error"]
+            df["ci95u"] = df["Estimate"] + 1.96 * df["Std. Error"]
+        
+        # Also add 90% CI
+        if hasattr(model, "conf_int"):
+            try:
+                ci90 = model.conf_int(level=0.90)
+                df["ci90l"] = pd.to_numeric(ci90.iloc[:, 0], errors="coerce")
+                df["ci90u"] = pd.to_numeric(ci90.iloc[:, 1], errors="coerce")
+            except Exception:
+                df["ci90l"] = df["Estimate"] - 1.645 * df["Std. Error"]
+                df["ci90u"] = df["Estimate"] + 1.645 * df["Std. Error"]
+        else:
+            df["ci90l"] = df["Estimate"] - 1.645 * df["Std. Error"]
+            df["ci90u"] = df["Estimate"] + 1.645 * df["Std. Error"]
+        
+        # Reorder columns
+        if tstats is not None:
+            df = df[["Estimate", "Std. Error", "t value", "Pr(>|t|)", "ci95l", "ci95u", "ci90l", "ci90u"]]
+        else:
+            df = df[["Estimate", "Std. Error", "Pr(>|t|)", "ci95l", "ci95u", "ci90l", "ci90u"]]
+        
         return df
 
     def depvar(self, model: Any) -> str:
