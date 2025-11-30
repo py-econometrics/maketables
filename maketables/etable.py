@@ -155,6 +155,7 @@ class ETable(MTable):
     DEFAULT_FELABELS: ClassVar[dict[str, str]] = {}
     DEFAULT_CAT_TEMPLATE = "{variable}={value}"
     DEFAULT_LINEBREAK = "\n"
+    DEFAULT_FE_MARKER = ("x", "-")
 
     def __init__(
         self,
@@ -538,7 +539,7 @@ class ETable(MTable):
                     and (fx in fx_str.split("+"))
                     and not getattr(m, "_use_mundlak", False)
                 )
-                row.append("x" if has else "-")
+                row.append(self.DEFAULT_FE_MARKER[0] if has else self.DEFAULT_FE_MARKER[1])
             rows[fx] = row
         fe_df = pd.DataFrame.from_dict(rows, orient="index", columns=list(like_columns))
         # relabel FE names
