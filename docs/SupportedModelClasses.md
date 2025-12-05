@@ -7,13 +7,15 @@
 - [Linearmodels](https://github.com/bashtage/linearmodels)
 - [Stata](https://www.stata.com/python/pystata19/) via [PyStata](docs\pystataIntegration.ipynb)
 
-
+<br>
+<br>
+<br>
 
 ## Adding Support for New Packages
 
 There are two ways to make your package compatible with `maketables`:
 
-
+<br>
 
 ### Plug-in Extractor Format 
 
@@ -35,7 +37,7 @@ table = ETable(result)  # Works automatically!
 
 See [Plugin Extractor Format](../PLUGIN_EXTRACTOR_FORMAT.md) for complete specifications.
 
-
+<br>
 
 ### Custom Extractor Implementation
 
