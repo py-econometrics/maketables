@@ -13,7 +13,7 @@
 
 ## Adding Support for New Packages
 
-There are two ways to make your package compatible with `maketables`:
+There are two ways to make packages compatible with `maketables`:
 
 <br>
 
@@ -35,7 +35,7 @@ result = MyRegression(y, X)
 table = ETable(result)  # Works automatically!
 ```
 
-See [Plugin Extractor Format](../PLUGIN_EXTRACTOR_FORMAT.md) for complete specifications.
+See [Plugin Extractor Format](Plugin_Extractor.md) for complete specifications.
 
 <br>
 
@@ -43,10 +43,4 @@ See [Plugin Extractor Format](../PLUGIN_EXTRACTOR_FORMAT.md) for complete specif
 
 If instead the package itself should not be changed, implement a custom extractor (such as maketables has for instance for statsmodels, PyFixest, or linearmodels) that follows the `ModelExtractor` protocol and register it in `maketables/extractors.py`.
 
-This approach requires implementing the extractor interface including:
-- `can_handle(model)`: Detect your model type
-- `coef_table(model)`: Extract coefficients
-- `stat(model, key)`: Extract statistics
-- Additional extraction (depvar, fixed effects, variable labels, etc.)
-
-See [Adding Methods](AddingMethods.ipynb) for a detailed guide on implementing a custom extractor.
+See [Adding Methods](AddingMethods.ipynb) for a guide on implementing a custom extractor.
