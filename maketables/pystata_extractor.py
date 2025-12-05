@@ -64,7 +64,7 @@ class StataResultWrapper:
         Parameters
         ----------
         coefficients : pd.DataFrame
-            Coefficient table with columns: Estimate, Std. Error, t value, Pr(>|t|)
+            Coefficient table with canonical columns: b, se, t, p (t and p may be missing for some commands)
         stats : dict
             Dictionary of model statistics (N, r2, adj_r2, etc.)
         depvar : str
@@ -261,16 +261,16 @@ class StataResultWrapper:
                     std_errors = t_stats = p_values = None
 
             # Create DataFrame
-            data = {"Estimate": coef_vals}
+            data = {"b": coef_vals}
 
             if std_errors is not None:
-                data["Std. Error"] = std_errors
+                data["se"] = std_errors
 
             if t_stats is not None:
-                data["t value"] = t_stats
+                data["t"] = t_stats
 
             if p_values is not None:
-                data["Pr(>|t|)"] = p_values
+                data["p"] = p_values
 
             # Extract coefficient names using sfi.Matrix to get colnames from e(b)
             # This works for all estimation commands (regress, xtreg, logit, etc.)
@@ -330,16 +330,16 @@ class StataResultWrapper:
                 index = [f"coef{i+1}" for i in range(len(coef_vals))]
 
             # Rebuild data dictionary with filtered arrays
-            data = {"Estimate": coef_vals}
+            data = {"b": coef_vals}
             
             if std_errors is not None and len(std_errors) > 0:
-                data["Std. Error"] = std_errors
+                data["se"] = std_errors
 
             if t_stats is not None and len(t_stats) > 0:
-                data["t value"] = t_stats
+                data["t"] = t_stats
 
             if p_values is not None and len(p_values) > 0:
-                data["Pr(>|t|)"] = p_values
+                data["p"] = p_values
 
             df = pd.DataFrame(data, index=index)
             df.index.name = "Coefficient"
@@ -349,10 +349,10 @@ class StataResultWrapper:
         except Exception:
             # Fallback: create minimal table with available info
             return pd.DataFrame({
-                "Estimate": [np.nan],
-                "Std. Error": [np.nan],
-                "t value": [np.nan],
-                "Pr(>|t|)": [np.nan]
+                "b": [np.nan],
+                "se": [np.nan],
+                "t": [np.nan],
+                "p": [np.nan]
             }, index=["coef"])
 
     @staticmethod

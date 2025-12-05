@@ -449,45 +449,31 @@ class ETable(MTable):
         cols_per_model = []
         for i, model in enumerate(models):
             tidy = self._extract_tidy_df(model)
-            stars = self._compute_stars(tidy["Pr(>|t|)"], signif_code)
+            stars = self._compute_stars(tidy["p"], signif_code)
 
             cell = pd.Series("", index=tidy.index, dtype=object)
             for element in coef_fmt_elements:
                 token = element["token"]
                 format_spec = element["format"]
 
-                # Handle standard tokens with backward compatibility
                 if token == "b":
-                    cell += (
-                        tidy["Estimate"].apply(_format_number, format_spec=format_spec)
-                        + stars
-                    )
-                elif token == "se":
-                    cell += tidy["Std. Error"].apply(
+                    # Add coefficient with significance stars
+                    cell += tidy["b"].apply(
                         _format_number, format_spec=format_spec
-                    )
-                elif token == "t":
-                    if "t value" in tidy.columns:
-                        cell += tidy["t value"].apply(
-                            _format_number, format_spec=format_spec
-                        )
-                elif token == "p":
-                    cell += tidy["Pr(>|t|)"].apply(
-                        _format_number, format_spec=format_spec
-                    )
+                    ) + stars
+                elif token == "\n":
+                    cell += lbcode
                 elif token in custom_stats:
                     # Custom stats from user
-                    assert len(custom_stats[token][i]) == len(tidy["Estimate"])
+                    assert len(custom_stats[token][i]) == len(tidy.index)
                     cell += pd.Series(custom_stats[token][i], index=tidy.index).apply(
                         _format_number, format_spec=format_spec
                     )
-                elif token == "\n":
-                    cell += lbcode
                 elif token in tidy.columns:
-                    # NEW: Any column from tidy dataframe can be used
+                    # Any column from tidy (se, t, p, ci95l, ci95u, etc.)
                     cell += tidy[token].apply(_format_number, format_spec=format_spec)
                 else:
-                    # Literal character
+                    # Literal character (parentheses, commas, etc.)
                     cell += token
 
             # one column per model, indexed by 'Coefficient'
