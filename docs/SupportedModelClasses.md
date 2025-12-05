@@ -15,7 +15,7 @@ There are two ways to make your package compatible with `maketables`:
 
 
 
-### 1. **Plug-in Extractor Format** 
+### Plug-in Extractor Format 
 
 If you maintain a statistical modeling package, you can make your model result classes compatible with `maketables` **without any code changes to `maketables`**. Simply implement a few standard attributes and methods on your model class:
 
@@ -33,11 +33,11 @@ result = MyRegression(y, X)
 table = ETable(result)  # Works automatically!
 ```
 
-**See [Plugin Extractor Format](../PLUGIN_EXTRACTOR_FORMAT.md) for complete specifications.**
+See [Plugin Extractor Format](../PLUGIN_EXTRACTOR_FORMAT.md) for complete specifications.
 
 
 
-### 2. **Custom Extractor Implementation** (For Core Integration)
+### Custom Extractor Implementation
 
 If instead the package itself should not be changed, implement a custom extractor (such as maketables has for instance for statsmodels, PyFixest, or linearmodels) that follows the `ModelExtractor` protocol and register it in `maketables/extractors.py`.
 
@@ -47,4 +47,4 @@ This approach requires implementing the extractor interface including:
 - `stat(model, key)`: Extract statistics
 - Additional extraction (depvar, fixed effects, variable labels, etc.)
 
-**See [Adding Methods](AddingMethods.ipynb) for a detailed guide on implementing a custom extractor.**
+See [Adding Methods](AddingMethods.ipynb) for a detailed guide on implementing a custom extractor.
