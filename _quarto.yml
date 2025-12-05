@@ -28,14 +28,16 @@ website:
           - href: docs/UsingLabels.ipynb
             text: "Using Variable Labels"
           - href: docs/AddingMethods.ipynb
-            text: Contributing Models
+            text: "Contributing Models"
+          - href: docs/Plugin_Extractor.md
+            text: "Making packages compatible"
           - text: "API Reference"
             file: reference/index.qmd
 
 
     right:
       - icon: github
-        href: https://github.com/dsliwka/maketables
+        href: https://py-econometrics.github.io/maketables/
 
 
 

@@ -150,12 +150,91 @@ def clear_extractors() -> None:
     _EXTRACTOR_REGISTRY.clear()
 
 
+class PluginExtractor:
+    """
+    Generic extractor for models implementing the maketables plug-in format.
+    
+    Packages can make their model classes compatible with maketables by implementing
+    any combination of the following attributes/methods on their model result class:
+    
+    - __maketables_coef_table__ (property): Returns pd.DataFrame with columns: b, se, t, p, etc.
+    - __maketables_stat__(key) (method): Returns statistic by key (e.g., 'N', 'r2', 'adj_r2')
+    - __maketables_depvar__ (property): Returns dependent variable name as str
+    - __maketables_fixef_string__ (property): Returns fixed effects string or None
+    - __maketables_var_labels__ (property): Returns dict mapping var names to labels or None
+    - __maketables_vcov_info__ (property): Returns dict with vcov metadata or None
+    
+    See PLUGIN_EXTRACTOR_FORMAT.md for detailed specifications.
+    """
+    
+    def can_handle(self, model: Any) -> bool:
+        """Check if model implements the plug-in interface (has coef_table attribute)."""
+        return hasattr(model, "__maketables_coef_table__")
+    
+    def coef_table(self, model: Any) -> pd.DataFrame:
+        """Extract coefficient table from plugin attribute."""
+        coef_df = model.__maketables_coef_table__
+        if isinstance(coef_df, pd.DataFrame):
+            if coef_df.index.name != "Coefficient":
+                coef_df = coef_df.copy()
+                coef_df.index.name = "Coefficient"
+            return coef_df
+        raise ValueError(
+            f"__maketables_coef_table__ must return a pd.DataFrame, got {type(coef_df)}"
+        )
+    
+    def depvar(self, model: Any) -> str:
+        """Extract dependent variable name from plugin attribute."""
+        if hasattr(model, "__maketables_depvar__"):
+            return model.__maketables_depvar__
+        return "Dependent Variable"
+    
+    def fixef_string(self, model: Any) -> str | None:
+        """Extract fixed effects string from plugin attribute."""
+        if hasattr(model, "__maketables_fixef_string__"):
+            return model.__maketables_fixef_string__
+        return None
+    
+    def stat(self, model: Any, key: str) -> Any:
+        """Extract a statistic using the plugin method."""
+        if hasattr(model, "__maketables_stat__"):
+            return model.__maketables_stat__(key)
+        return None
+    
+    def vcov_info(self, model: Any) -> dict[str, Any]:
+        """Extract variance-covariance information from plugin attribute."""
+        if hasattr(model, "__maketables_vcov_info__"):
+            info = model.__maketables_vcov_info__
+            return info if isinstance(info, dict) else {}
+        return {}
+    
+    def var_labels(self, model: Any) -> dict[str, str] | None:
+        """Extract variable labels from plugin attribute."""
+        if hasattr(model, "__maketables_var_labels__"):
+            return model.__maketables_var_labels__
+        return None
+    
+    def supported_stats(self, model: Any) -> set[str]:
+        """Return set of statistics that can be extracted via __maketables_stat__."""
+        # Try to discover supported stats by checking if __maketables_stat__ exists
+        if hasattr(model, "__maketables_stat__"):
+            # Can't easily determine what's supported without calling it,
+            # so return an empty set. Extractors can call stat() and it will
+            # return None if not available.
+            return set()
+        return set()
+
+
 def get_extractor(model: Any) -> ModelExtractor:
     """
     Find and return the appropriate extractor for a given model.
 
-    Iterates through registered extractors and returns the first one that
-    can handle the given model type.
+    Strategy (in order):
+    1. Check registered extractors (package-specific implementations)
+    2. Check for plug-in format (__maketables_coef_table__ attribute)
+    
+    The plug-in format allows external packages to integrate without modifying maketables.
+    See PLUGIN_EXTRACTOR_FORMAT.md for specifications.
 
     Args:
         model: Statistical model object to find an extractor for.
@@ -166,7 +245,7 @@ def get_extractor(model: Any) -> ModelExtractor:
 
     Raises
     ------
-        TypeError: If no registered extractor can handle the model type.
+        TypeError: If no registered extractor or plug-in format can handle the model type.
     """
     for ex in _EXTRACTOR_REGISTRY:
         try:
@@ -174,6 +253,14 @@ def get_extractor(model: Any) -> ModelExtractor:
                 return ex
         except Exception:
             continue
+    
+    # Check for plug-in format as fallback
+    plugin_extractor = PluginExtractor()
+    try:
+        if plugin_extractor.can_handle(model):
+            return plugin_extractor
+    except Exception:
+        pass
     
     # Build helpful error message
     model_type = type(model).__name__
@@ -189,7 +276,13 @@ def get_extractor(model: Any) -> ModelExtractor:
         error_msg += f"  {i}. {extractor_name}\n"
     
     error_msg += (
-        "\nTo add support for additional model types, implement the ModelExtractor protocol "
+        "\nAlternatively, implement the plug-in extractor format by adding these attributes "
+        "to your model class:\n"
+        "  - __maketables_coef_table__ (property): Returns DataFrame with columns b, se, t, p\n"
+        "  - __maketables_stat__(key) (method): Returns statistic by key\n"
+        "  - __maketables_depvar__ (property): Returns dependent variable name\n\n"
+        "See PLUGIN_EXTRACTOR_FORMAT.md for full specifications.\n\n"
+        "To register a custom extractor, implement the ModelExtractor protocol "
         "and use register_extractor()."
     )
     
