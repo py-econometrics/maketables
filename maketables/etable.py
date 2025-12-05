@@ -29,20 +29,23 @@ class ETable(MTable):
         Built-in support: pyfixest, statsmodels, linearmodels.
     signif_code : list[float], optional
         Three ascending p-value cutoffs for significance stars, default
-        ETable.DEFAULT_SIGNIF_CODE = [0.01, 0.05, 0.10].
+        ETable.DEFAULT_SIGNIF_CODE = [0.01, 0.05, 0.10]. Pass an empty list
+        to disable significance stars.
     coef_fmt : str, optional
         Cell layout for each coefficient. Tokens:
           - 'b' (estimate), 'se' (std. error), 't' (t value), 'p' (p-value),
           - further tokens extracted from the model's coef_table() (e.g., 'ci95l', 'ci95u'),
           - whitespace, ',', parentheses '(', ')', brackets '[', ']', and
           - '\\n' for line breaks.
+        Append '*' after a token to add significance stars: e.g., 'b*' or 't:*'.
         You may also reference keys from custom_stats to inject custom values.
         Format specifiers can be added after tokens (e.g., 'b:.3f', 'se:.2e', 'N:,.0f'):
           - '.Nf' for N decimal places (e.g., '.3f' for 3 decimals)
           - '.Ne' for scientific notation with N decimals (e.g., '.2e')
           - ',.Nf' for comma thousands separator (e.g., ',.0f')
           - ':d' for integer formatting
-        Default ETable.DEFAULT_COEF_FMT = "b \\n (se)".
+        Stars syntax: 'b*' (stars after unformatted b), 'b:.3f*' (stars after formatted b).
+        Default ETable.DEFAULT_COEF_FMT = "b:.3f* \n (se:.3f)".
     model_stats : list[str], optional
         Bottom panel statistics to display (order is kept). Examples:
         'N', 'r2', 'adj_r2', 'r2_within', 'se_type'. If None, defaults to
@@ -125,7 +128,7 @@ class ETable(MTable):
 
     # ---- Class defaults ----
     DEFAULT_SIGNIF_CODE: ClassVar[list[float]] = [0.01, 0.05, 0.10]
-    DEFAULT_COEF_FMT: ClassVar[str] = "b:.3f \n (se:.3f)"
+    DEFAULT_COEF_FMT: ClassVar[str] = "b:.3f* \n (se:.3f)"
     DEFAULT_MODEL_STATS: ClassVar[list[str]] = ["N", "r2"]
     # Canonical stat key -> printable label (used if model_stats_labels is None)
     DEFAULT_STAT_LABELS: ClassVar[dict[str, str]] = {
@@ -303,10 +306,14 @@ class ETable(MTable):
 
         # --- notes ---
         if notes == "":
-            notes = (
-                f"Significance levels: * p < {signif_code[2]}, ** p < {signif_code[1]}, *** p < {signif_code[0]}. "
-                + f"Format of coefficient cell: {coef_fmt_title}"
-            )
+            note_parts = []
+            # Only add significance levels explanation if format string contains stars
+            if "*" in coef_fmt:
+                note_parts.append(
+                    f"Significance levels: * p < {signif_code[2]}, ** p < {signif_code[1]}, *** p < {signif_code[0]}."
+                )
+            note_parts.append(f"Format of coefficient cell: {coef_fmt_title}")
+            notes = " ".join(note_parts)
             # Remove line breaks from notes "\n"
             notes = notes.replace("\n", " ")
 
@@ -455,12 +462,16 @@ class ETable(MTable):
             for element in coef_fmt_elements:
                 token = element["token"]
                 format_spec = element["format"]
+                add_stars = element["add_stars"]
 
                 if token == "b":
-                    # Add coefficient with significance stars
-                    cell += tidy["b"].apply(
+                    # Add coefficient (with stars if marked with *)
+                    formatted = tidy["b"].apply(
                         _format_number, format_spec=format_spec
-                    ) + stars
+                    )
+                    if add_stars:
+                        formatted = formatted + stars
+                    cell += formatted
                 elif token == "\n":
                     cell += lbcode
                 elif token in custom_stats:
@@ -471,7 +482,11 @@ class ETable(MTable):
                     )
                 elif token in tidy.columns:
                     # Any column from tidy (se, t, p, ci95l, ci95u, etc.)
-                    cell += tidy[token].apply(_format_number, format_spec=format_spec)
+                    formatted = tidy[token].apply(_format_number, format_spec=format_spec)
+                    # Add stars if marked with *
+                    if add_stars:
+                        formatted = formatted + stars
+                    cell += formatted
                 else:
                     # Literal character (parentheses, commas, etc.)
                     cell += token
@@ -717,13 +732,14 @@ def _relabel_index(index, labels=None, stats_labels=None):
 
 def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     """
-    Parse the coef_fmt string with format specifiers.
+    Parse the coef_fmt string with format specifiers and star markers.
 
     Parameters
     ----------
     coef_fmt: str
         The coef_fmt string. Supports format specifiers like 'b:.3f', 'se:.2e', etc.
         Can also use any column name from the dataframe extracted with coef_table().
+        Append '*' after a token to add significance stars: 'b*', 'b:.3f*', 't:*', etc.
     custom_stats: dict
         A dictionary of custom statistics.
     available_columns: set
@@ -733,7 +749,7 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     Returns
     -------
     coef_fmt_elements: list
-        List of parsed elements, each being a dict with 'token' and 'format' keys.
+        List of parsed elements, each being a dict with 'token', 'format', and 'add_stars' keys.
     coef_fmt_title: str
         The title for the coef_fmt string.
     """
@@ -800,10 +816,10 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
                     # Find the end of the format specifier
                     format_start = after_token_pos + 1
                     format_end = format_start
-                    # Stop at delimiters: space, newline, brackets, backslash, comma
+                    # Stop at delimiters: space, newline, brackets, backslash, comma, or *
                     while (
                         format_end < len(coef_fmt)
-                        and coef_fmt[format_end] not in [" ", "\n", "(", ")", "[", "]", "\\", ","]
+                        and coef_fmt[format_end] not in [" ", "\n", "(", ")", "[", "]", "\\", ",", "*"]
                         and not any(
                             coef_fmt[format_end:].startswith(t) for t in all_tokens
                         )
@@ -811,12 +827,21 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
                         format_end += 1
 
                     format_spec = coef_fmt[format_start:format_end]
-                    coef_fmt_elements.append({"token": token, "format": format_spec})
+                    # Check if * follows (after format spec)
+                    add_stars = False
+                    if format_end < len(coef_fmt) and coef_fmt[format_end] == "*":
+                        add_stars = True
+                        format_end += 1
+                    coef_fmt_elements.append({"token": token, "format": format_spec, "add_stars": add_stars})
                     title_parts.append(title_map.get(token, token))
                     i = format_end
                 else:
-                    # No format specifier
-                    coef_fmt_elements.append({"token": token, "format": None})
+                    # No format specifier, check for * suffix
+                    add_stars = False
+                    if after_token_pos < len(coef_fmt) and coef_fmt[after_token_pos] == "*":
+                        add_stars = True
+                        after_token_pos += 1
+                    coef_fmt_elements.append({"token": token, "format": None, "add_stars": add_stars})
                     title_parts.append(title_map.get(token, token))
                     i = after_token_pos
                 found_token = True
@@ -825,18 +850,18 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
         if not found_token:
             # Handle special sequences and single characters
             if coef_fmt[i : i + 2] == "\\n":
-                coef_fmt_elements.append({"token": "\n", "format": None})
+                coef_fmt_elements.append({"token": "\n", "format": None, "add_stars": False})
                 title_parts.append("\n")
                 i += 2
             elif coef_fmt[i : i + 2] in ["\\(", "\\)", "\\[", "\\]"]:
                 escaped_char = coef_fmt[i+1]
-                coef_fmt_elements.append({"token": coef_fmt[i:i+2], "format": None})
+                coef_fmt_elements.append({"token": coef_fmt[i:i+2], "format": None, "add_stars": False})
                 title_parts.append(escaped_char)
                 i += 2
             else:
                 # Single character literal
                 char = coef_fmt[i]
-                coef_fmt_elements.append({"token": char, "format": None})
+                coef_fmt_elements.append({"token": char, "format": None, "add_stars": False})
                 title_parts.append(char)
                 i += 1
 
