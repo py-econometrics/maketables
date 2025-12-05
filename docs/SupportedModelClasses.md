@@ -5,7 +5,7 @@
 - [PyFixest](https://github.com/py-econometrics/pyfixest)
 - [Statsmodels](https://github.com/statsmodels/statsmodels)
 - [Linearmodels](https://github.com/bashtage/linearmodels)
-- [Stata](https://www.stata.com/python/pystata19/) via [PyStata](docs\pystataIntegration.ipynb)
+- [Stata](https://www.stata.com/python/pystata19/) (see [documentation](pystataIntegration.ipynb))
 
 <br>
 <br>
