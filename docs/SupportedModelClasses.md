@@ -11,36 +11,12 @@
 <br>
 <br>
 
-## Adding Support for New Packages
+# Adding Support for New Packages
 
-There are two ways to make packages compatible with `maketables`:
+There are two ways to make a statistical package compatible with `ETables` in `maketables` for automatic table generation:
 
-<br>
+- *Custom Extractor Implementation:* Implement a custom extractor following the `ModelExtractor` protocol and register it in `maketables/extractors.py`. This approach requires code changes to maketables itself.
 
-### Plug-in Extractor Format 
+- *Plug-in Extractor Format:*: If you want your package to work with maketables out of the box, implement a few standard attributes and methods on your model result class (`__maketables_coef_table__`, `__maketables_stat__`, etc.). 
 
-If you maintain a statistical modeling package, you can make your model result classes compatible with `maketables` **without any code changes to `maketables`**. Simply implement a few standard attributes and methods on your model class:
-
-- `__maketables_coef_table__` (property): Returns a DataFrame with coefficient estimates and statistics
-- `__maketables_stat__(key)` (method): Returns model statistics by key
-- `__maketables_depvar__` (property): Returns the dependent variable name
-
-This approach has **no external dependencies** — your package never imports `maketables`. Users can then use your models directly with `ETable()`:
-
-```python
-from mypackage import MyRegression
-from maketables import ETable
-
-result = MyRegression(y, X)
-table = ETable(result)  # Works automatically!
-```
-
-See [Plugin Extractor Format](Plugin_Extractor.md) for complete specifications.
-
-<br>
-
-### Custom Extractor Implementation
-
-If instead the package itself should not be changed, implement a custom extractor (such as maketables has for instance for statsmodels, PyFixest, or linearmodels) that follows the `ModelExtractor` protocol and register it in `maketables/extractors.py`.
-
-See [Adding Methods](AddingMethods.ipynb) for a guide on implementing a custom extractor.
+See [Adding Methods](AddingMethods.ipynb) for a guide on implementing either of the two approaches.
