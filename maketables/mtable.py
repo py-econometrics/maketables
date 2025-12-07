@@ -99,8 +99,8 @@ class MTable:
     DEFAULT_SAVE_PATH = None  # can be string or dict
     DEFAULT_REPLACE = False
     DEFAULT_SAVE_TYPE = "html"
-    ADMISSIBLE_TYPES: ClassVar[list[str]] = ["gt", "tex", "docx", "html"]
-    ADMISSIBLE_SAVE_TYPES: ClassVar[list[str]] = ["tex", "docx", "html"]
+    ADMISSIBLE_TYPES: ClassVar[list[str]] = ["gt", "tex", "typst", "docx", "html"]
+    ADMISSIBLE_SAVE_TYPES: ClassVar[list[str]] = ["tex", "typst", "docx", "html"]
 
     # Default TeX style (override globally via MTable.DEFAULT_TEX_STYLE.update({...})
     # or per-call via tex_style in make/save/_output_tex)
@@ -125,6 +125,25 @@ class MTable:
         "group_header_format": r"\emph{%s}",
         # Notes font size command used in notes minipage
         "notes_fontsize_cmd": r"\footnotesize",
+    }
+
+    # Default Typst style (Typst table syntax)
+    DEFAULT_TYPST_STYLE: ClassVar[dict[str, object]] = {
+        # Table dimensions
+        "tab_width": "100%",  # Target width for table (e.g., "100%", "15cm")
+        "first_col_width": None,  # Column width for first column (e.g., "3cm")
+        # Row height
+        "row_height": "auto",  # Row height (e.g., "auto", "10pt")
+        # Alignment
+        "data_align": "center",  # left | center | right for data columns
+        # Spacing
+        "first_row_addlinespace": None,  # spacing before first row of each row group
+        "data_addlinespace": None,  # spacing between data rows
+        "rgroup_addlinespace": None,  # spacing between row groups
+        # Row-group header formatting
+        "group_header_format": "%s",  # plain formatting for group headers
+        # Notes font size
+        "notes_font_size": "10pt",
     }
 
     # Shared defaults (override per subclass if needed)
@@ -348,6 +367,8 @@ class MTable:
             return self._output_gt(**kwargs)
         elif type == "tex":
             return self._output_tex(**kwargs)
+        elif type == "typst":
+            return self._output_typst(**kwargs)
         elif type == "docx":
             return self._output_docx(**kwargs)
         else:
@@ -415,6 +436,9 @@ class MTable:
         if type == "tex":
             with open(file_name, "w") as f:
                 f.write(self._output_tex(**kwargs))  # Write the latex code to a file
+        elif type == "typst":
+            with open(file_name, "w") as f:
+                f.write(self._output_typst(**kwargs))  # Write the typst code to a file
         elif type == "docx":
             document = self._output_docx(file_name=file_name, **kwargs)
             document.save(file_name)
@@ -518,6 +542,118 @@ class MTable:
         document.save(file_name)
 
         # return gt table if show is True
+        if show:
+            return self._output_gt(**kwargs)
+
+    def update_typst(
+        self,
+        file_name: str | None = None,
+        tab_label: str | None = None,
+        show: bool = False,
+        typst_style: dict[str, object] | None = None,
+        **kwargs,
+    ):
+        """
+        Update an existing Typst document by replacing a figure containing a table
+        with the same tab_label. If no matching figure is found, append a new one.
+
+        Parameters
+        ----------
+        file_name : str, optional
+            Path to the Typst file. If relative and DEFAULT_SAVE_PATH['typst'] is set,
+            that path is prepended. If omitted, defaults to <default_path>/<tab_label>.typ.
+        tab_label : str, optional
+            Label to search for. Defaults to self.tab_label.
+        show : bool, optional
+            If True, also returns a GT object for display (HTML). Default False.
+        typst_style : Dict[str, object], optional
+            Per-call overrides for MTable.DEFAULT_TYPST_STYLE (see make()).
+        **kwargs : dict
+            Forwarded to _output_typst (e.g., symbol translation overrides).
+        """
+        label = tab_label or self.tab_label
+        assert label is not None, "tab_label must be provided"
+
+        # Resolve file path
+        if file_name is None:
+            if self.default_paths.get("typst") is None:
+                raise ValueError(
+                    "Default path for typst has to be set if file_name is None"
+                )
+            file_name = os.path.join(self.default_paths.get("typst", ""), label)
+        elif self.default_paths.get("typst") is not None and not os.path.isabs(
+            file_name
+        ):
+            file_name = os.path.join(self.default_paths.get("typst", ""), file_name)
+
+        root, ext = os.path.splitext(file_name)
+        if not ext:
+            file_name += ".typ"
+        elif ext not in (".typ", ".typst"):
+            raise ValueError("file_name must have .typ or .typst extension")
+
+        assert isinstance(file_name, str) and os.path.isdir(
+            os.path.dirname(file_name)
+        ), f"{file_name} is not a valid path."
+
+        # Render the new Typst figure (preserving original tab_label)
+        original_label = self.tab_label
+        self.tab_label = label
+        try:
+            new_figure = self._output_typst(typst_style=typst_style, **kwargs)
+        finally:
+            self.tab_label = original_label
+
+        # Helper: find the matching closing parenthesis for the figure call
+        def _find_matching_paren(text: str, open_idx: int) -> int:
+            depth = 0
+            for idx in range(open_idx, len(text)):
+                ch = text[idx]
+                if ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth -= 1
+                    if depth == 0:
+                        return idx
+            return -1
+
+        # Load existing content (if any)
+        if os.path.exists(file_name):
+            with open(file_name, "r", encoding="utf-8") as f:
+                content = f.read()
+        else:
+            content = ""
+
+        marker = f"<{label}>"
+        replaced = False
+
+        if content and marker in content:
+            label_pos = content.find(marker)
+            figure_start = content.rfind("#figure", 0, label_pos)
+            if figure_start != -1:
+                open_paren = content.find("(", figure_start)
+                if open_paren != -1:
+                    close_paren = _find_matching_paren(content, open_paren)
+                    label_end = content.find(">", label_pos)
+                    if close_paren != -1 and label_end != -1:
+                        label_end += 1
+                        while label_end < len(content) and content[label_end] in "\r\n":
+                            label_end += 1
+                        figure_block = content[figure_start:label_end]
+                        if "#table" in figure_block:
+                            content = content[:figure_start] + new_figure + content[label_end:]
+                            replaced = True
+
+        if not replaced:
+            if content and not content.endswith("\n"):
+                content += "\n\n"
+            elif content and not content.endswith("\n\n"):
+                content += "\n"
+            content = content + new_figure
+
+        with open(file_name, "w", encoding="utf-8") as f:
+            f.write(content)
+
         if show:
             return self._output_gt(**kwargs)
 
@@ -909,12 +1045,18 @@ class MTable:
             x_align = align_map.get(
                 str(s.get("x_col_align", "center")).lower(), align_map["center"]
             )
+            # Default: first column auto-sizes to content (uses left-aligned), data columns share space (X)
+            if _fcw:
+                first_spec = f"p{{{_fcw}}}"
+            else:
+                first_spec = r">{\raggedright\arraybackslash}l"  # Auto-size to content
+            # Data columns and any additional stub columns use flexible space
             n_flex = max(0, stub_cols - 1) + data_cols
             rest_spec = x_align * n_flex
-            first_spec = f"p{{{_fcw}}}" if _fcw else r">{\raggedright\arraybackslash}X"
             # Start flush left by removing left padding with @{}
             colspec = "@{}" + first_spec + rest_spec
         else:
+            # Default: first column auto-sizes to content (l), other stubs left-aligned (l), data aligned per setting
             first_stub = f"p{{{_fcw}}}" if _fcw else "l"
             other_stubs = "l" * max(0, stub_cols - 1)
             data_align = str(s.get("data_align", "c")).lower()
@@ -1108,6 +1250,278 @@ class MTable:
         latex_res = self._translate_symbols(latex_res, "tex")
 
         return latex_res
+
+    def _escape_typst(self, text: str, escape_asterisks: bool = True) -> str:
+        """
+        Escape special characters for Typst syntax.
+        
+        Parameters
+        ----------
+        text : str
+            Text to escape
+        escape_asterisks : bool, default True
+            Whether to escape asterisks (*, **, etc.). Set to False for header cells
+            that intentionally use *text* for bold formatting.
+        
+        Returns
+        -------
+        str
+            Escaped text safe for Typst
+        """
+        text = str(text)
+        
+        # Temporarily preserve actual newlines by replacing them with a placeholder
+        newline_placeholder = "\x00NEWLINE\x00"
+        text = text.replace("\n", newline_placeholder)
+        
+        # Escape backslashes (must be first!)
+        text = text.replace("\\", "\\\\")
+        # Escape bracket characters that interfere with Typst table syntax
+        text = text.replace("[", "\\[")
+        text = text.replace("]", "\\]")
+        # Escape other special characters
+        text = text.replace("#", "\\#")
+        if escape_asterisks:
+            # Only escape asterisks that are NOT already preceded by backslash
+            # (to preserve intentional escapes like \* from user input)
+            import re
+            text = re.sub(r'(?<!\\)\*', r'\\*', text)
+        text = text.replace("<", "\\<")
+        text = text.replace(">", "\\>")
+        text = text.replace("_", "\\_")
+        
+        # Restore actual newlines
+        text = text.replace(newline_placeholder, "\n")
+        
+        return text
+
+    def _output_typst(
+        self,
+        typst_style: dict[str, object] | None = None,
+        **kwargs,
+    ):
+        """
+        Generate Typst table code.
+        
+        Tables are created using Typst's native table syntax with configurable styling.
+        """
+        # Make a copy of the DataFrame to avoid modifying the original
+        dfs = self.df.copy()
+
+        # Resolve Typst style (per-call -> class default)
+        s = dict(getattr(self, "DEFAULT_TYPST_STYLE", {}))
+        if typst_style:
+            s.update(typst_style)
+        notes_fontsize = s.get("notes_font_size", "10pt")
+
+        # Prepare cell content (escape special Typst characters)
+        def _prep_cell(x):
+            if isinstance(x, float) and np.isnan(x):
+                return ""
+            # Keep newlines as-is for Typst (they work natively in cell content)
+            # Don't escape yet - we'll handle that after formatting for multi-line cells
+            return str(x)
+
+        # Element-wise conversion
+        dfs = dfs.map(_prep_cell) if hasattr(dfs, "map") else dfs.applymap(_prep_cell)  # type: ignore[attr-defined]
+
+        # Determine row groups (if MultiIndex on rows)
+        row_levels = dfs.index.nlevels
+        row_groups_present = row_levels > 1
+        if row_groups_present:
+            top_row_id = dfs.index.get_level_values(0).to_list()
+            row_groups = list(dict.fromkeys(top_row_id))
+            row_groups_len = [top_row_id.count(group) for group in row_groups]
+            # Show only the inner row labels in the stub
+            dfs.index = dfs.index.droplevel(0)
+
+        stub_cols = dfs.index.nlevels
+        data_cols = dfs.shape[1]
+        total_cols = stub_cols + data_cols
+
+        # Helper to collapse repeated labels into spans (same as TeX logic)
+        def _make_spanner_row(level_labels):
+            cells = []
+            spans = []
+            i = 0
+            n = len(level_labels)
+            while i < n:
+                label = level_labels[i]
+                span = 1
+                j = i + 1
+                while j < n and level_labels[j] == label:
+                    span += 1
+                    j += 1
+                cells.append(str(label))
+                spans.append(span)
+                i = j
+            return cells, spans
+
+        # Build the table command with booktabs-style formatting
+        lines = []
+        lines.append("#table(")
+        
+        # Build column alignment: first column left-aligned, data columns per style (default center)
+        data_align = s.get("data_align", "center")
+        align_specs = ["left"] * stub_cols + [data_align] * data_cols
+        align_str = ", ".join(align_specs)
+        
+        # Set column widths - first column auto-sizes to content, others use 1fr for equal distribution
+        if s.get("first_col_width"):
+            first_width = str(s["first_col_width"])
+            width_specs = [first_width] + ["1fr"] * (total_cols - 1)
+        else:
+            # Default: first column auto-sizes to widest content, others share remaining space equally
+            width_specs = ["auto"] + ["1fr"] * (total_cols - 1)
+        
+        width_str = ", ".join(width_specs)
+        lines.append(f"  columns: ({width_str}), align: ({align_str}),")
+        
+        # Add column-gutter for spacing between column groups
+        if isinstance(dfs.columns, pd.MultiIndex):
+            # Create gutter pattern: 0.5em where second-level index changes, 0em elsewhere
+            gutter_specs = ["0em"]  # After stub column
+            # Check for changes in the second-level index (index level -2)
+            if dfs.columns.nlevels >= 2:
+                second_level_idx = dfs.columns.get_level_values(-2)
+                for i in range(data_cols - 1):
+                    # If the second-level value changes between columns i and i+1, add spacing
+                    if second_level_idx[i] != second_level_idx[i + 1]:
+                        gutter_specs.append("0.5em")
+                    else:
+                        gutter_specs.append("0em")
+            else:
+                # If no second level, no spacing
+                gutter_specs.extend(["0em"] * (data_cols - 1))
+            gutter_str = ", ".join(gutter_specs)
+            lines.append(f"  column-gutter: ({gutter_str}),")
+        
+        lines.append(f"  stroke: none, row-gutter: 0.2em,")
+        lines.append(f"  table.hline(stroke: 0.08em),")
+
+        # Header rows with spanners (MultiIndex columns)
+        if isinstance(dfs.columns, pd.MultiIndex):
+            col_levels = dfs.columns.nlevels
+            for lvl in range(col_levels - 1):
+                labels_lvl = [dfs.columns[i][lvl] for i in range(len(dfs.columns))]
+                row_cells, row_spans = _make_spanner_row(labels_lvl)
+
+                row_parts: list[str] = ["[]"] * stub_cols
+                for cell_label, span in zip(row_cells, row_spans, strict=False):
+                    lbl = self._escape_typst(cell_label, escape_asterisks=False)
+                    row_parts.append(f"[#table.cell(colspan: {span})[{lbl}]]")
+                lines.append("  " + ", ".join(row_parts) + ",")
+
+                # cmidrule-like partial lines under each spanner
+                # Typst uses 1-based column indexing, and hlines span the full width of each spanner
+                start_col = 1  # First column (including stub)
+                for span in row_spans:
+                    end_col = start_col + span
+                    lines.append(f"  table.hline(stroke: 0.03em, start: {start_col}, end: {end_col}),")
+                    start_col = end_col  # Next spanner starts where this one ends
+
+            # Last level: the actual column names
+            last_labels = [dfs.columns[i][-1] for i in range(len(dfs.columns))]
+        else:
+            last_labels = list(dfs.columns)
+
+        # Bottom header row (always present)
+        last_parts: list[str] = ["[]"] * stub_cols
+        for label in last_labels:
+            lbl = self._escape_typst(label, escape_asterisks=False)
+            last_parts.append(f"[{lbl}]")
+        lines.append("  " + ", ".join(last_parts) + ",")
+
+        # Midrule after headers
+        lines.append(f"  table.hline(stroke: 0.05em),")
+
+        # Data rows (with optional row groups)
+        def _row_line(cells_list: list[str]) -> str:
+            return "  " + ", ".join(cells_list) + ","
+        
+        def _format_typst_cell(content: str) -> str:
+            """Format cell content for Typst, handling multi-line content."""
+            # ETable produces actual newline characters (\n as single char 0x0A)
+            if "\n" in content:
+                # Multi-line content: split by newline, escape each line, then format
+                lines_content = content.split("\n")
+                escaped_lines = [self._escape_typst(line.strip(), escape_asterisks=True) for line in lines_content if line.strip()]
+                # Use Typst's backslash syntax for line breaks within a cell
+                # Join lines with " \ " (backslash is Typst's line break operator)
+                formatted_content = " \\ ".join(escaped_lines)
+                return f"[{formatted_content}]"
+            else:
+                # Single-line content: escape and keep on one line
+                escaped_content = self._escape_typst(content, escape_asterisks=True)
+                return f"[{escaped_content}]"
+
+        if row_groups_present:
+            start = 0
+            for gi, (gname, glen) in enumerate(zip(row_groups, row_groups_len, strict=False)):
+                # Add top separator for row group (if not first group or if 't' in rgroup_sep)
+                if gi > 0 and "t" in self.rgroup_sep:
+                    lines.append(f"  table.hline(stroke: 0.03em),")
+                
+                if self.rgroup_display:
+                    fmt = str(s.get("group_header_format", "%s"))
+                    gtext = fmt % str(gname)
+                    gtext = self._escape_typst(gtext, escape_asterisks=False)
+                    # Use single cell spanning all columns to avoid line breaks in long headers
+                    lines.append(f"  [#table.cell(colspan: {total_cols})[{gtext}]],")
+
+                # Add bottom separator for row group (if 'b' in rgroup_sep)
+                if "b" in self.rgroup_sep:
+                    lines.append(f"  table.hline(stroke: 0.03em),")
+
+                end = start + glen
+                for ridx in range(start, end):
+                    row_label = str(dfs.index[ridx])
+                    row_parts = [_format_typst_cell(row_label)]
+                    for j in range(data_cols):
+                        cell_val = str(dfs.iloc[ridx, j])
+                        row_parts.append(_format_typst_cell(cell_val))
+                    lines.append(_row_line(row_parts))
+                
+                start = end
+        else:
+            for ridx in range(dfs.shape[0]):
+                row_label = str(dfs.index[ridx])
+                row_parts = [_format_typst_cell(row_label)]
+                for j in range(data_cols):
+                    cell_val = str(dfs.iloc[ridx, j])
+                    row_parts.append(_format_typst_cell(cell_val))
+                lines.append(_row_line(row_parts))
+
+        # Add bottom rule, then optional notes row below the rule, then close table
+        lines.append(f"  table.hline(stroke: 0.08em),")
+        if self.notes is not None:
+            notes_escaped = self._escape_typst(self.notes, escape_asterisks=True)
+            lines.append(f"  [#table.cell(colspan: {total_cols})[#text(size: {notes_fontsize})[{notes_escaped}]]],")
+        lines.append(")")
+
+        typst_table = "\n".join(lines)
+
+        # Add caption and/or reference label if present
+        if self.caption is not None or self.tab_label is not None:
+            # Build figure wrapper with caption and optional label for references
+            caption_line = ""
+            if self.caption is not None:
+                # Escape special characters in caption (but preserve * for bold formatting)
+                caption_escaped = self._escape_typst(self.caption, escape_asterisks=False)
+                caption_line = f", caption: [{caption_escaped}]"
+            
+            label_line = ""
+            if self.tab_label is not None:
+                label_line = f"\n<{self.tab_label}>"
+            
+            # Wrap table in figure() context with caption and label
+            # Syntax: #figure([content]{caption_line}){label_line}
+            typst_table = f"#figure([\n{typst_table}\n]{caption_line}){label_line}"
+        
+        # Apply symbol translation
+        typst_table = self._translate_symbols(typst_table, "typst")
+
+        return typst_table
 
     def _output_gt(
         self,
@@ -1350,3 +1764,4 @@ class MTable:
             The output object returned by make().
         """
         return self.make(type=type, **kwargs)
+

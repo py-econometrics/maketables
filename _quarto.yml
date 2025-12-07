@@ -23,6 +23,8 @@ website:
         text: Supported Models
       - text: Resources
         menu:
+          - href: docs\TypstTables.ipynb
+            text: "Output to Typst"
           - href: docs/pystataIntegration.ipynb
             text: "Stata Integration"
           - href: docs/UsingLabels.ipynb
