@@ -58,7 +58,11 @@ class MTable:
         from DEFAULT_TEX_STYLE such as: first_col_width, tab_width, texlocation,
         arraystretch, tabcolsep, data_align, x_col_align, cmidrule_trim,
         first_row_addlinespace, data_addlinespace, rgroup_addlinespace,
-        group_header_format, notes_fontsize_cmd. See DEFAULT_TEX_STYLE for full options.
+        group_header_format,.... See DEFAULT_TEX_STYLE for full options.
+    typst_style : dict, optional
+        Typst style overrides for auto-display in notebooks. Can include any parameter
+        from DEFAULT_TYPST_STYLE such as: first_col_width, tab_width, data_align,
+        group_header_format, notes_font_size. See DEFAULT_TYPST_STYLE for full options.
     docx_style : dict, optional
         DOCX style overrides for auto-display in notebooks. Can include any parameter
         from DEFAULT_DOCX_STYLE such as: first_col_width, font_name, font_color_rgb,
@@ -85,6 +89,7 @@ class MTable:
     >>> table = MTable(
     ...     df,
     ...     tex_style={"first_col_width": "3cm"},
+    ...     typst_style={"first_col_width": "2.5cm"},
     ...     docx_style={"first_col_width": "2in"},
     ...     gt_style={"table_width": "100%"},
     ... )
@@ -123,8 +128,12 @@ class MTable:
         "rgroup_addlinespace": None,  # spacing between row groups (independent of rgroup_sep); None disables
         # Row-group header formatting
         "group_header_format": r"\emph{%s}",
-        # Notes font size command used in notes minipage
-        "notes_fontsize_cmd": r"\footnotesize",
+        # Optional LaTeX injected right after \begingroup to scope table-level commands
+        # Example: r"\\small" or r"\\fontsize{9pt}{11pt}\\selectfont"
+        "group_intro": None,
+        # Notes intro placed at start of notes minipage (e.g., font size or prefix text)
+        # Examples: r"\\footnotesize" (default), r"\\small", r"\\textbf{Note: }\\footnotesize"
+        "notes_intro": r"\footnotesize",
     }
 
     # Default Typst style (Typst table syntax)
@@ -231,6 +240,7 @@ class MTable:
         default_paths: None | str | dict = DEFAULT_SAVE_PATH,
         # Style parameters for auto-display in notebooks (applied when no type is specified)
         tex_style: dict[str, object] | None = None,
+        typst_style: dict[str, object] | None = None,
         docx_style: dict[str, object] | None = None,
         gt_style: dict[str, object] | None = None,
         # No other style/render defaults here; handled in output methods
@@ -260,6 +270,7 @@ class MTable:
         # since the default display shows both LaTeX (for Quarto) and HTML (for notebooks)
         self._display_styles = {
             "tex_style": tex_style or {},
+            "typst_style": typst_style or {},
             "docx_style": docx_style or {},
             "gt_style": gt_style or {},
         }
@@ -287,7 +298,7 @@ class MTable:
         Parameters
         ----------
         type : str, optional
-            The type of the output object ("gt", "tex", "docx", "html").
+            The type of the output object ("gt", "tex", "typst", "docx", "html").
         **kwargs : Further arguments forwarded to the respective output method when type is specified.
             - For type="tex" (LaTeX):
 
@@ -296,9 +307,15 @@ class MTable:
                 {first_col_width: "3cm", tab_width: r"0.8\\textwidth", texlocation: "htbp",
                  arraystretch: 1.15, tabcolsep: "4pt", data_align: "c", x_col_align: "left",
                  cmidrule_trim: "lr", first_row_addlinespace: "0.75ex", data_addlinespace: "0.25ex",
-                 group_header_format: r"\\bfseries %s", notes_fontsize_cmd: r"\\footnotesize"}
+                group_header_format: r"\\bfseries %s", notes_intro: r"\\footnotesize"}
               Note: When tab_width is set, ensure your document loads
               the tabularx and array packages.
+            - For type="typst" (Typst):
+
+              - typst_style: Dict[str, object] (default MTable.DEFAULT_TYPST_STYLE)
+                Per-table overrides for Typst rendering, e.g.:
+                {first_col_width: "2.5cm", tab_width: "100%", data_align: "center",
+                 group_header_format: "%s", notes_font_size: "9pt"}
             - For type="gt" (HTML via great-tables):
 
               - gt_style: Dict[str, object]
@@ -650,6 +667,115 @@ class MTable:
             elif content and not content.endswith("\n\n"):
                 content += "\n"
             content = content + new_figure
+
+        with open(file_name, "w", encoding="utf-8") as f:
+            f.write(content)
+
+        if show:
+            return self._output_gt(**kwargs)
+
+    def update_tex(
+        self,
+        file_name: str | None = None,
+        tab_label: str | None = None,
+        show: bool = False,
+        tex_style: dict[str, object] | None = None,
+        **kwargs,
+    ):
+        """
+        Update an existing LaTeX document by replacing a table with the same tab_label.
+        If no matching table is found, append a new one.
+
+        Parameters
+        ----------
+        file_name : str, optional
+            Path to the LaTeX file. If relative and DEFAULT_SAVE_PATH['tex'] is set,
+            that path is prepended. If omitted, defaults to <default_path>/<tab_label>.tex.
+        tab_label : str, optional
+            Label to search for. Defaults to self.tab_label.
+        show : bool, optional
+            If True, also returns a GT object for display (HTML). Default False.
+        tex_style : Dict[str, object], optional
+            Per-call overrides for MTable.DEFAULT_TEX_STYLE (see make()).
+        **kwargs : dict
+            Forwarded to _output_tex (e.g., symbol translation overrides).
+        """
+        label = tab_label or self.tab_label
+        assert label is not None, "tab_label must be provided"
+
+        # Resolve file path
+        if file_name is None:
+            if self.default_paths.get("tex") is None:
+                raise ValueError(
+                    "Default path for tex has to be set if file_name is None"
+                )
+            file_name = os.path.join(self.default_paths.get("tex", ""), label)
+        elif self.default_paths.get("tex") is not None and not os.path.isabs(
+            file_name
+        ):
+            file_name = os.path.join(self.default_paths.get("tex", ""), file_name)
+
+        root, ext = os.path.splitext(file_name)
+        if not ext:
+            file_name += ".tex"
+        elif ext != ".tex":
+            raise ValueError("file_name must have .tex extension")
+
+        assert isinstance(file_name, str) and os.path.isdir(
+            os.path.dirname(file_name)
+        ), f"{file_name} is not a valid path."
+
+        # Render the new LaTeX table (preserving original tab_label)
+        original_label = self.tab_label
+        self.tab_label = label
+        try:
+            new_table = self._output_tex(tex_style=tex_style, **kwargs)
+        finally:
+            self.tab_label = original_label
+
+        # Load existing content (if any)
+        if os.path.exists(file_name):
+            with open(file_name, "r", encoding="utf-8") as f:
+                content = f.read()
+        else:
+            content = ""
+
+        # Search for existing table with matching label
+        label_marker = f"\\label{{{label}}}"
+        replaced = False
+
+        if content and label_marker in content:
+            label_pos = content.find(label_marker)
+            # Find the start of the table environment (search backwards for \begin{table})
+            table_start = content.rfind("\\begin{table", 0, label_pos)
+            if table_start != -1:
+                # Find the end of the table environment
+                table_end = content.find("\\end{table}", label_pos)
+                if table_end != -1:
+                    table_end = content.find("\n", table_end) + 1
+                    # Replace the entire table environment
+                    content = content[:table_start] + new_table + content[table_end:]
+                    replaced = True
+
+        if not replaced:
+            # Insert before \end{document} if it exists, otherwise append
+            end_doc_pos = content.rfind("\\end{document}")
+            if end_doc_pos != -1:
+                # Insert before \end{document}
+                before = content[:end_doc_pos]
+                after = content[end_doc_pos:]
+                if not before.endswith("\n"):
+                    before += "\n\n"
+                elif not before.endswith("\n\n"):
+                    before += "\n"
+                content = before + new_table + "\n\n" + after
+            else:
+                # No \end{document} found, append to end
+                if content and not content.endswith("\n"):
+                    content += "\n\n"
+                elif content and not content.endswith("\n\n"):
+                    content += "\n"
+                content = content + new_table
 
         with open(file_name, "w", encoding="utf-8") as f:
             f.write(content)
@@ -1190,6 +1316,11 @@ class MTable:
         lines = []
         # Scope style changes to this table
         lines.append(r"\begingroup")
+        # Inject optional TeX commands scoped to this table
+        if s.get("group_intro"):
+            lines.append(str(s["group_intro"]))
+        # Top-align makecell content
+        lines.append(r"\renewcommand\cellalign{t}")
         if s.get("arraystretch") is not None:
             lines.append(rf"\renewcommand\arraystretch{{{s['arraystretch']}}}")
         if s.get("tabcolsep"):
@@ -1207,11 +1338,11 @@ class MTable:
 
         # Wrap threeparttable
         if self.notes is not None:
+            notes_intro = str(s.get("notes_intro", r"\footnotesize"))
             latex_res = (
                 "\\begin{threeparttable}\n"
                 + latex_res
-                + "\n\\footnotesize "
-                + "\n\\noindent\\begin{minipage}{\\linewidth}\\smallskip\\footnotesize\n"
+                + "\n\\noindent\\begin{minipage}{\\linewidth}\\smallskip" + notes_intro + "\n"
                 + self.notes
                 + "\\end{minipage}\n"
                 + "\n\\end{threeparttable}"
@@ -1242,9 +1373,6 @@ class MTable:
                 + latex_res
                 + "\n\\end{table}"
             )
-
-        # Top-align makecell content
-        latex_res = "\\renewcommand\\cellalign{t}\n" + latex_res
 
         # Apply symbol translation to the final LaTeX output
         latex_res = self._translate_symbols(latex_res, "tex")

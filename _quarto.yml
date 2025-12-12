@@ -21,8 +21,10 @@ website:
         text: Writing Papers
       - href: docs/SupportedModelClasses.md
         text: Supported Models
-      - text: Resources
+      - text: Further Resources
         menu:
+          - href: docs/MTable.ipynb
+            text: "Custom Tables with MTable"
           - href: docs\TypstTables.ipynb
             text: "Output to Typst"
           - href: docs/pystataIntegration.ipynb
@@ -30,9 +32,7 @@ website:
           - href: docs/UsingLabels.ipynb
             text: "Using Variable Labels"
           - href: docs/AddingMethods.ipynb
-            text: "Contributing Models"
-          - href: docs/Plugin_Extractor.md
-            text: "Making packages compatible"
+            text: "Making Packages Compatible"
           - text: "API Reference"
             file: reference/index.qmd
 
