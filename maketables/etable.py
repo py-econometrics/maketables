@@ -133,6 +133,7 @@ class ETable(MTable):
     # Canonical stat key -> printable label (used if model_stats_labels is None)
     DEFAULT_STAT_LABELS: ClassVar[dict[str, str]] = {
         "N": "Observations",
+        "events": "Events",
         "se_type": "S.E. type",
         "r2": "R²",
         "adj_r2": "Adj. R²",
@@ -148,6 +149,7 @@ class ETable(MTable):
         "df_resid": "df(resid)",
         "deviance": "Deviance",
         "null_deviance": "Null deviance",
+        "concordance": "Concordance",
         "fvalue": "F statistic",
         "f_pvalue": "F p-value",
         "rmse": "RMSE",
@@ -778,6 +780,7 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
         "se": "Std. Error",
         "t": "t-stats",
         "p": "p-value",
+        "hr": "Hazard Ratio",
         "ci95l": "95% CI Lower",
         "ci95u": "95% CI Upper",
         "ci90l": "90% CI Lower",

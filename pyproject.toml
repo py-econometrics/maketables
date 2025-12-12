@@ -76,6 +76,10 @@ linearmodels = [
     "statsmodels>=0.13.0",
 ]
 
+lifelines = [
+    "lifelines>=0.27.0",
+]
+
 [tool.pixi.feature.dev.dependencies]
 quarto = ">=1.8.25,<2"
 
@@ -92,6 +96,7 @@ dev = { features = ["dev"], solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
 pystata = { features = ["pystata", "docs"], solve-group = "default" }
 linearmodels = { features = ["linearmodels", "docs"], solve-group = "default" }
+lifelines = { features = ["lifelines", "docs"], solve-group = "default" }
 publish = { features = ["publish"], solve-group = "default" }
 
 [tool.pixi.feature.dev.tasks]

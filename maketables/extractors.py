@@ -289,6 +289,146 @@ def get_extractor(model: Any) -> ModelExtractor:
     raise TypeError(error_msg)
 
 
+def inspect_model(model: Any, long: bool = False) -> None:
+    """
+    Inspect a fitted model by printing its extracted coefficient table columns and available statistics.
+    
+    By default, shows a concise summary. Use long=True for detailed output with sample values.
+    
+    Parameters
+    ----------
+    model : Any
+        A fitted statistical model (from statsmodels, pyfixest, linearmodels, lifelines, etc.)
+    long : bool, optional
+        If True, show detailed output with sample values and first few rows. Default is False.
+    
+    Examples
+    --------
+    >>> from lifelines import CoxPHFitter
+    >>> from lifelines.datasets import load_rossi
+    >>> cph = CoxPHFitter().fit(load_rossi(), 'week', 'arrest')
+    >>> inspect_model(cph)  # Concise summary
+    >>> inspect_model(cph, long=True)  # Detailed output
+    """
+    try:
+        extractor = get_extractor(model)
+    except TypeError as e:
+        print(f"Error: {e}")
+        return
+    
+    print(f"\n{'='*60}")
+    print(f"Model: {type(model).__name__} | Extractor: {type(extractor).__name__}")
+    print(f"{'='*60}\n")
+    
+    # Extract and display coefficient table structure
+    print("COEFFICIENT TABLE COLUMNS:")
+    try:
+        coef_df = extractor.coef_table(model)
+        
+        if long:
+            # Detailed output with sample values
+            print("-" * 60)
+            print(f"Index name: {coef_df.index.name}")
+            print(f"Number of coefficients: {len(coef_df)}")
+            print("\nAvailable columns (non-empty):")
+            for col in coef_df.columns:
+                non_null = coef_df[col].notna().sum()
+                if non_null > 0:
+                    sample_val = coef_df[col].dropna().iloc[0] if non_null > 0 else "N/A"
+                    print(f"  - {col:15s} ({non_null}/{len(coef_df)} non-null) example: {sample_val}")
+            
+            print("\nFirst few rows:")
+            print(coef_df.head().to_string())
+        else:
+            # Concise output - just list non-empty columns
+            non_empty_cols = [col for col in coef_df.columns if coef_df[col].notna().sum() > 0]
+            print(f"  {', '.join(non_empty_cols)}")
+            
+    except Exception as e:
+        print(f"  Error: {e}")
+    
+    # Extract and display available statistics
+    print(f"\nAVAILABLE STATISTICS:")
+    try:
+        # Try common stats and collect non-None values
+        common_stats = [
+            "N", "events", "ll", "aic", "bic", "concordance",
+            "r2", "adj_r2", "r2_within", "pseudo_r2",
+            "fvalue", "f_pvalue", "rmse",
+            "llr", "llr_df", "llr_p", "llr_log2p",
+            "se_type", "df_model", "df_resid"
+        ]
+        
+        available_stats = []
+        stat_values = {}
+        for stat_key in common_stats:
+            try:
+                val = extractor.stat(model, stat_key)
+                if val is not None:
+                    available_stats.append(stat_key)
+                    stat_values[stat_key] = val
+            except Exception:
+                pass
+        
+        if long:
+            # Detailed output with values
+            print("-" * 60)
+            supported = extractor.supported_stats(model)
+            if supported:
+                print(f"Supported stats ({len(supported)}): {', '.join(sorted(supported))}")
+            
+            print("\nExtracted values (non-empty):")
+            if available_stats:
+                for stat_key in available_stats:
+                    print(f"  {stat_key:15s} = {stat_values[stat_key]}")
+            else:
+                print("  (no statistics extracted)")
+        else:
+            # Concise output - just list available stats
+            if available_stats:
+                print(f"  {', '.join(available_stats)}")
+            else:
+                print("  (none)")
+            
+    except Exception as e:
+        print(f"  Error: {e}")
+    
+    # Display other metadata
+    print(f"\nOTHER METADATA:")
+    try:
+        depvar = extractor.depvar(model)
+        vcov = extractor.vcov_info(model)
+        fixef = extractor.fixef_string(model)
+        
+        if long:
+            # Detailed output
+            print("-" * 60)
+            print(f"Dependent variable: {depvar}")
+            if vcov:
+                vcov_type = vcov.get("vcov_type")
+                clustervar = vcov.get("clustervar")
+                print(f"Variance-covariance type: {vcov_type}")
+                if clustervar:
+                    print(f"Cluster variable: {clustervar}")
+            print(f"Fixed effects: {fixef if fixef else 'None'}")
+        else:
+            # Concise output
+            parts = [f"depvar={depvar}"]
+            if vcov and vcov.get("vcov_type"):
+                vcov_str = vcov.get("vcov_type")
+                if vcov.get("clustervar"):
+                    vcov_str += f"({vcov.get('clustervar')})"
+                parts.append(f"vcov={vcov_str}")
+            if fixef:
+                parts.append(f"fixef={fixef}")
+            print(f"  {', '.join(parts)}")
+            
+    except Exception as e:
+        print(f"  Error: {e}")
+    
+    print(f"{'='*60}\n")
+
+
 # ---------- small helpers ----------
 
 
@@ -890,3 +1030,207 @@ clear_extractors()
 register_extractor(PyFixestExtractor())
 register_extractor(LinearmodelsExtractor())
 register_extractor(StatsmodelsExtractor())
+
+
+class LifelinesExtractor:
+    """Extractor for lifelines survival regression fitters (CoxPH, AFT)."""
+
+    def can_handle(self, model: Any) -> bool:
+        """Check if object looks like a lifelines fitted model."""
+        mod = type(model).__module__ or ""
+        if not mod.startswith("lifelines."):
+            return False
+        # lifelines fitters expose a `summary` DataFrame after fitting
+        return hasattr(model, "summary") and isinstance(getattr(model, "summary", None), pd.DataFrame)
+
+    def coef_table(self, model: Any) -> pd.DataFrame:
+        """
+        Extract coefficient table from lifelines fitter.
+
+        Maps columns to maketables tokens :
+        - b, se, t (z), p, ci95l, ci95u
+        - hr (hazard ratio = exp(coef)) and hr_ci95l/hr_ci95u when present
+        """
+        df = model.summary.copy()
+
+        # Determine coefficient name index
+        if df.index.name != "Coefficient":
+            df.index.name = "Coefficient"
+
+        # lifelines column variants across fitters
+        # Note: p and z already named adequately in lifelines summary
+        rename_map = {}
+        cols = set(df.columns)
+
+        if "coef" in cols:
+            rename_map["coef"] = "b"
+
+        if "se(coef)" in cols:
+            rename_map["se(coef)"] = "se"
+    
+        if "coef lower 95%" in cols:
+            rename_map["coef lower 95%"] = "ci95l"
+        
+        if "coef upper 95%" in cols:
+            rename_map["coef upper 95%"] = "ci95u"
+
+        # 95% CI
+        lower95 = None
+        upper95 = None
+        for lcol in ["coef lower 95%", "lower 95%"]:
+            if lcol in cols:
+                lower95 = lcol
+                break
+        for ucol in ["coef upper 95%", "upper 95%"]:
+            if ucol in cols:
+                upper95 = ucol
+                break
+
+        if lower95 and upper95:
+            rename_map[lower95] = "ci95l"
+            rename_map[upper95] = "ci95u"
+
+        # Hazard ratios and their CI when present
+        if "exp(coef)" in cols:
+            rename_map["exp(coef)"] = "hr"
+        
+        hr_l95 = None
+        hr_u95 = None
+        for lcol in ["exp(coef) lower 95%"]:
+            if lcol in cols:
+                hr_l95 = lcol
+                break
+        for ucol in ["exp(coef) upper 95%"]:
+            if ucol in cols:
+                hr_u95 = ucol
+                break
+        if hr_l95:
+            rename_map[hr_l95] = "hr_ci95l"
+        if hr_u95:
+            rename_map[hr_u95] = "hr_ci95u"
+
+        df = df.rename(columns=rename_map)
+
+        # Ensure required columns exist (only from summary)
+        required = {"b", "se", "p"}
+        missing = required - set(df.columns)
+        if missing:
+            missing_list = ", ".join(sorted(missing))
+            raise ValueError(f"LifelinesExtractor: summary missing required columns: {missing_list}.")
+
+
+        # Reorder canonical columns first (include hazard ratio tokens when present)
+        ordered = [c for c in ["b", "se", "z", "p", "ci95l", "ci95u", "hr", "hr_ci95l", "hr_ci95u"] if c in df.columns]
+        df = df[ordered + [c for c in df.columns if c not in ordered]]
+        return df
+
+    def depvar(self, model: Any) -> str:
+        """Return event_col."""
+        return getattr(model, "event_col", None) or getattr(model, "event_col_", None) or "duration"
+
+    def fixef_string(self, model: Any) -> str | None:
+        """Survival models typically have no fixed effects string."""
+        return None
+
+    STAT_MAP: ClassVar[dict[str, Any]] = {
+        # Basic counts
+        "N": lambda m: (
+            getattr(m, "_n_examples", None) or 
+            (getattr(m, "weights", None).sum() if hasattr(m, "weights") and getattr(m, "weights", None) is not None else None)
+        ),
+        "events": lambda m: (
+            getattr(m, "weights", None)[getattr(m, "event_observed", None) > 0].sum()
+            if hasattr(m, "weights") and hasattr(m, "event_observed") 
+            and getattr(m, "weights", None) is not None 
+            and getattr(m, "event_observed", None) is not None
+            else None
+        ),
+        # Likelihood
+        "ll": lambda m: getattr(m, "log_likelihood_", None),
+        # Model fit measures
+        "aic": lambda m: (
+            getattr(m, "AIC_partial_", None)
+            if hasattr(m, "AIC_partial_") else getattr(m, "AIC_", None)
+        ),
+        "concordance": lambda m: getattr(m, "concordance_index_", None) or getattr(m, "concordance_index", None),
+        # Log-likelihood ratio test - call the method if it exists
+        "llr": lambda m: (
+            getattr(m.log_likelihood_ratio_test(), "test_statistic", None)
+            if hasattr(m, "log_likelihood_ratio_test") and callable(m.log_likelihood_ratio_test)
+            else None
+        ),
+        "llr_df": lambda m: (
+            getattr(m.log_likelihood_ratio_test(), "degrees_freedom", None)
+            if hasattr(m, "log_likelihood_ratio_test") and callable(m.log_likelihood_ratio_test)
+            else None
+        ),
+        "llr_p": lambda m: (
+            getattr(m.log_likelihood_ratio_test(), "p_value", None)
+            if hasattr(m, "log_likelihood_ratio_test") and callable(m.log_likelihood_ratio_test)
+            else None
+        ),
+        "llr_log2p": lambda m: (
+            (-(np.log2(p)))
+            if hasattr(m, "log_likelihood_ratio_test") and callable(m.log_likelihood_ratio_test)
+            and (p := getattr(m.log_likelihood_ratio_test(), "p_value", None)) is not None and p > 0
+            else None
+        ),
+    }
+
+    def stat(self, model: Any, key: str) -> Any:
+        spec = self.STAT_MAP.get(key)
+        if spec is None:
+            return None
+        val = _get_attr(model, spec)
+        if key == "N" and val is not None:
+            try:
+                return int(val)
+            except Exception:
+                return val
+        return val
+
+    def vcov_info(self, model: Any) -> dict[str, Any]:
+        """
+        Extract variance-covariance information from lifelines models.
+        
+        Detects:
+        - robust: whether robust (sandwich) standard errors were requested
+        - cluster_col: column name used for clustering
+        """
+        robust = getattr(model, "robust", False)
+        cluster_col = getattr(model, "cluster_col", None)
+        
+        # Determine vcov_type based on robust and cluster_col
+        if cluster_col:
+            vcov_type = "cluster"
+        elif robust:
+            vcov_type = "robust"
+        else:
+            vcov_type = None
+        
+        return {
+            "vcov_type": vcov_type,
+            "clustervar": cluster_col
+        }
+
+    def var_labels(self, model: Any) -> dict[str, str] | None:
+        # Try to find original DataFrame from cached fit args
+        df = None
+        try:
+            args = getattr(model, "_cached_fit_arguments", {})
+            df = args.get("df", None)
+        except Exception:
+            df = None
+        if isinstance(df, pd.DataFrame):
+            try:
+                return get_var_labels(df, include_defaults=True)
+            except Exception:
+                return None
+        return None
+
+    def supported_stats(self, model: Any) -> set[str]:
+        return {k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None}
+
+
+# Register lifelines extractor
+register_extractor(LifelinesExtractor())
