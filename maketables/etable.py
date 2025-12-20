@@ -29,19 +29,23 @@ class ETable(MTable):
         Built-in support: pyfixest, statsmodels, linearmodels.
     signif_code : list[float], optional
         Three ascending p-value cutoffs for significance stars, default
-        ETable.DEFAULT_SIGNIF_CODE = [0.01, 0.05, 0.10].
+        ETable.DEFAULT_SIGNIF_CODE = [0.01, 0.05, 0.10]. Pass an empty list
+        to disable significance stars.
     coef_fmt : str, optional
         Cell layout for each coefficient. Tokens:
           - 'b' (estimate), 'se' (std. error), 't' (t value), 'p' (p-value),
+          - further tokens extracted from the model's coef_table() (e.g., 'ci95l', 'ci95u'),
           - whitespace, ',', parentheses '(', ')', brackets '[', ']', and
           - '\\n' for line breaks.
+        Append '*' after a token to add significance stars: e.g., 'b*' or 't:*'.
         You may also reference keys from custom_stats to inject custom values.
         Format specifiers can be added after tokens (e.g., 'b:.3f', 'se:.2e', 'N:,.0f'):
           - '.Nf' for N decimal places (e.g., '.3f' for 3 decimals)
           - '.Ne' for scientific notation with N decimals (e.g., '.2e')
           - ',.Nf' for comma thousands separator (e.g., ',.0f')
           - ':d' for integer formatting
-        Default ETable.DEFAULT_COEF_FMT = "b \\n (se)".
+        Stars syntax: 'b*' (stars after unformatted b), 'b:.3f*' (stars after formatted b).
+        Default ETable.DEFAULT_COEF_FMT = "b:.3f* \n (se:.3f)".
     model_stats : list[str], optional
         Bottom panel statistics to display (order is kept). Examples:
         'N', 'r2', 'adj_r2', 'r2_within', 'se_type'. If None, defaults to
@@ -63,6 +67,12 @@ class ETable(MTable):
         applying keep.
     exact_match : bool, default False
         If True, treat keep/drop patterns as exact names (no regex).
+    order : list[str], optional
+        Explicit order for coefficients in the output table. Provide a list of 
+        coefficient names (after keep/drop filtering) to specify the exact order.
+        Any coefficients not in the list will appear at the end in their original order.
+        This is applied after keep/drop filtering.
+        Example: order=['age', 'female', 'education'] will place these first.
     labels : dict, optional
         Variable labels for relabeling dependent vars, regressors, and (if not
         provided in felabels) fixed effects. If None, labels are collected from
@@ -118,11 +128,12 @@ class ETable(MTable):
 
     # ---- Class defaults ----
     DEFAULT_SIGNIF_CODE: ClassVar[list[float]] = [0.01, 0.05, 0.10]
-    DEFAULT_COEF_FMT: ClassVar[str] = "b:.3f \n (se:.3f)"
+    DEFAULT_COEF_FMT: ClassVar[str] = "b:.3f* \n (se:.3f)"
     DEFAULT_MODEL_STATS: ClassVar[list[str]] = ["N", "r2"]
     # Canonical stat key -> printable label (used if model_stats_labels is None)
     DEFAULT_STAT_LABELS: ClassVar[dict[str, str]] = {
         "N": "Observations",
+        "events": "Events",
         "se_type": "S.E. type",
         "r2": "R²",
         "adj_r2": "Adj. R²",
@@ -138,6 +149,7 @@ class ETable(MTable):
         "df_resid": "df(resid)",
         "deviance": "Deviance",
         "null_deviance": "Null deviance",
+        "concordance": "Concordance",
         "fvalue": "F statistic",
         "f_pvalue": "F p-value",
         "rmse": "RMSE",
@@ -149,6 +161,7 @@ class ETable(MTable):
     DEFAULT_FELABELS: ClassVar[dict[str, str]] = {}
     DEFAULT_CAT_TEMPLATE = "{variable}={value}"
     DEFAULT_LINEBREAK = "\n"
+    DEFAULT_FE_MARKER = ("x", "-")
 
     def __init__(
         self,
@@ -163,6 +176,7 @@ class ETable(MTable):
         keep: list | str | None = None,
         drop: list | str | None = None,
         exact_match: bool | None = False,
+        order: list[str] | None = None,
         labels: dict | None = None,
         cat_template: str | None = None,
         show_fe: bool | None = None,
@@ -251,6 +265,7 @@ class ETable(MTable):
             custom_stats=custom_stats,
             keep=keep,
             drop=drop,
+            order=order,
             exact_match=exact_match,
             labels=labels,
             cat_template=cat_template,
@@ -293,10 +308,14 @@ class ETable(MTable):
 
         # --- notes ---
         if notes == "":
-            notes = (
-                f"Significance levels: * p < {signif_code[2]}, ** p < {signif_code[1]}, *** p < {signif_code[0]}. "
-                + f"Format of coefficient cell: {coef_fmt_title}"
-            )
+            note_parts = []
+            # Only add significance levels explanation if format string contains stars
+            if "*" in coef_fmt:
+                note_parts.append(
+                    f"Significance levels: * p < {signif_code[2]}, ** p < {signif_code[1]}, *** p < {signif_code[0]}."
+                )
+            note_parts.append(f"Format of coefficient cell: {coef_fmt_title}")
+            notes = " ".join(note_parts)
             # Remove line breaks from notes "\n"
             notes = notes.replace("\n", " ")
 
@@ -422,49 +441,56 @@ class ETable(MTable):
         custom_stats: dict[str, list[list]],
         keep: list[str],
         drop: list[str],
+        order: list[str],
         exact_match: bool,
         labels: dict[str, str],
         cat_template: str,
     ) -> tuple[pd.DataFrame, str]:
         lbcode = self.DEFAULT_LINEBREAK
-        coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(coef_fmt, custom_stats)
-
+        
+        # Get column names from first model to validate tokens
+        first_tidy = self._extract_tidy_df(models[0])
+        available_columns = set(first_tidy.columns)
+        coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(
+            coef_fmt, custom_stats, available_columns
+        )
+        
         cols_per_model = []
         for i, model in enumerate(models):
             tidy = self._extract_tidy_df(model)
-            stars = self._compute_stars(tidy["Pr(>|t|)"], signif_code)
+            stars = self._compute_stars(tidy["p"], signif_code)
 
             cell = pd.Series("", index=tidy.index, dtype=object)
             for element in coef_fmt_elements:
                 token = element["token"]
                 format_spec = element["format"]
+                add_stars = element["add_stars"]
 
                 if token == "b":
-                    cell += (
-                        tidy["Estimate"].apply(_format_number, format_spec=format_spec)
-                        + stars
-                    )
-                elif token == "se":
-                    cell += tidy["Std. Error"].apply(
+                    # Add coefficient (with stars if marked with *)
+                    formatted = tidy["b"].apply(
                         _format_number, format_spec=format_spec
                     )
-                elif token == "t":
-                    if "t value" in tidy.columns:
-                        cell += tidy["t value"].apply(
-                            _format_number, format_spec=format_spec
-                        )
-                elif token == "p":
-                    cell += tidy["Pr(>|t|)"].apply(
-                        _format_number, format_spec=format_spec
-                    )
+                    if add_stars:
+                        formatted = formatted + stars
+                    cell += formatted
+                elif token == "\n":
+                    cell += lbcode
                 elif token in custom_stats:
-                    assert len(custom_stats[token][i]) == len(tidy["Estimate"])
+                    # Custom stats from user
+                    assert len(custom_stats[token][i]) == len(tidy.index)
                     cell += pd.Series(custom_stats[token][i], index=tidy.index).apply(
                         _format_number, format_spec=format_spec
                     )
-                elif token == "\n":
-                    cell += lbcode
+                elif token in tidy.columns:
+                    # Any column from tidy (se, t, p, ci95l, ci95u, etc.)
+                    formatted = tidy[token].apply(_format_number, format_spec=format_spec)
+                    # Add stars if marked with *
+                    if add_stars:
+                        formatted = formatted + stars
+                    cell += formatted
                 else:
+                    # Literal character (parentheses, commas, etc.)
                     cell += token
 
             # one column per model, indexed by 'Coefficient'
@@ -478,8 +504,8 @@ class ETable(MTable):
 
         # keep/drop ordering on the index (no reset)
         idxs = (
-            _select_order_coefs(res.index.tolist(), keep, drop, exact_match)
-            if (keep or drop)
+            _select_order_coefs(res.index.tolist(), keep, drop, exact_match, order)
+            if (keep or drop or order)
             else res.index.tolist()
         )
         res = res.loc[idxs]
@@ -529,7 +555,7 @@ class ETable(MTable):
                     and (fx in fx_str.split("+"))
                     and not getattr(m, "_use_mundlak", False)
                 )
-                row.append("x" if has else "-")
+                row.append(self.DEFAULT_FE_MARKER[0] if has else self.DEFAULT_FE_MARKER[1])
             rows[fx] = row
         fe_df = pd.DataFrame.from_dict(rows, orient="index", columns=list(like_columns))
         # relabel FE names
@@ -706,41 +732,75 @@ def _relabel_index(index, labels=None, stats_labels=None):
     return index
 
 
-def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
+def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     """
-    Parse the coef_fmt string with format specifiers.
+    Parse the coef_fmt string with format specifiers and star markers.
 
     Parameters
     ----------
     coef_fmt: str
         The coef_fmt string. Supports format specifiers like 'b:.3f', 'se:.2e', etc.
+        Can also use any column name from the dataframe extracted with coef_table().
+        Append '*' after a token to add significance stars: 'b*', 'b:.3f*', 't:*', etc.
     custom_stats: dict
-        A dictionary of custom statistics. Key should be lowercased (e.g., simul_intv).
-        If you provide "b", "se", "t", or "p" as a key, it will overwrite the default
-        values.
+        A dictionary of custom statistics.
+    available_columns: set
+        Set of available column names from from the dataframe extracted with coef_table(). Used to validate
+        tokens in the coef_fmt string.
 
     Returns
     -------
     coef_fmt_elements: list
-        List of parsed elements, each being a dict with 'token' and 'format' keys.
+        List of parsed elements, each being a dict with 'token', 'format', and 'add_stars' keys.
     coef_fmt_title: str
         The title for the coef_fmt string.
     """
+    # Reserved tokens that cannot be overridden
+    reserved_tokens = ["b", "se", "t", "p"]
+    
+    # Validate custom_stats don't use reserved tokens
     custom_elements = list(custom_stats.keys())
-    if any(x in ["b", "se", "t", "p"] for x in custom_elements):
+    if any(x in reserved_tokens for x in custom_elements):
         raise ValueError(
-            "You cannot use 'b', 'se', 't', or 'p' as a key in custom_stats."
+            f"Custom stats cannot use reserved tokens: {reserved_tokens}"
         )
+    
+    # Validate custom_stats don't conflict with available columns
+    if available_columns:
+        conflicting = [x for x in custom_elements if x in available_columns]
+        if conflicting:
+            raise ValueError(
+                f"Custom stats cannot use column names from tidy dataframe: {conflicting}. "
+                f"These columns are already available: {sorted(available_columns)}"
+            )
 
+    # Title mappings
     title_map = {
         "b": "Coefficient",
         "se": "Std. Error",
         "t": "t-stats",
         "p": "p-value",
+        "hr": "Hazard Ratio",
+        "ci95l": "95% CI Lower",
+        "ci95u": "95% CI Upper",
+        "ci90l": "90% CI Lower",
+        "ci90u": "90% CI Upper",
     }
 
-    # All possible tokens (base + custom)
-    all_tokens = ["b", "se", "t", "p"] + custom_elements
+    # Build list of all valid tokens
+    # Priority: reserved > available columns > custom_stats
+    all_tokens = reserved_tokens.copy()
+    
+    if available_columns:
+        # Add tidy columns that aren't reserved
+        tidy_tokens = [
+            col for col in available_columns 
+            if col not in reserved_tokens
+        ]
+        all_tokens.extend(tidy_tokens)
+    
+    # Add custom stats last (lowest priority, already validated for conflicts)
+    all_tokens.extend(custom_elements)
 
     coef_fmt_elements = []
     title_parts = []
@@ -750,7 +810,8 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
         found_token = False
 
         # Check for tokens with potential format specifiers
-        for token in all_tokens:
+        # Sort by length descending to match longer tokens first (e.g., "Std. Error" before "Std")
+        for token in sorted(all_tokens, key=len, reverse=True):
             if coef_fmt[i:].startswith(token):
                 # Check if followed by format specifier
                 after_token_pos = i + len(token)
@@ -758,11 +819,10 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
                     # Find the end of the format specifier
                     format_start = after_token_pos + 1
                     format_end = format_start
-                    # Read until we hit a delimiter or token (but allow comma in format spec)
+                    # Stop at delimiters: space, newline, brackets, backslash, comma, or *
                     while (
                         format_end < len(coef_fmt)
-                        and coef_fmt[format_end]
-                        not in [" ", "\n", "(", ")", "[", "]", "\\"]
+                        and coef_fmt[format_end] not in [" ", "\n", "(", ")", "[", "]", "\\", ",", "*"]
                         and not any(
                             coef_fmt[format_end:].startswith(t) for t in all_tokens
                         )
@@ -770,12 +830,21 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
                         format_end += 1
 
                     format_spec = coef_fmt[format_start:format_end]
-                    coef_fmt_elements.append({"token": token, "format": format_spec})
+                    # Check if * follows (after format spec)
+                    add_stars = False
+                    if format_end < len(coef_fmt) and coef_fmt[format_end] == "*":
+                        add_stars = True
+                        format_end += 1
+                    coef_fmt_elements.append({"token": token, "format": format_spec, "add_stars": add_stars})
                     title_parts.append(title_map.get(token, token))
                     i = format_end
                 else:
-                    # No format specifier
-                    coef_fmt_elements.append({"token": token, "format": None})
+                    # No format specifier, check for * suffix
+                    add_stars = False
+                    if after_token_pos < len(coef_fmt) and coef_fmt[after_token_pos] == "*":
+                        add_stars = True
+                        after_token_pos += 1
+                    coef_fmt_elements.append({"token": token, "format": None, "add_stars": add_stars})
                     title_parts.append(title_map.get(token, token))
                     i = after_token_pos
                 found_token = True
@@ -784,29 +853,18 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict):
         if not found_token:
             # Handle special sequences and single characters
             if coef_fmt[i : i + 2] == "\\n":
-                coef_fmt_elements.append({"token": "\n", "format": None})
+                coef_fmt_elements.append({"token": "\n", "format": None, "add_stars": False})
                 title_parts.append("\n")
                 i += 2
-            elif coef_fmt[i : i + 2] == "\\(":
-                coef_fmt_elements.append({"token": r"\(", "format": None})
-                title_parts.append("(")
-                i += 2
-            elif coef_fmt[i : i + 2] == "\\)":
-                coef_fmt_elements.append({"token": r"\)", "format": None})
-                title_parts.append(")")
-                i += 2
-            elif coef_fmt[i : i + 2] == "\\[":
-                coef_fmt_elements.append({"token": r"\[", "format": None})
-                title_parts.append("[")
-                i += 2
-            elif coef_fmt[i : i + 2] == "\\]":
-                coef_fmt_elements.append({"token": r"\]", "format": None})
-                title_parts.append("]")
+            elif coef_fmt[i : i + 2] in ["\\(", "\\)", "\\[", "\\]"]:
+                escaped_char = coef_fmt[i+1]
+                coef_fmt_elements.append({"token": coef_fmt[i:i+2], "format": None, "add_stars": False})
+                title_parts.append(escaped_char)
                 i += 2
             else:
                 # Single character literal
                 char = coef_fmt[i]
-                coef_fmt_elements.append({"token": char, "format": None})
+                coef_fmt_elements.append({"token": char, "format": None, "add_stars": False})
                 title_parts.append(char)
                 i += 1
 
@@ -819,6 +877,7 @@ def _select_order_coefs(
     keep: list | str | None = None,
     drop: list | str | None = None,
     exact_match: bool | None = False,
+    order: list[str] | None = None,
 ):
     r"""
     Select and order the coefficients based on the pattern.
@@ -844,6 +903,12 @@ def _select_order_coefs(
         Whether to use exact match for `keep` and `drop`. Default is False.
         If True, the pattern will be matched exactly to the coefficient name
         instead of using regular expressions.
+    order: list[str], optional
+        Explicit order for coefficients in the output table. Provide a list of 
+        coefficient names (after keep/drop filtering) to specify the exact order.
+        Any coefficients not in the list will appear at the end in their original order.
+        This is applied after keep/drop filtering.
+        Example: order=['age', 'female', 'education'] will place these first.
 
     Returns
     -------
@@ -862,6 +927,8 @@ def _select_order_coefs(
 
     coefs = list(coefs)
     res = [] if keep else coefs[:]  # Store matched coefs
+    
+    # Apply keep patterns
     for pattern in keep:
         _coefs = []  # Store remaining coefs
         for coef in coefs:
@@ -873,6 +940,7 @@ def _select_order_coefs(
                 _coefs.append(coef)
         coefs = _coefs
 
+    # Apply drop patterns
     for pattern in drop:
         _coefs = []
         for coef in res:  # Remove previously matched coefs that match the drop pattern
@@ -883,6 +951,20 @@ def _select_order_coefs(
             else:
                 _coefs.append(coef)
         res = _coefs
+
+    # Apply explicit ordering if provided
+    if order is not None:
+        ordered_res = []
+        remaining = list(res)
+        
+        for coef_name in order:
+            if coef_name in remaining:
+                ordered_res.append(coef_name)
+                remaining.remove(coef_name)
+        
+        # Append any remaining coefficients not in order list
+        ordered_res.extend(remaining)
+        res = ordered_res
 
     return res
 
