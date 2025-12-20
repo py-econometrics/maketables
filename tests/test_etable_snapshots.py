@@ -92,3 +92,55 @@ class TestStatsmodelsSnapshots:
         table = mt.ETable([statsmodels_probit])
         latex = table.make(type="tex")
         assert latex == snapshot
+
+
+class TestLinearmodelsSnapshots:
+    """Snapshot tests for linearmodels output formats."""
+
+    def test_panelols_html(self, linearmodels_panelols, snapshot):
+        """Linearmodels PanelOLS HTML output."""
+        table = mt.ETable([linearmodels_panelols])
+        html = normalize_html(table.make(type="gt").as_raw_html())
+        assert html == snapshot
+
+    def test_panelols_latex(self, linearmodels_panelols, snapshot):
+        """Linearmodels PanelOLS LaTeX output."""
+        table = mt.ETable([linearmodels_panelols])
+        latex = table.make(type="tex")
+        assert latex == snapshot
+
+    def test_pooledols_html(self, linearmodels_pooledols, snapshot):
+        """Linearmodels PooledOLS HTML output."""
+        table = mt.ETable([linearmodels_pooledols])
+        html = normalize_html(table.make(type="gt").as_raw_html())
+        assert html == snapshot
+
+    def test_pooledols_latex(self, linearmodels_pooledols, snapshot):
+        """Linearmodels PooledOLS LaTeX output."""
+        table = mt.ETable([linearmodels_pooledols])
+        latex = table.make(type="tex")
+        assert latex == snapshot
+
+    def test_absorbingls_html(self, linearmodels_absorbingls, snapshot):
+        """Linearmodels AbsorbingLS HTML output."""
+        table = mt.ETable([linearmodels_absorbingls])
+        html = normalize_html(table.make(type="gt").as_raw_html())
+        assert html == snapshot
+
+    def test_absorbingls_latex(self, linearmodels_absorbingls, snapshot):
+        """Linearmodels AbsorbingLS LaTeX output."""
+        table = mt.ETable([linearmodels_absorbingls])
+        latex = table.make(type="tex")
+        assert latex == snapshot
+
+    def test_iv2sls_html(self, linearmodels_iv2sls, snapshot):
+        """Linearmodels IV2SLS HTML output."""
+        table = mt.ETable([linearmodels_iv2sls])
+        html = normalize_html(table.make(type="gt").as_raw_html())
+        assert html == snapshot
+
+    def test_iv2sls_latex(self, linearmodels_iv2sls, snapshot):
+        """Linearmodels IV2SLS LaTeX output."""
+        table = mt.ETable([linearmodels_iv2sls])
+        latex = table.make(type="tex")
+        assert latex == snapshot
