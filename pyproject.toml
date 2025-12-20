@@ -50,6 +50,10 @@ Issues = "https://github.com/py-econometrics/maketables/issues"
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "syrupy>=4.0.0",
+    "pyfixest>=0.13.0",
+    "statsmodels>=0.13.0",
+    "linearmodels>=4.0",
     "black>=22.0",
     "flake8>=5.0",
     "mypy>=1.0",
@@ -99,8 +103,16 @@ linearmodels = { features = ["linearmodels", "docs"], solve-group = "default" }
 lifelines = { features = ["lifelines", "docs"], solve-group = "default" }
 publish = { features = ["publish"], solve-group = "default" }
 
+[tool.pixi.feature.dev.pypi-dependencies]
+maketables = { path = ".", editable = true, extras = ["dev"] }
+
 [tool.pixi.feature.dev.tasks]
 check = "pre-commit run --all-files"
+tests = "pytest tests/ -v"
+tests-update-snapshots = "pytest tests/ --snapshot-update -v"
+
+[tool.pytest.ini_options]
+pythonpath = ["tests"]
 
 [tool.pixi.feature.docs.tasks]
 run-all-notebooks = "jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb DocxTables.ipynb LatexTables.ipynb WritingPapers.ipynb getting-started.ipynb"
@@ -110,7 +122,6 @@ docs-install-tex = "quarto install tinytex"
 [tool.pixi.feature.publish.pypi-dependencies]
 build = ">=1.0"
 twine = ">=5.0"
-
 [tool.pixi.feature.publish.tasks]
 # Step 1: Clean old builds
 clean = { cmd = "python -c \"import shutil; import pathlib; [shutil.rmtree(p, ignore_errors=True) for p in [pathlib.Path('dist'), pathlib.Path('build')] + list(pathlib.Path('.').glob('*.egg-info'))]\"" }
