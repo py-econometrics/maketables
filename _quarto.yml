@@ -25,12 +25,14 @@ website:
         menu:
           - href: docs/MTable.ipynb
             text: "Custom Tables with MTable"
-          - href: docs\TypstTables.ipynb
+          - href: docs/TypstTables.ipynb
             text: "Output to Typst"
           - href: docs/pystataIntegration.ipynb
             text: "Stata Integration"
           - href: docs/UsingLabels.ipynb
             text: "Using Variable Labels"
+          - href: docs/Lifelines.ipynb
+            text: "Lifelines Survival Models"
           - href: docs/AddingMethods.ipynb
             text: "Making Packages Compatible"
           - text: "API Reference"
