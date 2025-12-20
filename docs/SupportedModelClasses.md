@@ -3,13 +3,10 @@
 `maketables` supports creating regression tables for models from currently the following packages: 
 
 - [PyFixest](https://github.com/py-econometrics/pyfixest)
-- [Statsmodels](https://github.com/statsmodels/statsmodels)
-- [Linearmodels](https://github.com/bashtage/linearmodels)
+- [statsmodels](https://github.com/statsmodels/statsmodels)
+- [linearmodels](https://github.com/bashtage/linearmodels)
+- [lifelines](https://github.com/CamDavidsonPilon/lifelines)
 - [Stata](https://www.stata.com/python/pystata19/) (see [documentation](pystataIntegration.ipynb))
-
-<br>
-<br>
-<br>
 
 # Adding Support for New Packages
 
