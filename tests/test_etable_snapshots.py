@@ -52,3 +52,43 @@ class TestETableSnapshots:
         table = mt.ETable([fitted_model_fe])
         latex = table.make(type="tex")
         assert latex == snapshot
+
+
+class TestStatsmodelsSnapshots:
+    """Snapshot tests for statsmodels output formats."""
+
+    def test_ols_html(self, statsmodels_ols, snapshot):
+        """Statsmodels OLS HTML output."""
+        table = mt.ETable([statsmodels_ols])
+        html = normalize_html(table.make(type="gt").as_raw_html())
+        assert html == snapshot
+
+    def test_ols_latex(self, statsmodels_ols, snapshot):
+        """Statsmodels OLS LaTeX output."""
+        table = mt.ETable([statsmodels_ols])
+        latex = table.make(type="tex")
+        assert latex == snapshot
+
+    def test_logit_html(self, statsmodels_logit, snapshot):
+        """Statsmodels Logit HTML output."""
+        table = mt.ETable([statsmodels_logit])
+        html = normalize_html(table.make(type="gt").as_raw_html())
+        assert html == snapshot
+
+    def test_logit_latex(self, statsmodels_logit, snapshot):
+        """Statsmodels Logit LaTeX output."""
+        table = mt.ETable([statsmodels_logit])
+        latex = table.make(type="tex")
+        assert latex == snapshot
+
+    def test_probit_html(self, statsmodels_probit, snapshot):
+        """Statsmodels Probit HTML output."""
+        table = mt.ETable([statsmodels_probit])
+        html = normalize_html(table.make(type="gt").as_raw_html())
+        assert html == snapshot
+
+    def test_probit_latex(self, statsmodels_probit, snapshot):
+        """Statsmodels Probit LaTeX output."""
+        table = mt.ETable([statsmodels_probit])
+        latex = table.make(type="tex")
+        assert latex == snapshot

@@ -52,6 +52,7 @@ dev = [
     "pytest-cov>=4.0",
     "syrupy>=4.0.0",
     "pyfixest>=0.13.0",
+    "statsmodels>=0.13.0",
     "black>=22.0",
     "flake8>=5.0",
     "mypy>=1.0",
