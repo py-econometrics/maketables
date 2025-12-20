@@ -23,6 +23,7 @@ The package supports multiple output formats including:
 - [PyFixest](https://github.com/py-econometrics/pyfixest)
 - [statsmodels](https://github.com/statsmodels/statsmodels)
 - [linearmodels](https://github.com/bashtage/linearmodels)
+- [lifelines](https://github.com/CamDavidsonPilon/lifelines)
 
 ## Origin
 
