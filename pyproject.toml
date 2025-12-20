@@ -50,6 +50,8 @@ Issues = "https://github.com/py-econometrics/maketables/issues"
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "syrupy>=4.0.0",
+    "pyfixest>=0.13.0",
     "black>=22.0",
     "flake8>=5.0",
     "mypy>=1.0",
@@ -94,8 +96,13 @@ pystata = { features = ["pystata", "docs"], solve-group = "default" }
 linearmodels = { features = ["linearmodels", "docs"], solve-group = "default" }
 publish = { features = ["publish"], solve-group = "default" }
 
+[tool.pixi.feature.dev.pypi-dependencies]
+maketables = { path = ".", editable = true, extras = ["dev"] }
+
 [tool.pixi.feature.dev.tasks]
 check = "pre-commit run --all-files"
+tests = "pytest tests/ -v"
+tests-update-snapshots = "pytest tests/ --snapshot-update -v"
 
 [tool.pixi.feature.docs.tasks]
 run-all-notebooks = "jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb DocxTables.ipynb LatexTables.ipynb WritingPapers.ipynb getting-started.ipynb"
