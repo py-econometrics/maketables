@@ -24,6 +24,7 @@ The package supports multiple output formats including:
 - [PyFixest](https://github.com/py-econometrics/pyfixest)
 - [statsmodels](https://github.com/statsmodels/statsmodels)
 - [linearmodels](https://github.com/bashtage/linearmodels)
+- [lifelines](https://github.com/CamDavidsonPilon/lifelines)
 
 ## Origin
 
@@ -131,5 +132,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Built on the excellent [pyfixest](https://github.com/py-econometrics/pyfixest) package for econometric models
+- Built on the excellent [pyfixest](https://github.com/py-econometrics/pyfixest) package for econometric models. We gratefully acknowledge the contributors to pyfixest's etable: [@s3alfisc](https://github.com/s3alfisc),
+[@dsliwka](https://github.com/dsliwka), [@Wenzhi-Ding](https://github.com/Wenzhi-Ding),
+[@juanitorduz](https://github.com/juanitorduz), [@NKeleher](https://github.com/NKeleher),
+[@blucap](https://github.com/blucap), [@mortizm1988](https://github.com/mortizm1988),
+[@jsr-p](https://github.com/jsr-p), [@IshwaraHegde97](https://github.com/IshwaraHegde97),
+[@Erica-Ryan](https://github.com/Erica-Ryan), [@Dpananos](https://github.com/Dpananos),
+and [@AronNemeth](https://github.com/AronNemeth).
 - Uses [Great Tables](https://github.com/posit-dev/great-tables) for beautiful HTML table output
