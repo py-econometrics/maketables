@@ -106,6 +106,9 @@ check = "pre-commit run --all-files"
 tests = "pytest tests/ -v"
 tests-update-snapshots = "pytest tests/ --snapshot-update -v"
 
+[tool.pytest.ini_options]
+pythonpath = ["tests"]
+
 [tool.pixi.feature.docs.tasks]
 run-all-notebooks = "jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb DocxTables.ipynb LatexTables.ipynb WritingPapers.ipynb getting-started.ipynb"
 docs-preview = "quarto preview"
@@ -114,7 +117,6 @@ docs-install-tex = "quarto install tinytex"
 [tool.pixi.feature.publish.pypi-dependencies]
 build = ">=1.0"
 twine = ">=5.0"
-
 [tool.pixi.feature.publish.tasks]
 # Step 1: Clean old builds
 clean = { cmd = "python -c \"import shutil; import pathlib; [shutil.rmtree(p, ignore_errors=True) for p in [pathlib.Path('dist'), pathlib.Path('build')] + list(pathlib.Path('.').glob('*.egg-info'))]\"" }

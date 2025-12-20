@@ -1,15 +1,7 @@
 """Snapshot tests for ETable coefficient formatting."""
 
-import re
-
 import maketables as mt
-
-
-def normalize_html(html: str) -> str:
-    """Normalize HTML output by replacing random IDs with a stable placeholder."""
-    normalized = re.sub(r'id="([a-z]{10})"', 'id="STABLE_ID"', html)
-    normalized = re.sub(r"#[a-z]{10}", "#STABLE_ID", normalized)
-    return normalized
+from helpers import normalize_html
 
 
 class TestETableCoefFormat:
