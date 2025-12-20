@@ -98,12 +98,12 @@
 # ---
 # name: TestETableCoefSelection.test_drop_intercept_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{1}{c}{y} \\
   \cmidrule(lr){2-2}
@@ -122,7 +122,6 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
@@ -232,12 +231,12 @@
 # ---
 # name: TestETableCoefSelection.test_exact_match_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{2}{c}{y} \\
   \cmidrule(lr){2-3}
@@ -256,7 +255,6 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
@@ -376,12 +374,12 @@
 # ---
 # name: TestETableCoefSelection.test_keep_reorders_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{2}{c}{y} \\
   \cmidrule(lr){2-3}
@@ -406,7 +404,6 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
@@ -516,12 +513,12 @@
 # ---
 # name: TestETableCoefSelection.test_keep_single_coef_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{2}{c}{y} \\
   \cmidrule(lr){2-3}
@@ -540,7 +537,6 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
@@ -655,12 +651,12 @@
 # ---
 # name: TestETableCoefSelection.test_keep_with_regex_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{2}{c}{y} \\
   \cmidrule(lr){2-3}
@@ -682,7 +678,6 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   

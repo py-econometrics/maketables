@@ -68,7 +68,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> (0.000) <br> [14721136768019674.00]</td>
+      <td class="gt_row gt_center">2.100 <br> (0.000) <br> [14721136768019674.00]</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
@@ -89,7 +89,7 @@
     <tfoot class="gt_sourcenotes">
     
     <tr>
-      <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)   [t-stats]</td>
+      <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   (Std. Error)   [t-stats]</td>
     </tr>
   
   </tfoot>
@@ -102,19 +102,19 @@
 # ---
 # name: TestETableCoefFormat.test_coef_fmt_all_stats_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{1}{c}{y} \\
   \cmidrule(lr){2-2}
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ (0.000) \\ [14721136768019674.00]} \\
+  x & \makecell{2.100 \\ (0.000) \\ [14721136768019674.00]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Intercept & \makecell{0.000 \\ (0.000) \\ [1.29]} \\
@@ -129,9 +129,8 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
-  Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)   [t-stats]\end{minipage}
+  Format of coefficient cell: Coefficient   (Std. Error)   [t-stats]\end{minipage}
   
   \end{threeparttable}
   '''
@@ -239,12 +238,12 @@
 # ---
 # name: TestETableCoefFormat.test_coef_fmt_default_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{1}{c}{y} \\
   \cmidrule(lr){2-2}
@@ -266,7 +265,6 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
@@ -342,7 +340,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.1000*** <br> (0.00)</td>
+      <td class="gt_row gt_center">2.1000 <br> (0.00)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
@@ -363,7 +361,7 @@
     <tfoot class="gt_sourcenotes">
     
     <tr>
-      <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
+      <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
   
   </tfoot>
@@ -376,19 +374,19 @@
 # ---
 # name: TestETableCoefFormat.test_coef_fmt_different_decimals_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{1}{c}{y} \\
   \cmidrule(lr){2-2}
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.1000*** \\ (0.00)} \\
+  x & \makecell{2.1000 \\ (0.00)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Intercept & \makecell{0.0000 \\ (0.00)} \\
@@ -403,9 +401,8 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
-  Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
+  Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
   '''
@@ -479,7 +476,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> (0.0000)</td>
+      <td class="gt_row gt_center">2.100 <br> (0.0000)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
@@ -500,7 +497,7 @@
     <tfoot class="gt_sourcenotes">
     
     <tr>
-      <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (p-value)</td>
+      <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   (p-value)</td>
     </tr>
   
   </tfoot>
@@ -513,19 +510,19 @@
 # ---
 # name: TestETableCoefFormat.test_coef_fmt_with_pvalue_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{1}{c}{y} \\
   \cmidrule(lr){2-2}
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ (0.0000)} \\
+  x & \makecell{2.100 \\ (0.0000)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Intercept & \makecell{0.000 \\ (0.1996)} \\
@@ -540,9 +537,8 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
-  Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (p-value)\end{minipage}
+  Format of coefficient cell: Coefficient   (p-value)\end{minipage}
   
   \end{threeparttable}
   '''
@@ -616,7 +612,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> [14721136768019674.00]</td>
+      <td class="gt_row gt_center">2.100 <br> [14721136768019674.00]</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
@@ -637,7 +633,7 @@
     <tfoot class="gt_sourcenotes">
     
     <tr>
-      <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   [t-stats]</td>
+      <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   [t-stats]</td>
     </tr>
   
   </tfoot>
@@ -650,19 +646,19 @@
 # ---
 # name: TestETableCoefFormat.test_coef_fmt_with_tstat_latex
   '''
-  \renewcommand\cellalign{t}
   \begin{threeparttable}
   \begingroup
+  \renewcommand\cellalign{t}
   \renewcommand\arraystretch{1}
   \setlength{\tabcolsep}{3pt}
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}X}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}l>{\centering\arraybackslash}X}
   \toprule
    & \multicolumn{1}{c}{y} \\
   \cmidrule(lr){2-2}
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ [14721136768019674.00]} \\
+  x & \makecell{2.100 \\ [14721136768019674.00]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Intercept & \makecell{0.000 \\ [1.29]} \\
@@ -677,9 +673,8 @@
   \bottomrule
   \end{tabularx}
   \endgroup
-  \footnotesize 
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
-  Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   [t-stats]\end{minipage}
+  Format of coefficient cell: Coefficient   [t-stats]\end{minipage}
   
   \end{threeparttable}
   '''
