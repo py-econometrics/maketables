@@ -10,6 +10,7 @@ SYMBOLS = {
     # Statistical symbols
     "R²": {
         "tex": r"$R^2$",         # LaTeX math mode superscript notation
+        "typst": "$R^2$",        # Typst math mode superscript notation
         "html": "R<sup>2</sup>", # HTML superscript tags (used by GT too)
         "docx": "R²",            # Unicode works in Word
         "plain": "R²"           # Plain text notation
@@ -18,6 +19,7 @@ SYMBOLS = {
     # Interaction symbol
     "×": {
         "tex": r"$\times$",     # LaTeX math mode times symbol
+        "typst": "$times$",     # Typst math mode times symbol
         "html": "&times;",       # HTML entity (used by GT too)
         "docx": "×",
         "plain": "x"
@@ -26,6 +28,7 @@ SYMBOLS = {
     # Mathematical comparison symbols
     "≤": {
         "tex": r"$\leq$",       # LaTeX math mode less than or equal
+        "typst": "$≤$",         # Typst math mode
         "html": "&le;",          # HTML entity (used by GT too)
         "docx": "≤",
         "plain": "<="
@@ -33,6 +36,7 @@ SYMBOLS = {
 
     "≥": {
         "tex": r"$\geq$",       # LaTeX math mode greater than or equal
+        "typst": "$≥$",         # Typst math mode
         "html": "&ge;",          # HTML entity (used by GT too)
         "docx": "≥",
         "plain": ">="
@@ -41,6 +45,7 @@ SYMBOLS = {
     # Greek letters commonly used in statistics
     "α": {
         "tex": r"$\alpha$",     # LaTeX math mode alpha
+        "typst": "$alpha$",     # Typst math mode alpha
         "html": "&alpha;",       # HTML entity (used by GT too)
         "docx": "α",
         "plain": "alpha"
@@ -48,6 +53,7 @@ SYMBOLS = {
 
     "β": {
         "tex": r"$\beta$",      # LaTeX math mode beta
+        "typst": "$beta$",      # Typst math mode beta
         "html": "&beta;",        # HTML entity (used by GT too)
         "docx": "β",
         "plain": "beta"
@@ -55,6 +61,7 @@ SYMBOLS = {
 
     "σ": {
         "tex": r"$\sigma$",     # LaTeX math mode sigma
+        "typst": "$sigma$",     # Typst math mode sigma
         "html": "&sigma;",       # HTML entity (used by GT too)
         "docx": "σ",
         "plain": "sigma"
@@ -63,6 +70,7 @@ SYMBOLS = {
     # Other common symbols
     "±": {
         "tex": r"$\pm$",        # LaTeX math mode plus-minus
+        "typst": "$plus.minus$", # Typst math mode plus-minus
         "html": "&plusmn;",      # HTML entity (used by GT too)
         "docx": "±",
         "plain": "+/-"
@@ -70,6 +78,7 @@ SYMBOLS = {
 
     "°": {
         "tex": r"$^\circ$",     # LaTeX math mode degree symbol
+        "typst": "$degree$",    # Typst math mode degree symbol
         "html": "&deg;",         # HTML entity (used by GT too)
         "docx": "°",
         "plain": "deg"
@@ -83,7 +92,7 @@ def translate_symbols(text: str, output_format: str) -> str:
 
     Args:
         text: Text containing symbols to translate
-        output_format: Target format ('tex', 'html', 'docx', 'gt', 'plain')
+        output_format: Target format ('tex', 'typst', 'html', 'docx', 'gt', 'plain')
                       Note: 'gt' is mapped to 'html' since GT uses HTML rendering
 
     Returns:

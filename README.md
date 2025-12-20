@@ -15,6 +15,7 @@ The package supports multiple output formats including:
 - Great Tables (HTML)
 - LaTeX
 - Microsoft Word (docx) documents
+- Typst
 
 ## Model Support
 
