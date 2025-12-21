@@ -215,12 +215,12 @@
     <tr>
       <th class="gt_row gt_left gt_stub">group=B</th>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">-0.000 <br> (0.000)</td>
+      <td class="gt_row gt_center">-0.000*** <br> (0.000)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.000 <br> (0.000)</td>
-      <td class="gt_row gt_center">0.000 <br> (0.000)</td>
+      <td class="gt_row gt_center">0.000** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.000*** <br> (0.000)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="3">stats</th>
@@ -267,10 +267,10 @@
   x & \makecell{2.100*** \\ (0.000)} & \makecell{2.100*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  group=B &  & \makecell{-0.000 \\ (0.000)} \\
+  group=B &  & \makecell{-0.000*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.000 \\ (0.000)} & \makecell{0.000 \\ (0.000)} \\
+  Intercept & \makecell{0.000** \\ (0.000)} & \makecell{0.000*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -361,7 +361,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.000 <br> (0.000)</td>
+      <td class="gt_row gt_center">0.000** <br> (0.000)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -406,7 +406,7 @@
   x & \makecell{2.100*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.000 \\ (0.000)} \\
+  Intercept & \makecell{0.000** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
