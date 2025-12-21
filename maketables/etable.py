@@ -252,7 +252,47 @@ class ETable(MTable):
 
         # --- bottom model stats keys (modular default) ---
         if model_stats is None:
-            model_stats = list(self.DEFAULT_MODEL_STATS)
+            # For mixed model types, collect default stats from all models and use their union
+            try:
+                from .extractors import get_extractor
+                if models:
+                    all_defaults = []
+                    has_custom_defaults = False
+                    
+                    # Collect defaults from each model
+                    for model in models:
+                        try:
+                            extractor = get_extractor(model)
+                            if hasattr(extractor, 'default_stat_keys'):
+                                ext_defaults = extractor.default_stat_keys(model)
+                                if ext_defaults is not None:
+                                    all_defaults.extend(ext_defaults)
+                                    has_custom_defaults = True
+                                else:
+                                    # Model extractor exists but returns None, use general defaults
+                                    all_defaults.extend(self.DEFAULT_MODEL_STATS)
+                            else:
+                                # Extractor doesn't have default_stat_keys, use general defaults
+                                all_defaults.extend(self.DEFAULT_MODEL_STATS)
+                        except Exception:
+                            # If extractor lookup fails, use general defaults
+                            all_defaults.extend(self.DEFAULT_MODEL_STATS)
+                    
+                    # Use union of all defaults, preserving order
+                    if all_defaults:
+                        seen = set()
+                        model_stats = []
+                        for stat in all_defaults:
+                            if stat not in seen:
+                                seen.add(stat)
+                                model_stats.append(stat)
+                    else:
+                        model_stats = list(self.DEFAULT_MODEL_STATS)
+                else:
+                    model_stats = list(self.DEFAULT_MODEL_STATS)
+            except Exception:
+                # If anything goes wrong, fall back to defaults
+                model_stats = list(self.DEFAULT_MODEL_STATS)
         model_stats = list(model_stats)
         assert all(isinstance(s, str) for s in model_stats)
         assert len(model_stats) == len(set(model_stats))
@@ -577,8 +617,20 @@ class ETable(MTable):
     ) -> pd.DataFrame:
         # builtin stats via extractor
         def label_of(k: str) -> str:
-            default = self.DEFAULT_STAT_LABELS.get(k, k)
-            return stat_labels.get(k, default) if stat_labels else default
+            # Priority: user override > extractor labels > ETable defaults
+            if stat_labels and k in stat_labels:
+                return stat_labels[k]
+            # Check if extractor has stat_labels() method (new optional feature)
+            try:
+                extractor = get_extractor(models[0]) if models else None
+                if extractor and hasattr(extractor, "stat_labels"):
+                    ext_labels = extractor.stat_labels(models[0]) or {}
+                    if k in ext_labels:
+                        return ext_labels[k]
+            except Exception:
+                pass  # If extractor lookup fails, continue to defaults
+            # Fall back to ETable's canonical defaults
+            return self.DEFAULT_STAT_LABELS.get(k, k)
 
         rows = {
             label_of(k): [self._extract_stat(m, k) for m in models] for k in stat_keys

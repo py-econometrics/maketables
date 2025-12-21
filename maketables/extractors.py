@@ -131,6 +131,38 @@ class ModelExtractor(Protocol):
         """
         ...
 
+    def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """
+        Return custom stat labels for this model type (optional).
+
+        This allows extractors to provide model-type-specific or context-specific
+        labels for statistics. For example, an extractor might label 'r2' as
+        'R² Within' for panel models or 'Pseudo R²' for logit models.
+
+        Returns
+        -------
+            Dictionary mapping stat keys to human-readable labels, or None to use
+            ETable's DEFAULT_STAT_LABELS as fallback.
+        """
+        ...
+
+    def default_stat_keys(self, model: Any) -> list[str] | None:
+        """
+        Return the default statistics to display for this model type (optional).
+
+        This allows extractors to specify which statistics are most relevant for a
+        particular model type. For example, linear models might default to
+        ['N', 'r2', 'adj_r2', 'fvalue'], while logit models might prefer
+        ['N', 'pseudo_r2', 'll', 'aic'].
+
+        Returns
+        -------
+            List of stat keys to display by default, or None to let ETable choose.
+            If None, ETable will either use the user-provided stat_keys or fall
+            back to a basic set like ['N', 'r2'] for compatibility.
+        """
+        ...
+
 
 _EXTRACTOR_REGISTRY: list[ModelExtractor] = []
 
@@ -223,6 +255,20 @@ class PluginExtractor:
             # return None if not available.
             return set()
         return set()
+    
+    def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """Extract stat labels from plugin attribute."""
+        if hasattr(model, "__maketables_stat_labels__"):
+            return model.__maketables_stat_labels__
+        return None
+    
+    def default_stat_keys(self, model: Any) -> list[str] | None:
+        """Extract default stat keys from plugin attribute."""
+        if hasattr(model, "__maketables_default_stat_keys__"):
+            keys = model.__maketables_default_stat_keys__
+            if isinstance(keys, list) and all(isinstance(k, str) for k in keys):
+                return keys
+        return None
 
 
 def get_extractor(model: Any) -> ModelExtractor:
@@ -322,6 +368,7 @@ def inspect_model(model: Any, long: bool = False) -> None:
     
     # Extract and display coefficient table structure
     print("COEFFICIENT TABLE COLUMNS:")
+    print("  Use these in coef_fmt parameter (e.g., coef_fmt='b:.3f* \\n (se:.3f)')")
     try:
         coef_df = extractor.coef_table(model)
         
@@ -342,13 +389,14 @@ def inspect_model(model: Any, long: bool = False) -> None:
         else:
             # Concise output - just list non-empty columns
             non_empty_cols = [col for col in coef_df.columns if coef_df[col].notna().sum() > 0]
-            print(f"  {', '.join(non_empty_cols)}")
+            print(f"  Available: {', '.join(non_empty_cols)}")
             
     except Exception as e:
         print(f"  Error: {e}")
     
     # Extract and display available statistics
     print(f"\nAVAILABLE STATISTICS:")
+    print("  Use these in model_stats parameter (e.g., model_stats=['N', 'r2', 'aic'])")
     try:
         # Try common stats and collect non-None values
         common_stats = [
@@ -370,6 +418,14 @@ def inspect_model(model: Any, long: bool = False) -> None:
             except Exception:
                 pass
         
+        # Check for default stats from extractor
+        default_stats = None
+        if hasattr(extractor, 'default_stat_keys'):
+            try:
+                default_stats = extractor.default_stat_keys(model)
+            except Exception:
+                pass
+        
         if long:
             # Detailed output with values
             print("-" * 60)
@@ -377,16 +433,22 @@ def inspect_model(model: Any, long: bool = False) -> None:
             if supported:
                 print(f"Supported stats ({len(supported)}): {', '.join(sorted(supported))}")
             
+            if default_stats:
+                print(f"\nDefault stats (auto-shown in ETable): {', '.join(default_stats)}")
+            
             print("\nExtracted values (non-empty):")
             if available_stats:
                 for stat_key in available_stats:
-                    print(f"  {stat_key:15s} = {stat_values[stat_key]}")
+                    marker = " (default)" if default_stats and stat_key in default_stats else ""
+                    print(f"  {stat_key:15s} = {stat_values[stat_key]}{marker}")
             else:
                 print("  (no statistics extracted)")
         else:
             # Concise output - just list available stats
             if available_stats:
-                print(f"  {', '.join(available_stats)}")
+                print(f"  Available: {', '.join(available_stats)}")
+                if default_stats:
+                    print(f"  Defaults: {', '.join(default_stats)}")
             else:
                 print("  (none)")
             
@@ -787,6 +849,20 @@ class StatsmodelsExtractor:
             k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
         }
 
+    def default_stat_keys(self, model: Any) -> list[str] | None:
+        """
+        Return default statistics appropriate for the model type.
+
+        Logit/Probit models default to: ['N', 'pseudo_r2', 'll']
+        Other models use ETable defaults.
+        """
+        # Check if this is a logit or probit model by checking the wrapped model class
+        if hasattr(model, 'model') and hasattr(model.model, '__class__'):
+            model_class = model.model.__class__.__name__
+            if model_class in ('Logit', 'Probit', 'MNLogit'):
+                return ['N', 'pseudo_r2', 'll']
+        return None
+    
 
 class LinearmodelsExtractor:
     """Extractor for linearmodels regression results."""
@@ -1230,6 +1306,10 @@ class LifelinesExtractor:
 
     def supported_stats(self, model: Any) -> set[str]:
         return {k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None}
+
+    def default_stat_keys(self, model: Any) -> list[str] | None:
+        """Return default statistics for survival models."""
+        return ["N", "events", "concordance", "ll"]
 
 
 # Register lifelines extractor
