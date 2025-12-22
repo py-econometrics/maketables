@@ -5500,7 +5500,7 @@ packages:
 - pypi: ./
   name: maketables
   version: 0.1.7
-  sha256: 7f0eb0dce74e7a789d9bcbf4b9760930eba00c4bb03a86bd274dbbc8c8d13d19
+  sha256: dfaf7fe3133b3dc621242e3ab39afe0f957caba8bf653f2345b10dd16c076c01
   requires_dist:
   - numpy>=1.20.0
   - pandas>=1.3.0
