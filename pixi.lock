@@ -5499,8 +5499,8 @@ packages:
   requires_python: '>=3.8'
 - pypi: ./
   name: maketables
-  version: 0.1.6
-  sha256: c6971ff83e253a11d408bbab5564d769dff7d597751cea719027994fa3316bdd
+  version: 0.1.7
+  sha256: 7f0eb0dce74e7a789d9bcbf4b9760930eba00c4bb03a86bd274dbbc8c8d13d19
   requires_dist:
   - numpy>=1.20.0
   - pandas>=1.3.0
@@ -7188,19 +7188,19 @@ packages:
   - black ; extra == 'testing'
   - isort ; extra == 'testing'
   - twine ; extra == 'packaging'
-  - pytest-cov ; extra == 'all'
+  - markupsafe==2.0.1 ; extra == 'all'
+  - quantities ; extra == 'all'
   - pytest>=4.6 ; extra == 'all'
   - matplotlib ; extra == 'all'
-  - quantities ; extra == 'all'
   - sphinx ; extra == 'all'
-  - markupsafe==2.0.1 ; extra == 'all'
-  - alabaster<0.7.12 ; extra == 'all'
-  - coverage ; extra == 'all'
+  - jinja2<3.0 ; extra == 'all'
+  - pytest-cov ; extra == 'all'
+  - twine ; extra == 'all'
   - black ; extra == 'all'
   - numpy ; extra == 'all'
-  - twine ; extra == 'all'
+  - alabaster<0.7.12 ; extra == 'all'
+  - coverage ; extra == 'all'
   - isort ; extra == 'all'
-  - jinja2<3.0 ; extra == 'all'
 - pypi: https://files.pythonhosted.org/packages/10/5e/1aa9a93198c6b64513c9d7752de7422c06402de6600a8767da1524f9570b/pyparsing-3.2.5-py3-none-any.whl
   name: pyparsing
   version: 3.2.5

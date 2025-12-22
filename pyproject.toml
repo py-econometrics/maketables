@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "maketables"
-version = "0.1.6"
+version = "0.1.7"
 authors = [
     {name = "Alexander Fischer", email = "alexander-fischer1801@t-online.de"},
     {name = "Dirk Sliwka", email = "dirk.sliwka@uni-koeln.de"},
@@ -39,7 +39,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/py-econometrics/maketables"
+Homepage = "https://py-econometrics.github.io/maketables/"
 Documentation = "https://py-econometrics.github.io/maketables/"
 Repository = "https://github.com/py-econometrics/maketables"
 Issues = "https://github.com/py-econometrics/maketables/issues"
