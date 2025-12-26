@@ -3,7 +3,6 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit)
 ![Python Versions](https://img.shields.io/badge/Python-3.8–3.14-blue)
 [![PyPI -Version](https://img.shields.io/pypi/v/maketables.svg)](https://pypi.org/project/maketables/)
-[![Known Bugs](https://img.shields.io/github/issues/py-econometrics/maketables/bug?color=red&label=Bugs)](https://github.com/py-econometrics/maketables/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
 [![File an Issue](https://img.shields.io/github/issues/py-econometrics/maketables)](https://github.com/py-econometrics/maketables/issues)
 [![Downloads](https://static.pepy.tech/badge/maketables)](https://pepy.tech/project/maketables)
 [![Downloads](https://static.pepy.tech/badge/maketables/month)](https://pepy.tech/project/maketables)
@@ -45,7 +44,7 @@ MakeTables originated as the table output functionality within the [pyfixest](ht
 
 ## Authors
 
-- Alexander Fischer [https://github.com/s3alfischer](https://github.com/s3alfisc)
+- Alexander Fischer [https://github.com/s3alfisc](https://github.com/s3alfisc)
 - Dirk Sliwka [https://dsliwka.github.io/](https://dsliwka.github.io)
 
 ## Installation
