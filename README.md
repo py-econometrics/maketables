@@ -1,7 +1,7 @@
 # MakeTables
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit)
-![Python Versions](https://img.shields.io/badge/Python-3.9–3.14-blue)
+![Python Versions](https://img.shields.io/badge/Python-3.8–3.14-blue)
 [![PyPI -Version](https://img.shields.io/pypi/v/maketables.svg)](https://pypi.org/project/maketables/)
 [![Known Bugs](https://img.shields.io/github/issues/py-econometrics/maketables/bug?color=red&label=Bugs)](https://github.com/py-econometrics/maketables/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
 [![File an Issue](https://img.shields.io/github/issues/py-econometrics/maketables)](https://github.com/py-econometrics/maketables/issues)
