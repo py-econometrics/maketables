@@ -37,6 +37,8 @@ The package supports multiple output formats including:
 - [linearmodels](https://github.com/bashtage/linearmodels)
 - [lifelines](https://github.com/CamDavidsonPilon/lifelines)
 
+It is very easy to add support for new models - either in the `maketables` code base, or from within your own package via a maketables **plug-in**. Take a look at the [docs](https://py-econometrics.github.io/maketables/docs/AddingMethods.html) to get started, and please feel free to reach out for help!
+
 ## Origin
 
 MakeTables originated as the table output functionality within the [pyfixest](https://github.com/py-econometrics/pyfixest) package and has been moved to this standalone package to provide broader table creation capabilities also supporting other statistical packages.
