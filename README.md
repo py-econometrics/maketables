@@ -1,6 +1,17 @@
 # MakeTables
 
-A Python package for creating publication-ready tables from regression results (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables with output to LaTeX, Word, and HTML via Great Tables. To get started, check out the [Getting Started Notebook](getting-started.ipynb).
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/license/mit)
+![Python Versions](https://img.shields.io/badge/Python-3.9–3.14-blue)
+[![PyPI -Version](https://img.shields.io/pypi/v/maketables.svg)](https://pypi.org/project/maketables/)
+[![Known Bugs](https://img.shields.io/github/issues/py-econometrics/maketables/bug?color=red&label=Bugs)](https://github.com/py-econometrics/maketables/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![File an Issue](https://img.shields.io/github/issues/py-econometrics/maketables)](https://github.com/py-econometrics/maketables/issues)
+[![Downloads](https://static.pepy.tech/badge/maketables)](https://pepy.tech/project/maketables)
+[![Downloads](https://static.pepy.tech/badge/maketables/month)](https://pepy.tech/project/maketables)
+[![PyPI](https://img.shields.io/pypi/v/maketables)](https://pypi.org/project/maketables)
+
+[Docs](https://py-econometrics.github.io/maketables/docs/getting-started.html) · [Function & API Reference](https://py-econometrics.github.io/maketables/reference/) · [Report Bugs & Request Features](https://github.com/py-econometrics/maketables/issues) · [Adding Support for new Model Classes](https://py-econometrics.github.io/maketables/docs/AddingMethods.html)
+
+A Python package for creating publication-ready tables from regression results (`statsmodels`, `pyfixest`, `linearmodels`), descriptive statistics, and balance tables with output to *LaTeX*, *Word*, *HTML* and *Typst* via [Great Tables](https://github.com/posit-dev/great-tables). To get started, check out the [Getting Started Notebook](https://py-econometrics.github.io/maketables/docs/getting-started.html).
 
 ## Overview
 
@@ -12,10 +23,10 @@ MakeTables provides a unified interface for generating tables such as:
 
 The package supports multiple output formats including:
 
-- Great Tables (HTML)
-- LaTeX
-- Microsoft Word (docx) documents
-- Typst
+- *Great Tables (HTML)*
+- *LaTeX*
+- *Microsoft Word (docx)* documents
+- *Typst*
 
 ## Model Support
 

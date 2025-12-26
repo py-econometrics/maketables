@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.31">
+<meta name="generator" content="quarto-1.8.26">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -61,14 +61,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="README_files/libs/clipboard/clipboard.min.js"></script>
 <script src="README_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="README_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="README_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="README_files/libs/quarto-html/popper.min.js"></script>
 <script src="README_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="README_files/libs/quarto-html/anchor.min.js"></script>
 <link href="README_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="README_files/libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="README_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="README_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="README_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="README_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="README_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -84,37 +85,67 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="maketables" class="level1">
 <h1>MakeTables</h1>
-<p>A Python package for creating publication-ready tables from statistical models and descriptive statistics. To get started quickly, check out the <a href="getting-started.ipynb">Getting Started Notebook</a>.</p>
+<p><a href="https://opensource.org/license/mit"><img src="https://img.shields.io/badge/License-MIT-green.svg" class="img-fluid" alt="License"></a> <img src="https://img.shields.io/badge/Python-3.9–3.14-blue" class="img-fluid" alt="Python Versions"> <a href="https://pypi.org/project/maketables/"><img src="https://img.shields.io/pypi/v/maketables.svg" class="img-fluid" alt="PyPI -Version"></a> <a href="https://github.com/py-econometrics/maketables/issues?q=is%3Aissue+is%3Aopen+label%3Abug"><img src="https://img.shields.io/github/issues/py-econometrics/maketables/bug?color=red&amp;label=Bugs.png" class="img-fluid" alt="Known Bugs"></a> <a href="https://github.com/py-econometrics/maketables/issues"><img src="https://img.shields.io/github/issues/py-econometrics/maketables.png" class="img-fluid" alt="File an Issue"></a> <a href="https://pepy.tech/project/maketables"><img src="https://static.pepy.tech/badge/maketables.png" class="img-fluid" alt="Downloads"></a> <a href="https://pepy.tech/project/maketables"><img src="https://static.pepy.tech/badge/maketables/month.png" class="img-fluid" alt="Downloads"></a> <a href="https://pypi.org/project/maketables"><img src="https://img.shields.io/pypi/v/maketables.png" class="img-fluid" alt="PyPI"></a></p>
+<p><a href="https://py-econometrics.github.io/maketables/docs/getting-started.html">Docs</a> · <a href="https://py-econometrics.github.io/maketables/reference/">Function &amp; API Reference</a> · <a href="https://github.com/py-econometrics/maketables/issues">Report Bugs &amp; Request Features</a> · <a href="https://py-econometrics.github.io/maketables/docs/AddingMethods.html">Adding Support for new Model Classes</a></p>
+<p>A Python package for creating publication-ready tables from regression results (<code>statsmodels</code>, <code>pyfixest</code>, <code>linearmodels</code>), descriptive statistics, and balance tables with output to <em>LaTeX</em>, <em>Word</em>, <em>HTML</em> and <em>Typst</em> via <a href="https://github.com/posit-dev/great-tables">Great Tables</a>. To get started, check out the <a href="https://py-econometrics.github.io/maketables/docs/getting-started.html">Getting Started Notebook</a>.</p>
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>MakeTables provides a unified interface for generating tables from: - Regression results (from <a href="https://www.statsmodels.org/stable/index.html">statsmodels</a>, <a href="https://py-econometrics.github.io/pyfixest/pyfixest.html">pyfixest</a>, or (still more experimental) <a href="https://bashtage.github.io/linearmodels/">linearmodels</a>) - Descriptive statistics - Custom data tables</p>
-<p>The package supports multiple output formats including: - Great Tables (HTML) - LaTeX - Microsoft Word (docx) documents</p>
+<p>MakeTables provides a unified interface for generating tables such as:</p>
+<ul>
+<li>Regression tables from <a href="https://www.statsmodels.org/stable/index.html">Statsmodels</a>, <a href="https://py-econometrics.github.io/pyfixest/pyfixest.html">PyFixest</a>, <a href="https://bashtage.github.io/linearmodels/">Linearmodels</a> and <a href="https://www.stata.com/python/pystata19/">Stata</a></li>
+<li>Descriptive statistics</li>
+<li>Balance tables</li>
+</ul>
+<p>The package supports multiple output formats including:</p>
+<ul>
+<li><em>Great Tables (HTML)</em></li>
+<li><em>LaTeX</em></li>
+<li><em>Microsoft Word (docx)</em> documents</li>
+<li><em>Typst</em></li>
+</ul>
+</section>
+<section id="model-support" class="level2">
+<h2 class="anchored" data-anchor-id="model-support">Model Support</h2>
+<p><code>maketables</code> supports creating regression tables for models from the following packages:</p>
+<ul>
+<li><a href="https://github.com/py-econometrics/pyfixest">PyFixest</a></li>
+<li><a href="https://github.com/statsmodels/statsmodels">statsmodels</a></li>
+<li><a href="https://github.com/bashtage/linearmodels">linearmodels</a></li>
+<li><a href="https://github.com/CamDavidsonPilon/lifelines">lifelines</a></li>
+</ul>
 </section>
 <section id="origin" class="level2">
 <h2 class="anchored" data-anchor-id="origin">Origin</h2>
 <p>MakeTables originated as the table output functionality within the <a href="https://github.com/py-econometrics/pyfixest">pyfixest</a> package and has been moved to this standalone package to provide broader table creation capabilities also supporting other statistical packages.</p>
 </section>
+<section id="authors" class="level2">
+<h2 class="anchored" data-anchor-id="authors">Authors</h2>
+<ul>
+<li>Alexander Fischer <a href="https://github.com/s3alfisc">https://github.com/s3alfischer</a></li>
+<li>Dirk Sliwka <a href="https://dsliwka.github.io">https://dsliwka.github.io/</a></li>
+</ul>
+</section>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
-<section id="from-pypi-when-published" class="level3">
-<h3 class="anchored" data-anchor-id="from-pypi-when-published">From PyPI (when published)</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install maketables</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="from-pypi" class="level3">
+<h3 class="anchored" data-anchor-id="from-pypi">From PyPI</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install maketables</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="development-installation" class="level3">
 <h3 class="anchored" data-anchor-id="development-installation">Development Installation</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the repository</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the repository</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/yourusername/maketables.git</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> maketables</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install in development mode</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-e</span> .</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-e</span> .</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="quick-start" class="level2">
 <h2 class="anchored" data-anchor-id="quick-start">Quick Start</h2>
 <section id="descriptive-statistics-table" class="level3">
 <h3 class="anchored" data-anchor-id="descriptive-statistics-table">Descriptive Statistics Table</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> maketables <span class="im">as</span> mt</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load your data (here using a sample Stata dataset with the import_dta function that also stores variable labels)</span></span>
@@ -122,24 +153,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create descriptive statistics table</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>mt.DTable(df, <span class="bu">vars</span><span class="op">=</span>[<span class="st">"mpg"</span>,<span class="st">"weight"</span>,<span class="st">"length"</span>], bycol<span class="op">=</span>[<span class="st">"foreign"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>mt.DTable(df, <span class="bu">vars</span><span class="op">=</span>[<span class="st">"mpg"</span>,<span class="st">"weight"</span>,<span class="st">"length"</span>], bycol<span class="op">=</span>[<span class="st">"foreign"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="regression-tables" class="level3">
 <h3 class="anchored" data-anchor-id="regression-tables">Regression Tables</h3>
 <section id="with-pyfixest" class="level4">
 <h4 class="anchored" data-anchor-id="with-pyfixest">with pyfixest</h4>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyfixest <span class="im">as</span> pf</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pyfixest <span class="im">as</span> pf</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit your models here using pyfixest</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>est1 <span class="op">=</span> pf.feols(<span class="st">"mpg ~ weight"</span>, data<span class="op">=</span>df)</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>est2 <span class="op">=</span> pf.feols(<span class="st">"mpg ~ weight + length"</span>, data<span class="op">=</span>df)</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Make the table</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>mt.ETable([est1, est2])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>mt.ETable([est1, est2])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="with-statsmodels" class="level4">
 <h4 class="anchored" data-anchor-id="with-statsmodels">with statsmodels</h4>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate a dummy variable and label it</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"foreign_i"</span>] <span class="op">=</span> (df[<span class="st">"foreign"</span>] <span class="op">==</span> <span class="st">"Foreign"</span>)<span class="op">*</span><span class="dv">1</span></span>
@@ -150,7 +181,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>est2 <span class="op">=</span> smf.probit(<span class="st">"foreign_i ~ weight + length + price"</span>, data<span class="op">=</span>df).fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Make the table</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>mt.ETable([est1, est2], model_stats<span class="op">=</span>[<span class="st">"N"</span>,<span class="st">"r2"</span>,<span class="st">"pseudo_r2"</span>,<span class="st">""</span>], model_heads<span class="op">=</span>[<span class="st">"OLS"</span>,<span class="st">"Probit"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>mt.ETable([est1, est2], model_stats<span class="op">=</span>[<span class="st">"N"</span>,<span class="st">"r2"</span>,<span class="st">"pseudo_r2"</span>,<span class="st">""</span>], model_heads<span class="op">=</span>[<span class="st">"OLS"</span>,<span class="st">"Probit"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 </section>
@@ -180,7 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="acknowledgments" class="level2">
 <h2 class="anchored" data-anchor-id="acknowledgments">Acknowledgments</h2>
 <ul>
-<li>Built on the excellent <a href="https://github.com/py-econometrics/pyfixest">pyfixest</a> package for econometric models</li>
+<li>Built on the excellent <a href="https://github.com/py-econometrics/pyfixest">pyfixest</a> package for econometric models. We gratefully acknowledge the contributors to pyfixest’s etable: <a href="https://github.com/s3alfisc"><span class="citation" data-cites="s3alfisc">@s3alfisc</span></a>, <a href="https://github.com/dsliwka"><span class="citation" data-cites="dsliwka">@dsliwka</span></a>, <a href="https://github.com/Wenzhi-Ding"><span class="citation" data-cites="Wenzhi-Ding">@Wenzhi-Ding</span></a>, <a href="https://github.com/juanitorduz"><span class="citation" data-cites="juanitorduz">@juanitorduz</span></a>, <a href="https://github.com/NKeleher"><span class="citation" data-cites="NKeleher">@NKeleher</span></a>, <a href="https://github.com/blucap"><span class="citation" data-cites="blucap">@blucap</span></a>, <a href="https://github.com/mortizm1988"><span class="citation" data-cites="mortizm1988">@mortizm1988</span></a>, <a href="https://github.com/jsr-p"><span class="citation" data-cites="jsr-p">@jsr-p</span></a>, <a href="https://github.com/IshwaraHegde97"><span class="citation" data-cites="IshwaraHegde97">@IshwaraHegde97</span></a>, <a href="https://github.com/Erica-Ryan"><span class="citation" data-cites="Erica-Ryan">@Erica-Ryan</span></a>, <a href="https://github.com/Dpananos"><span class="citation" data-cites="Dpananos">@Dpananos</span></a>, and <a href="https://github.com/AronNemeth"><span class="citation" data-cites="AronNemeth">@AronNemeth</span></a>.</li>
 <li>Uses <a href="https://github.com/posit-dev/great-tables">Great Tables</a> for beautiful HTML table output</li>
 </ul>
 </section>
@@ -239,13 +270,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
