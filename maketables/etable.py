@@ -375,15 +375,22 @@ class ETable(MTable):
         Normalize models to a list, expanding multi-model containers.
         
         Uses duck typing to detect FixestMulti-like objects (anything with a to_list() method).
-        This keeps etable.py package-agnostic.
+        This keeps etable.py package-agnostic. Recursively expands containers within lists.
         """
         # Check for multi-model container (has to_list method)
         if hasattr(models, 'to_list') and callable(getattr(models, 'to_list', None)):
             return models.to_list()
         
-        # Handle lists/tuples/ValuesView
+        # Handle lists/tuples/ValuesView - recursively expand any containers within
         if isinstance(models, (list, tuple, ValuesView)):
-            return list(models)
+            result = []
+            for item in models:
+                # Recursively normalize each item to handle lists of FixestMulti objects
+                if hasattr(item, 'to_list') and callable(getattr(item, 'to_list', None)):
+                    result.extend(item.to_list())
+                else:
+                    result.append(item)
+            return result
         
         # Single model
         return [models]
