@@ -68,7 +68,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">2.000*** <br> (0.000)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -110,7 +110,7 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ (0.000)} \\
+  x & \makecell{2.000*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]

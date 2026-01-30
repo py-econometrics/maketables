@@ -22,10 +22,11 @@ def fitted_model(simple_df):
     """Single fitted pyfixest model."""
     import pyfixest as pf
 
-    # Create deterministic relationship
-    np.random.seed(42)
-    df = simple_df.copy()
-    df["y"] = 2 * df["x"] + np.random.randn(len(df)) * 0.1
+    # Create fully deterministic data (no random component)
+    df = pd.DataFrame({
+        "x": [1.0, 2.0, 3.0, 4.0, 5.0] * 20,  # 100 rows
+        "y": [2.1, 4.1, 6.1, 8.1, 10.1] * 20,  # Deterministic: y ≈ 2*x + 0.1
+    })
     return pf.feols("y ~ x", data=df)
 
 
