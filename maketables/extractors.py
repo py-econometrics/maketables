@@ -18,8 +18,13 @@ try:
     from pyfixest.estimation.models.feiv_ import Feiv
     from pyfixest.estimation.models.feols_ import Feols
     from pyfixest.estimation.models.fepois_ import Fepois
-except Exception:
-    Feols = Fepois = Feiv = ()  # type: ignore
+except ImportError:
+    try:
+        from pyfixest.estimation.feiv_ import Feiv
+        from pyfixest.estimation.feols_ import Feols
+        from pyfixest.estimation.fepois_ import Fepois
+    except ImportError:
+        Feols = Fepois = Feiv = ()  # type: ignore
 
 try:
     # Import linearmodels result classes (not model classes!)
