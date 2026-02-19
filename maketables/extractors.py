@@ -15,9 +15,9 @@ from .importdta import get_var_labels
 
 # Optional imports for built-ins
 try:
-    from pyfixest.estimation.feiv_ import Feiv
-    from pyfixest.estimation.feols_ import Feols
-    from pyfixest.estimation.fepois_ import Fepois
+    from pyfixest.estimation.models.feiv_ import Feiv
+    from pyfixest.estimation.models.feols_ import Feols
+    from pyfixest.estimation.models.fepois_ import Fepois
 except Exception:
     Feols = Fepois = Feiv = ()  # type: ignore
 
