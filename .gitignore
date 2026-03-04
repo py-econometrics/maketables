@@ -172,6 +172,15 @@ Desktop.ini
 # Custom folder
 mystuff/
 
+# Generated output directories
+latex_output/
+output/
+README_files/
+
+# Misc
+database.db
+objects.json
+
 # Quarto
 _site/
 .quarto/
