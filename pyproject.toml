@@ -11,7 +11,7 @@ authors = [
 ]
 description = "A Python package for creating publication-ready tables from regression results (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables with output to LaTeX, Word, and HTML/Great Tables"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 
 keywords = ["tables", "statistics", "regression", "econometrics", "latex", "publication", "pyfixest", "statsmodels"]
@@ -20,11 +20,11 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
 ]
 
@@ -144,7 +144,7 @@ line-length = 88
 fix = true
 
 # Assume Python 3.12
-target-version = "py312"
+target-version = "py310"
 
 [tool.ruff.lint]
 # docs: https://docs.astral.sh/ruff/rules/
