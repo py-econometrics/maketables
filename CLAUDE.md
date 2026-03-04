@@ -30,12 +30,14 @@ pixi run -e docs docs-preview
 
 ## Architecture
 
+Source code lives in `src/maketables/` (src layout). Build uses hatchling with hatch-vcs for git-tag-based versioning.
+
 ### Class Hierarchy
 ```
-MTable (base - mtable.py)
-├── DTable (descriptive stats - dtable.py)
-│   └── BTable (balance tables - btable.py)
-└── ETable (regression tables - etable.py)
+MTable (base - src/maketables/mtable.py)
+├── DTable (descriptive stats - src/maketables/dtable.py)
+│   └── BTable (balance tables - src/maketables/btable.py)
+└── ETable (regression tables - src/maketables/etable.py)
 ```
 
 - **MTable**: Base class handling all output formats, styling, captions, notes, row grouping
@@ -43,7 +45,7 @@ MTable (base - mtable.py)
 - **DTable**: Computes descriptive statistics with grouping support
 - **BTable**: Extends DTable with group difference p-values
 
-### Extractor System (extractors.py)
+### Extractor System (src/maketables/extractors.py)
 
 Plugin architecture using a runtime-checkable `ModelExtractor` Protocol. Each extractor implements `can_handle()`, `coef_table()`, `depvar()`, `stat()`, etc. Built-in extractors for pyfixest, statsmodels, linearmodels. Optional extractors for Stata (`pystata_extractor.py`) and lifelines via conditional imports. New model types are added by implementing the Protocol and calling `register_extractor()`.
 
