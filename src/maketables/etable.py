@@ -809,7 +809,7 @@ def _is_valid_format_spec(spec: str) -> bool:
     """Check if spec is a valid Python format specification."""
     try:
         format(0.0, spec)
-    except (ValueError, TypeError):
+    except ValueError:
         return False
     return True
 
