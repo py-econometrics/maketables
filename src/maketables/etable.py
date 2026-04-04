@@ -805,6 +805,14 @@ def _relabel_index(index, labels=None, stats_labels=None):
     return index
 
 
+def _is_valid_format_spec(spec: str) -> bool:
+    """Check if spec is a valid Python format specification."""
+    try:
+        format(0.0, spec)
+    except ValueError:
+        return False
+    return True
+
 def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     """
     Parse the coef_fmt string with format specifiers and star markers.
@@ -893,9 +901,15 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
                     format_start = after_token_pos + 1
                     format_end = format_start
                     # Stop at delimiters: space, newline, brackets, backslash, comma, or *
+                    # A comma is allowed when it is a valid grouping option
+                    # (thousands separator) rather than a literal delimiter.
                     while (
                         format_end < len(coef_fmt)
-                        and coef_fmt[format_end] not in [" ", "\n", "(", ")", "[", "]", "\\", ",", "*"]
+                        and coef_fmt[format_end] not in [" ", "\n", "(", ")", "[", "]", "\\", "*"]
+                        and (
+                            coef_fmt[format_end] != ","
+                            or _is_valid_format_spec(coef_fmt[format_start:format_end + 1])
+                        )
                         and not any(
                             coef_fmt[format_end:].startswith(t) for t in all_tokens
                         )
