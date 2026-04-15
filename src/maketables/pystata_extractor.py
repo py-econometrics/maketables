@@ -662,6 +662,9 @@ class PyStataExtractor:
 
         return available_stats | mapped_stats
 
+    def sample_split(self, model: StataResultWrapper) -> str | None:
+        return None
+
 
 # Convenience functions for users
 def rstata(stata_code: str,

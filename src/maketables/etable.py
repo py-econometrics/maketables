@@ -244,9 +244,14 @@ class ETable(MTable):
             for key in custom_stats:
                 assert isinstance(custom_stats[key], list)
                 assert len(custom_stats[key]) == len(models)
-
+        if model_heads is None:
+            # Use sample splits if available
+            model_heads = [self._extract_sample_split(m) or "" for m in models]
+            if not any(model_heads):
+                model_heads = None
         if model_heads is not None:
             assert len(model_heads) == len(models)
+
 
         assert head_order in ["dh", "hd", "d", "h", ""]
 
@@ -412,6 +417,9 @@ class ETable(MTable):
 
     def _extract_fixef_string(self, model: Any) -> str | None:
         return self._get_extractor(model).fixef_string(model)
+
+    def _extract_sample_split(self, model: Any) -> str | None:
+        return self._get_extractor(model).sample_split(model)
 
     def _extract_vcov_info(self, model: Any) -> dict[str, Any]:
         return self._get_extractor(model).vcov_info(model)

@@ -168,6 +168,16 @@ class ModelExtractor(Protocol):
         """
         ...
 
+    def sample_split(self, model: Any) -> str | None:
+        """
+        Return the sample split value for models estimated on subsamples.
+
+        Returns
+        -------
+            The split value as a string, or None if not a split model.
+        """
+        ...
+
 
 _EXTRACTOR_REGISTRY: list[ModelExtractor] = []
 
@@ -273,6 +283,9 @@ class PluginExtractor:
             keys = model.__maketables_default_stat_keys__
             if isinstance(keys, list) and all(isinstance(k, str) for k in keys):
                 return keys
+        return None
+
+    def sample_split(self, model: Any) -> str | None:
         return None
 
 
@@ -683,6 +696,15 @@ class PyFixestExtractor:
             "clustervar": getattr(model, "_clustervar", None),
         }
 
+    def sample_split(self, model: Any) -> str | None:
+        """Return the split value or None if not a split model."""
+        if getattr(model, "_sample_split_var", None) is None:
+            # PyFixest always sets _sample_split_value
+            # We identify an actual sample split based on _sample_split_var
+            return None
+        val = getattr(model, "_sample_split_value", None)
+        return str(val) if val is not None else None
+
     def var_labels(self, model: Any) -> dict[str, str] | None:
         """Extract variable labels from the model's data DataFrame when available."""
         df = getattr(model, "_data", None)
@@ -870,7 +892,10 @@ class StatsmodelsExtractor:
             if model_class in ('Logit', 'Probit', 'MNLogit'):
                 return ['N', 'pseudo_r2', 'll']
         return None
-    
+
+    def sample_split(self, model: Any) -> str | None:
+        return None
+
 
 class LinearmodelsExtractor:
     """Extractor for linearmodels regression results."""
@@ -1109,6 +1134,9 @@ class LinearmodelsExtractor:
             k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
         }
 
+    def sample_split(self, model: Any) -> str | None:
+        return None
+
 # Register built-ins
 clear_extractors()
 register_extractor(PyFixestExtractor())
@@ -1318,6 +1346,9 @@ class LifelinesExtractor:
     def default_stat_keys(self, model: Any) -> list[str] | None:
         """Return default statistics for survival models."""
         return ["N", "events", "concordance", "ll"]
+
+    def sample_split(self, model: Any) -> str | None:
+        return None
 
 
 # Register lifelines extractor

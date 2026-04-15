@@ -5,8 +5,6 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
-    options:
-      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -229,8 +227,6 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
-    options:
-      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -759,8 +755,6 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
-    options:
-      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -1274,8 +1268,6 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
-    options:
-      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -1801,8 +1793,6 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
-    options:
-      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -2328,8 +2318,6 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
-    options:
-      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -2646,8 +2634,6 @@ environments:
     - url: https://conda.anaconda.org/conda-forge/
     indexes:
     - https://pypi.org/simple
-    options:
-      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -5488,7 +5474,7 @@ packages:
   requires_python: '>=3.8'
 - pypi: ./
   name: maketables
-  version: 0.1.8.dev29+g8bcb3a5f1
+  version: 0.1.9.dev7+g2297d87ae.d20260414
   sha256: fa727ff50a60554f415e92a3683cf1dd2d0aa8f21e9e167421e0bba300744479
   requires_dist:
   - great-tables>=0.2.0
@@ -5520,6 +5506,7 @@ packages:
   - pystata>=0.0.1 ; extra == 'pystata'
   - stata-setup>=0.1.0 ; extra == 'pystata'
   requires_python: '>=3.10'
+  editable: true
 - pypi: https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl
   name: markdown-it-py
   version: 4.0.0
@@ -7159,19 +7146,19 @@ packages:
   - black ; extra == 'testing'
   - isort ; extra == 'testing'
   - twine ; extra == 'packaging'
-  - numpy ; extra == 'all'
-  - alabaster<0.7.12 ; extra == 'all'
-  - pytest>=4.6 ; extra == 'all'
-  - quantities ; extra == 'all'
-  - coverage ; extra == 'all'
   - markupsafe==2.0.1 ; extra == 'all'
-  - sphinx ; extra == 'all'
-  - twine ; extra == 'all'
+  - quantities ; extra == 'all'
+  - pytest>=4.6 ; extra == 'all'
   - matplotlib ; extra == 'all'
-  - isort ; extra == 'all'
+  - sphinx ; extra == 'all'
   - jinja2<3.0 ; extra == 'all'
   - pytest-cov ; extra == 'all'
+  - twine ; extra == 'all'
   - black ; extra == 'all'
+  - numpy ; extra == 'all'
+  - alabaster<0.7.12 ; extra == 'all'
+  - coverage ; extra == 'all'
+  - isort ; extra == 'all'
 - pypi: https://files.pythonhosted.org/packages/10/5e/1aa9a93198c6b64513c9d7752de7422c06402de6600a8767da1524f9570b/pyparsing-3.2.5-py3-none-any.whl
   name: pyparsing
   version: 3.2.5
