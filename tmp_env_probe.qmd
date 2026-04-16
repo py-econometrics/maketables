@@ -1,0 +1,28 @@
+---
+title: "Env Probe"
+format:
+  pdf: default
+  typst: default
+execute:
+  echo: false
+---
+
+```{python}
+import json, os
+from pathlib import Path
+
+keys = [k for k in os.environ.keys() if k.startswith('QUARTO')]
+vals = {k: os.environ.get(k) for k in sorted(keys)}
+info_path = os.environ.get('QUARTO_EXECUTE_INFO')
+info = {}
+if info_path and Path(info_path).exists():
+    try:
+        info = json.loads(Path(info_path).read_text(encoding='utf-8'))
+    except Exception:
+        info = {'error': 'failed to parse'}
+
+stem = f"probe_{vals.get('QUARTO_FORMAT')}_{vals.get('QUARTO_PROJECT_OUTPUT_FILES')}"
+stem = stem.replace('\\', '_').replace('/', '_').replace(':', '_').replace(';', '__')
+Path(stem[:120] + '.json').write_text(json.dumps({'env': vals, 'info': info}, indent=2), encoding='utf-8')
+print('probe written')
+```

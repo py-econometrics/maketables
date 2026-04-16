@@ -1,5 +1,7 @@
 import os
+import json
 from typing import ClassVar
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -104,7 +106,14 @@ class MTable:
     DEFAULT_SAVE_PATH = None  # can be string or dict
     DEFAULT_REPLACE = False
     DEFAULT_SAVE_TYPE = "html"
-    ADMISSIBLE_TYPES: ClassVar[list[str]] = ["gt", "tex", "typst", "docx", "html"]
+    ADMISSIBLE_TYPES: ClassVar[list[str]] = [
+        "gt",
+        "tex",
+        "typst",
+        "docx",
+        "html",
+        "quarto",
+    ]
     ADMISSIBLE_SAVE_TYPES: ClassVar[list[str]] = ["tex", "typst", "docx", "html"]
 
     # Default TeX style (override globally via MTable.DEFAULT_TEX_STYLE.update({...})
@@ -289,16 +298,65 @@ class MTable:
         """
         return translate_symbols(text, output_format)
 
+    def _resolve_quarto_output_type(self) -> str:
+        """
+        Resolve output type from Quarto execution context.
+
+        Returns
+        -------
+        str
+            One of: "html", "tex", "typst", "docx", or "gt" (fallback).
+        """
+        execute_info_path = os.environ.get("QUARTO_EXECUTE_INFO")
+        if not execute_info_path:
+            return "gt"
+
+        execute_info_file = Path(execute_info_path)
+        if not execute_info_file.exists() or not execute_info_file.is_file():
+            return "gt"
+
+        try:
+            with execute_info_file.open(encoding="utf-8") as f:
+                info = json.load(f)
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            return "gt"
+
+        identifier = info.get("format", {}).get("identifier", {})
+        base_format = str(identifier.get("base-format", "")).lower()
+        target_format = str(identifier.get("target-format", "")).lower()
+
+        def _map_format(fmt: str) -> str | None:
+            if fmt.startswith("html"):
+                return "html"
+            if fmt == "typst":
+                return "typst"
+            if fmt in {"latex", "pdf"}:
+                return "tex"
+            if fmt == "docx":
+                return "docx"
+            return None
+
+        # Prefer target format first: Quarto can report base-format=latex while
+        # rendering typst/docx, and target-format captures the actual backend.
+        for fmt in (target_format, base_format):
+            mapped = _map_format(fmt)
+            if mapped is not None:
+                return mapped
+
+        return "gt"
+
     def make(self, type: str | None = None, **kwargs):
         r"""
-        Create the output object of the table (either gt, tex, docx, or html).
+        Create the output object of the table (either gt, tex, typst, docx, html,
+        or quarto).
         If type is None, displays both HTML and LaTeX outputs for compatibility
         with both notebook viewing and Quarto rendering.
 
         Parameters
         ----------
         type : str, optional
-            The type of the output object ("gt", "tex", "typst", "docx", "html").
+            The type of the output object
+            ("gt", "tex", "typst", "docx", "html", "quarto").
         **kwargs : Further arguments forwarded to the respective output method when type is specified.
             - For type="tex" (LaTeX):
 
@@ -333,6 +391,10 @@ class MTable:
                 first_col_width, font_name, font_color_rgb, font_size_pt, notes_font_size_pt,
                 caption_font_name, caption_font_size_pt, caption_align, notes_align,
                 align_center_cells, border_*_rule_sz, cell_margins_dxa, table_style_name.
+                        - For type="quarto":
+
+                            - Reads QUARTO_EXECUTE_INFO and resolves target output format.
+                                If Quarto context is unavailable/invalid, falls back to GT.
 
         Returns
         -------
@@ -346,19 +408,23 @@ class MTable:
             class DualOutput:
                 """Display different outputs in notebook vs Quarto rendering."""
 
-                def __init__(self, notebook_html, quarto_latex):
+                def __init__(self, notebook_html, quarto_latex, quarto_typst):
                     self.notebook_html = notebook_html
                     self.quarto_latex = quarto_latex
+                    self.quarto_typst = quarto_typst
 
                 def _repr_mimebundle_(self, include=None, exclude=None):
-                    return {
+                    bundle = {
                         "text/html": self.notebook_html,
+                        "text/typst": self.quarto_typst,
                         "text/latex": self.quarto_latex,
                     }
+                    return bundle
 
             # Generate both HTML and LaTeX outputs
             html_output = self._output_gt().as_raw_html()
             tex_output = self._output_tex()
+            typst_output = self._output_typst()
 
             # Add CSS to remove zebra striping if desired
             html_output = (
@@ -372,7 +438,7 @@ class MTable:
                 + html_output
             )
             # Create and display the dual output object
-            dual_output = DualOutput(html_output, tex_output)
+            dual_output = DualOutput(html_output, tex_output, typst_output)
             display(dual_output)
             return None
 
@@ -388,6 +454,34 @@ class MTable:
             return self._output_typst(**kwargs)
         elif type == "docx":
             return self._output_docx(**kwargs)
+        elif type == "quarto":
+            class QuartoRaw(str):
+                """String content with rich notebook renderers for Quarto backends."""
+
+                def __new__(cls, value: str, fmt: str):
+                    obj = super().__new__(cls, value)
+                    obj._fmt = fmt
+                    return obj
+
+                def _repr_mimebundle_(self, include=None, exclude=None):
+                    raw_block = f"```{{={self._fmt}}}\n{str(self)}\n```"
+                    bundle = {"text/markdown": raw_block}
+                    if self._fmt == "latex":
+                        bundle["text/latex"] = str(self)
+                    elif self._fmt == "typst":
+                        bundle["text/typst"] = str(self)
+                    return bundle
+
+            resolved_type = self._resolve_quarto_output_type()
+            if resolved_type == "html":
+                return self._output_gt(**kwargs).as_raw_html()
+            elif resolved_type == "tex":
+                return QuartoRaw(self._output_tex(**kwargs), "latex")
+            elif resolved_type == "typst":
+                return QuartoRaw(self._output_typst(**kwargs), "typst")
+            elif resolved_type == "docx":
+                return self._output_docx(**kwargs)
+            return self._output_gt(**kwargs)
         else:
             return self._output_gt(**kwargs).as_raw_html()
 
@@ -1840,22 +1934,27 @@ class MTable:
         class DualOutput:
             """Display different outputs in notebook vs Quarto rendering."""
 
-            def __init__(self, notebook_html, quarto_latex):
+            def __init__(self, notebook_html, quarto_latex, quarto_typst):
                 self.notebook_html = notebook_html
                 self.quarto_latex = quarto_latex
+                self.quarto_typst = quarto_typst
 
             def _repr_mimebundle_(self, include=None, exclude=None):
-                return {
+                bundle = {
                     "text/html": self.notebook_html,
+                    "text/typst": self.quarto_typst,
                     "text/latex": self.quarto_latex,
                 }
+                return bundle
 
         # Generate both HTML and LaTeX outputs with their specific styles
         gt_style = self._display_styles.get("gt_style", {})
         tex_style = self._display_styles.get("tex_style", {})
+        typst_style = self._display_styles.get("typst_style", {})
 
         html_output = self._output_gt(gt_style=gt_style).as_raw_html()
         tex_output = self._output_tex(tex_style=tex_style)
+        typst_output = self._output_typst(typst_style=typst_style)
 
         # Add CSS to remove zebra striping if desired
         html_output = (
@@ -1871,7 +1970,7 @@ class MTable:
         # Create and display the dual output object
         from IPython.display import display
 
-        dual_output = DualOutput(html_output, tex_output)
+        dual_output = DualOutput(html_output, tex_output, typst_output)
         display(dual_output)
         return ""
 

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>quartoExample Notebook Source View</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --code-bg: #111827;
+      --code-text: #e5e7eb;
+      --md-bg: #f9fafb;
+    }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 1.35rem;
+    }
+    .sub {
+      margin: 0 0 20px 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .cell {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 0 0 14px 0;
+      background: #fff;
+    }
+    .head {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--muted);
+      background: #fff;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .content {
+      padding: 12px;
+    }
+    .markdown {
+      background: var(--md-bg);
+    }
+    pre {
+      margin: 0;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 6px;
+      padding: 12px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+    }
+    .err {
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #991b1b;
+      padding: 10px 12px;
+      border-radius: 8px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="quartoExample-source-data.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Notebook Source View: quartoExample.ipynb</h1>
+    <p class="sub">This view shows markdown and code cells from the notebook source (similar to the editor view in VS Code).</p>
+    <div id="app"></div>
+  </div>
+  <script>
+    const app = document.getElementById("app");
+
+    function normalizeSource(src) {
+      if (Array.isArray(src)) {
+        return src.join("\n");
+      }
+      return String(src || "");
+    }
+
+    function addCell(index, kind, htmlOrText, isMarkdown) {
+      const cell = document.createElement("section");
+      cell.className = "cell";
+
+      const head = document.createElement("div");
+      head.className = "head";
+      head.textContent = "Cell " + index + " - " + kind;
+      cell.appendChild(head);
+
+      const content = document.createElement("div");
+      content.className = "content" + (isMarkdown ? " markdown" : "");
+
+      if (isMarkdown) {
+        content.innerHTML = htmlOrText;
+      } else {
+        const pre = document.createElement("pre");
+        const code = document.createElement("code");
+        code.textContent = htmlOrText;
+        pre.appendChild(code);
+        content.appendChild(pre);
+      }
+
+      cell.appendChild(content);
+      app.appendChild(cell);
+    }
+
+    async function loadNotebook() {
+      if (
+        typeof window !== "undefined" &&
+        window.__QUARTO_EXAMPLE_NOTEBOOK__ &&
+        Array.isArray(window.__QUARTO_EXAMPLE_NOTEBOOK__.cells)
+      ) {
+        return window.__QUARTO_EXAMPLE_NOTEBOOK__;
+      }
+
+      const notebookSources = [
+        "quartoExample.ipynb",
+        "../../../docs/examples/quartoExample.ipynb",
+        "https://raw.githubusercontent.com/py-econometrics/maketables/main/docs/examples/quartoExample.ipynb"
+      ];
+
+      let lastError = null;
+      for (const src of notebookSources) {
+        try {
+          const r = await fetch(src, { cache: "no-store" });
+          if (!r.ok) {
+            throw new Error("HTTP " + r.status + " " + r.statusText + " from " + src);
+          }
+          return await r.json();
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      throw new Error(
+        "Failed to fetch notebook source from all locations. " +
+        "Try opening the docs with 'pixi run docs-preview' or check your network connection. " +
+        "Last error: " + (lastError && lastError.message ? lastError.message : String(lastError))
+      );
+    }
+
+    loadNotebook()
+      .then((nb) => {
+        const cells = Array.isArray(nb.cells) ? nb.cells : [];
+        cells.forEach((c, i) => {
+          const src = normalizeSource(c.source);
+          if ((c.cell_type || "").toLowerCase() === "markdown") {
+            addCell(i + 1, "Markdown", marked.parse(src), true);
+          } else {
+            const lang = (c.metadata && c.metadata.language) ? c.metadata.language : c.cell_type;
+            addCell(i + 1, "Code (" + lang + ")", src, false);
+          }
+        });
+      })
+      .catch((e) => {
+        const err = document.createElement("div");
+        err.className = "err";
+        err.textContent = e.message;
+        app.appendChild(err);
+      });
+  </script>
+</body>
+</html>
