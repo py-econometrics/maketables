@@ -91,6 +91,7 @@ platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
 python = "~=3.13.0"
+quarto = ">=1.8.27,<2"
 
 [tool.pixi.pypi-dependencies]
 maketables = { path = ".", editable = true }
