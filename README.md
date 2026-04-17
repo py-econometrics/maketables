@@ -8,7 +8,7 @@
 [![Downloads](https://static.pepy.tech/badge/maketables/month)](https://pepy.tech/project/maketables)
 [![PyPI](https://img.shields.io/pypi/v/maketables)](https://pypi.org/project/maketables)
 
-[Docs](https://py-econometrics.github.io/maketables/docs/getting-started.html) · [Function & API Reference](https://py-econometrics.github.io/maketables/reference/) · [Report Bugs & Request Features](https://github.com/py-econometrics/maketables/issues) · [Adding Support for new Model Classes](https://py-econometrics.github.io/maketables/docs/AddingMethods.html)
+[Docs](https://py-econometrics.github.io/maketables/docs/getting-started.html) · [Function & API Reference](https://py-econometrics.github.io/maketables/reference/) · [Report Bugs & Request Features](https://github.com/py-econometrics/maketables/issues) · [Adding Support for new Model Classes](https://py-econometrics.github.io/maketables/docs/AddingModelClasses.html)
 
 A Python package for creating publication-ready tables from regression results (`statsmodels`, `pyfixest`, `linearmodels`), descriptive statistics, and balance tables with output to *LaTeX*, *Word*, *HTML* and *Typst* via [Great Tables](https://github.com/posit-dev/great-tables). To get started, check out the [Getting Started Notebook](https://py-econometrics.github.io/maketables/docs/getting-started.html).
 
@@ -36,7 +36,7 @@ The package supports multiple output formats including:
 - [linearmodels](https://github.com/bashtage/linearmodels)
 - [lifelines](https://github.com/CamDavidsonPilon/lifelines)
 
-It is very easy to add support for new models - either in the `maketables` code base, or from within your own package via a maketables **plug-in**. Take a look at the [docs](https://py-econometrics.github.io/maketables/docs/AddingMethods.html) to get started, and please feel free to reach out for help!
+It is very easy to add support for new models - either in the `maketables` code base, or from within your own package via a maketables **plug-in**. Take a look at the [docs](https://py-econometrics.github.io/maketables/docs/AddingModelClasses.html) to get started, and please feel free to reach out for help!
 
 ## Origin
 

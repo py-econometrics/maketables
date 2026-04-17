@@ -19,7 +19,7 @@ website:
         text: LaTeX
       - href: docs/WritingPapers.ipynb
         text: Writing Papers
-      - href: docs/SupportedModelClasses.md
+      - href: docs/SupportedModels.md
         text: Supported Models
       - text: Further Resources
         menu:
@@ -33,7 +33,7 @@ website:
             text: "Using Variable Labels"
           - href: docs/Lifelines.ipynb
             text: "Lifelines Survival Models"
-          - href: docs/AddingMethods.ipynb
+          - href: docs/AddingModelClasses.ipynb
             text: "Making Packages Compatible"
           - text: "API Reference"
             file: reference/index.qmd
