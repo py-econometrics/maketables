@@ -354,7 +354,7 @@ def interactive_regression(data: pd.DataFrame, formula: str, vcov: str = 'iid', 
     >>> import maketables as mt
     >>>
     >>> # Load data
-    >>> df = mt.import_dta("auto.dta")
+    >>> df = mt.import_dta("../data/auto.dta")
     >>>
     >>> # Create interactive dashboard
     >>> dashboard = mt.interactive_regression(df, "price ~ mpg + weight")
@@ -721,7 +721,7 @@ def interactive_dtable(data: pd.DataFrame, vars: list[str] | None = None, show_c
     >>> import maketables as mt
     >>>
     >>> # Load data
-    >>> df = mt.import_dta("auto.dta")
+    >>> df = mt.import_dta("../data/auto.dta")
     >>>
     >>> # Create interactive descriptive statistics dashboard
     >>> dashboard = mt.interactive_dtable(df)
