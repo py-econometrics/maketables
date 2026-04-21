@@ -67,6 +67,7 @@ docs = [
     "nbconvert>=7.0.0",
     "pylatex>=1.4.2,<2",
     "pyyaml>=6.0.0,<7",
+    "nbclient>=0.10,<1",
 ]
 pystata = [
     "pystata>=0.0.1",

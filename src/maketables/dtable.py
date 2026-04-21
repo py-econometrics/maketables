@@ -121,7 +121,7 @@ class DTable(MTable):
         assert all(pd.api.types.is_numeric_dtype(df[var]) for var in vars), (
             "Variables must be numerical."
         )
-        assert type in ["gt", "tex", "df"], "type must be either 'gt' or 'tex' or 'df'."
+        assert type in ["gt", "tex", "df", "quarto"], "type must be either 'gt', 'tex', 'df', or 'quarto'."
         assert byrow is None or byrow in df.columns, (
             "byrow must be a column in the DataFrame."
         )
@@ -292,7 +292,13 @@ class DTable(MTable):
         # --- End dtable logic ---
 
         # Call MTable constructor with processed table and metadata
-        super().__init__(res, notes=notes, rgroup_display=rgroup_display, **kwargs)
+        super().__init__(
+            res,
+            notes=notes,
+            rgroup_display=rgroup_display,
+            _requested_type=type,
+            **kwargs,
+        )
 
     def _format_number(self, x: float, format_spec: str | None = None, digits: int = 2) -> str:
         """Format a number with optional format specifier or sensible default."""
