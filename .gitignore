@@ -194,3 +194,8 @@ _site/
 
 **/*.quarto_ipynb
 _freeze/
+
+# continue dev LLM instructions
+.continue/
+.gitmodules
+AGENTS.md
