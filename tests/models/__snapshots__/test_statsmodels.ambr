@@ -347,11 +347,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">940.384 <br> (140417681969.961)</td>
+      <td class="gt_row gt_center">940.384 <br> (140417681969.216)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">4.646 <br> (1895244764.480)</td>
+      <td class="gt_row gt_center">4.646 <br> (1895244764.470)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -397,10 +397,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{940.384 \\ (140417681969.961)} \\
+  x & \makecell{940.384 \\ (140417681969.216)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{4.646 \\ (1895244764.480)} \\
+  Intercept & \makecell{4.646 \\ (1895244764.470)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]

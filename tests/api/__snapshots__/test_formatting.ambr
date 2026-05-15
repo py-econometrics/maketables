@@ -68,11 +68,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000 <br> (0.000) <br> [inf]</td>
+      <td class="gt_row gt_center">2.000 <br> (0.000) <br> [16501042479138636.00]</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100 <br> (0.000) <br> [inf]</td>
+      <td class="gt_row gt_center">0.100 <br> (0.000) <br> [248762575240997.72]</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -114,10 +114,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000 \\ (0.000) \\ [inf]} \\
+  x & \makecell{2.000 \\ (0.000) \\ [16501042479138636.00]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100 \\ (0.000) \\ [inf]} \\
+  Intercept & \makecell{0.100 \\ (0.000) \\ [248762575240997.72]} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -612,11 +612,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000 <br> [inf]</td>
+      <td class="gt_row gt_center">2.000 <br> [16501042479138636.00]</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100 <br> [inf]</td>
+      <td class="gt_row gt_center">0.100 <br> [248762575240997.72]</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -658,10 +658,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000 \\ [inf]} \\
+  x & \makecell{2.000 \\ [16501042479138636.00]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100 \\ [inf]} \\
+  Intercept & \makecell{0.100 \\ [248762575240997.72]} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
