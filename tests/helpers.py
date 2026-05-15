@@ -4,7 +4,6 @@ import re
 
 import pytest
 
-
 OUTPUT_TYPES = [
     pytest.param("gt", id="html"),
     pytest.param("tex", id="latex"),

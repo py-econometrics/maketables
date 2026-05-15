@@ -1,8 +1,9 @@
 """Snapshot tests for ETable model statistics."""
 
-import maketables as mt
 import pytest
 from helpers import OUTPUT_TYPES, render_table
+
+import maketables as mt
 
 
 class TestETableModelStats:

@@ -8,7 +8,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -47,11 +47,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -94,17 +94,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
 # name: TestLinearmodels.test_model[absorbingls-latex]
@@ -142,7 +142,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
@@ -181,7 +181,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -220,11 +220,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -264,17 +264,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
 # name: TestLinearmodels.test_model[iv2sls-latex]
@@ -311,7 +311,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
@@ -348,7 +348,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -387,11 +387,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -434,17 +434,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
 # name: TestLinearmodels.test_model[panelols-latex]
@@ -482,7 +482,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
@@ -521,7 +521,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -560,11 +560,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -600,17 +600,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
 # name: TestLinearmodels.test_model[pooledols-latex]
@@ -644,7 +644,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
