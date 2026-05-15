@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: TestETableCoefFormat.test_coef_fmt_all_stats_html
+# name: TestETableCoefFormat.test_coef_fmt[all_stats-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -100,7 +100,7 @@
           
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_all_stats_latex
+# name: TestETableCoefFormat.test_coef_fmt[all_stats-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -135,7 +135,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_all_stats_typst
+# name: TestETableCoefFormat.test_coef_fmt[all_stats-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -158,7 +158,7 @@
   )
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_default_html
+# name: TestETableCoefFormat.test_coef_fmt[default-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -259,7 +259,7 @@
           
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_default_latex
+# name: TestETableCoefFormat.test_coef_fmt[default-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -294,7 +294,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_default_typst
+# name: TestETableCoefFormat.test_coef_fmt[default-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -317,7 +317,7 @@
   )
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_different_decimals_html
+# name: TestETableCoefFormat.test_coef_fmt[different_decimals-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -418,7 +418,7 @@
           
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_different_decimals_latex
+# name: TestETableCoefFormat.test_coef_fmt[different_decimals-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -453,7 +453,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_different_decimals_typst
+# name: TestETableCoefFormat.test_coef_fmt[different_decimals-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -476,7 +476,7 @@
   )
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_pvalue_html
+# name: TestETableCoefFormat.test_coef_fmt[with_pvalue-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -577,7 +577,7 @@
           
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_pvalue_latex
+# name: TestETableCoefFormat.test_coef_fmt[with_pvalue-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -612,7 +612,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_pvalue_typst
+# name: TestETableCoefFormat.test_coef_fmt[with_pvalue-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -635,7 +635,7 @@
   )
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_tstat_html
+# name: TestETableCoefFormat.test_coef_fmt[with_tstat-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -736,7 +736,7 @@
           
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_tstat_latex
+# name: TestETableCoefFormat.test_coef_fmt[with_tstat-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -771,7 +771,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_tstat_typst
+# name: TestETableCoefFormat.test_coef_fmt[with_tstat-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: TestETableModelStats.test_model_stats_aic_bic_html
+# name: TestETableModelStats.test_model_stats[aic_bic-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -104,7 +104,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_aic_bic_latex
+# name: TestETableModelStats.test_model_stats[aic_bic-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -142,7 +142,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_aic_bic_typst
+# name: TestETableModelStats.test_model_stats[aic_bic-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -166,7 +166,7 @@
   )
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_custom_labels_html
+# name: TestETableModelStats.test_model_stats[custom_labels-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -267,7 +267,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_custom_labels_latex
+# name: TestETableModelStats.test_model_stats[custom_labels-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -302,7 +302,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_custom_labels_typst
+# name: TestETableModelStats.test_model_stats[custom_labels-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -325,7 +325,7 @@
   )
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_extended_html
+# name: TestETableModelStats.test_model_stats[extended-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -434,7 +434,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_extended_latex
+# name: TestETableModelStats.test_model_stats[extended-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -475,7 +475,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_extended_typst
+# name: TestETableModelStats.test_model_stats[extended-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -500,7 +500,7 @@
   )
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_minimal_html
+# name: TestETableModelStats.test_model_stats[minimal-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -597,7 +597,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_minimal_latex
+# name: TestETableModelStats.test_model_stats[minimal-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -629,7 +629,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_minimal_typst
+# name: TestETableModelStats.test_model_stats[minimal-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -651,7 +651,7 @@
   )
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_with_se_type_html
+# name: TestETableModelStats.test_model_stats[with_se_type-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -756,7 +756,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_with_se_type_latex
+# name: TestETableModelStats.test_model_stats[with_se_type-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -794,7 +794,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_with_se_type_typst
+# name: TestETableModelStats.test_model_stats[with_se_type-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),

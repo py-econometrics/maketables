@@ -1,68 +1,25 @@
 """Base snapshot tests for linearmodels models."""
 
 import maketables as mt
-from helpers import normalize_html
+import pytest
+from helpers import OUTPUT_TYPES, render_table
 
 
 class TestLinearmodels:
     """Base tests for linearmodels model extraction."""
 
-    def test_panelols_html(self, linearmodels_panelols, snapshot):
-        """Linearmodels PanelOLS HTML output."""
-        table = mt.ETable([linearmodels_panelols])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_panelols_latex(self, linearmodels_panelols, snapshot):
-        """Linearmodels PanelOLS LaTeX output."""
-        table = mt.ETable([linearmodels_panelols])
-        assert table.make(type="tex") == snapshot
-
-    def test_panelols_typst(self, linearmodels_panelols, snapshot):
-        """Linearmodels PanelOLS Typst output."""
-        table = mt.ETable([linearmodels_panelols])
-        assert table.make(type="typst") == snapshot
-
-    def test_pooledols_html(self, linearmodels_pooledols, snapshot):
-        """Linearmodels PooledOLS HTML output."""
-        table = mt.ETable([linearmodels_pooledols])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_pooledols_latex(self, linearmodels_pooledols, snapshot):
-        """Linearmodels PooledOLS LaTeX output."""
-        table = mt.ETable([linearmodels_pooledols])
-        assert table.make(type="tex") == snapshot
-
-    def test_pooledols_typst(self, linearmodels_pooledols, snapshot):
-        """Linearmodels PooledOLS Typst output."""
-        table = mt.ETable([linearmodels_pooledols])
-        assert table.make(type="typst") == snapshot
-
-    def test_absorbingls_html(self, linearmodels_absorbingls, snapshot):
-        """Linearmodels AbsorbingLS HTML output."""
-        table = mt.ETable([linearmodels_absorbingls])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_absorbingls_latex(self, linearmodels_absorbingls, snapshot):
-        """Linearmodels AbsorbingLS LaTeX output."""
-        table = mt.ETable([linearmodels_absorbingls])
-        assert table.make(type="tex") == snapshot
-
-    def test_absorbingls_typst(self, linearmodels_absorbingls, snapshot):
-        """Linearmodels AbsorbingLS Typst output."""
-        table = mt.ETable([linearmodels_absorbingls])
-        assert table.make(type="typst") == snapshot
-
-    def test_iv2sls_html(self, linearmodels_iv2sls, snapshot):
-        """Linearmodels IV2SLS HTML output."""
-        table = mt.ETable([linearmodels_iv2sls])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_iv2sls_latex(self, linearmodels_iv2sls, snapshot):
-        """Linearmodels IV2SLS LaTeX output."""
-        table = mt.ETable([linearmodels_iv2sls])
-        assert table.make(type="tex") == snapshot
-
-    def test_iv2sls_typst(self, linearmodels_iv2sls, snapshot):
-        """Linearmodels IV2SLS Typst output."""
-        table = mt.ETable([linearmodels_iv2sls])
-        assert table.make(type="typst") == snapshot
+    @pytest.mark.parametrize("output_type", OUTPUT_TYPES)
+    @pytest.mark.parametrize(
+        "model_fixture",
+        [
+            pytest.param("linearmodels_panelols", id="panelols"),
+            pytest.param("linearmodels_pooledols", id="pooledols"),
+            pytest.param("linearmodels_absorbingls", id="absorbingls"),
+            pytest.param("linearmodels_iv2sls", id="iv2sls"),
+        ],
+    )
+    def test_model(self, request, snapshot, model_fixture, output_type):
+        """Linearmodels model output."""
+        model = request.getfixturevalue(model_fixture)
+        table = mt.ETable([model])
+        assert render_table(table, output_type) == snapshot

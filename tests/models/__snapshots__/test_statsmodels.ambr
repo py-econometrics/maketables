@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: TestStatsmodels.test_logit_html
+# name: TestStatsmodels.test_model[logit-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -104,7 +104,7 @@
           
   '''
 # ---
-# name: TestStatsmodels.test_logit_latex
+# name: TestStatsmodels.test_model[logit-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -142,7 +142,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestStatsmodels.test_logit_typst
+# name: TestStatsmodels.test_model[logit-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -166,7 +166,7 @@
   )
   '''
 # ---
-# name: TestStatsmodels.test_ols_html
+# name: TestStatsmodels.test_model[ols-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -267,7 +267,7 @@
           
   '''
 # ---
-# name: TestStatsmodels.test_ols_latex
+# name: TestStatsmodels.test_model[ols-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -302,7 +302,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestStatsmodels.test_ols_typst
+# name: TestStatsmodels.test_model[ols-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -325,7 +325,7 @@
   )
   '''
 # ---
-# name: TestStatsmodels.test_probit_html
+# name: TestStatsmodels.test_model[probit-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -430,7 +430,7 @@
           
   '''
 # ---
-# name: TestStatsmodels.test_probit_latex
+# name: TestStatsmodels.test_model[probit-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -468,7 +468,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestStatsmodels.test_probit_typst
+# name: TestStatsmodels.test_model[probit-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
