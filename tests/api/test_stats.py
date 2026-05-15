@@ -1,7 +1,9 @@
 """Snapshot tests for ETable model statistics."""
 
-import maketables as mt
+import pytest
 from helpers import normalize_html
+
+import maketables as mt
 
 
 class TestETableModelStats:
@@ -64,3 +66,23 @@ class TestETableModelStats:
         """Information criteria (AIC, BIC)."""
         table = mt.ETable([fitted_model], model_stats=["N", "aic", "bic"])
         assert table.make(type="tex") == snapshot
+
+
+class TestBTableStats:
+    """Snapshot tests for BTable statistics."""
+
+    def test_accepts_list_group_for_column_combinations(
+        self,
+        btable_factorial_df,
+        snapshot,
+    ):
+        """Accept list-valued groups for column combinations."""
+        pytest.importorskip("pyfixest")
+        table = mt.BTable(
+            btable_factorial_df,
+            vars=["x", "z"],
+            group=["treatment", "period"],
+            stats=["mean"],
+        )
+
+        assert table.df.to_csv().strip() == snapshot
