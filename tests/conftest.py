@@ -7,7 +7,7 @@ import pytest
 
 @pytest.fixture
 def simple_df():
-    """Simple DataFrame for basic table tests."""
+    """Create a simple DataFrame for basic table tests."""
     np.random.seed(42)
     n = 100
     return pd.DataFrame({
@@ -18,8 +18,47 @@ def simple_df():
 
 
 @pytest.fixture
+def dtable_binary_df():
+    """Create data with binary and continuous variables for DTable/BTable tests."""
+    return pd.DataFrame(
+        {
+            "binary": [0, 1, 1, 0, 0, 1, 1, 0],
+            "continuous": [1.0, 2.0, 4.0, 5.0, 1.5, 2.5, 4.5, 5.5],
+            "group": ["A", "A", "B", "B", "A", "A", "B", "B"],
+        }
+    )
+
+
+@pytest.fixture
+def binary_type_df():
+    """Create binary and non-binary columns across several dtypes."""
+    return pd.DataFrame(
+        {
+            "int_binary": [0, 1, 1, 0],
+            "non_indicator_numeric_binary": [1, 2, np.nan, 2],
+            "float_binary": [0.0, 1.0, np.nan, 1.0],
+            "bool_binary": [True, False, True, False],
+            "nullable_bool_binary": pd.Series(
+                [True, False, pd.NA, True],
+                dtype="boolean",
+            ),
+            "string_binary": ["yes", "no", None, "yes"],
+            "categorical_binary": pd.Categorical(
+                ["treated", "control", None, "treated"],
+            ),
+            "datetime_binary": pd.to_datetime(
+                ["2020-01-01", "2020-01-02", None, "2020-01-01"],
+            ),
+            "single_level": [1, 1, np.nan, 1],
+            "three_level": ["a", "b", "c", None],
+            "all_missing": [None, None, None, None],
+        }
+    )
+
+
+@pytest.fixture
 def fitted_model(simple_df):
-    """Single fitted pyfixest model."""
+    """Create a single fitted pyfixest model."""
     import pyfixest as pf
 
     # Create fully deterministic data (no random component)
@@ -32,7 +71,7 @@ def fitted_model(simple_df):
 
 @pytest.fixture
 def fitted_models(simple_df):
-    """Multiple fitted pyfixest models for multi-column tables."""
+    """Create multiple fitted pyfixest models for multi-column tables."""
     import pyfixest as pf
 
     np.random.seed(42)
@@ -47,7 +86,7 @@ def fitted_models(simple_df):
 
 @pytest.fixture
 def fitted_model_fe(simple_df):
-    """Pyfixest model with fixed effects."""
+    """Create a pyfixest model with fixed effects."""
     import pyfixest as pf
 
     np.random.seed(42)
@@ -63,7 +102,7 @@ def fitted_model_fe(simple_df):
 
 @pytest.fixture
 def statsmodels_ols(simple_df):
-    """Statsmodels OLS model."""
+    """Create a statsmodels OLS model."""
     import statsmodels.formula.api as smf
 
     np.random.seed(42)
@@ -74,7 +113,7 @@ def statsmodels_ols(simple_df):
 
 @pytest.fixture
 def statsmodels_logit(simple_df):
-    """Statsmodels Logit model."""
+    """Create a statsmodels Logit model."""
     import statsmodels.formula.api as smf
 
     np.random.seed(42)
@@ -86,7 +125,7 @@ def statsmodels_logit(simple_df):
 
 @pytest.fixture
 def statsmodels_probit(simple_df):
-    """Statsmodels Probit model."""
+    """Create a statsmodels Probit model."""
     import statsmodels.formula.api as smf
 
     np.random.seed(42)
@@ -101,7 +140,7 @@ def statsmodels_probit(simple_df):
 
 @pytest.fixture
 def panel_df():
-    """Panel DataFrame for linearmodels tests."""
+    """Create a panel DataFrame for linearmodels tests."""
     np.random.seed(42)
     n_entities = 20
     n_periods = 5
@@ -139,7 +178,7 @@ def panel_df():
 
 @pytest.fixture
 def linearmodels_panelols(panel_df):
-    """Linearmodels PanelOLS with entity effects."""
+    """Create a linearmodels PanelOLS with entity effects."""
     from linearmodels import PanelOLS
 
     mod = PanelOLS.from_formula("y ~ x1 + x2 + EntityEffects", data=panel_df)
@@ -148,7 +187,7 @@ def linearmodels_panelols(panel_df):
 
 @pytest.fixture
 def linearmodels_pooledols(panel_df):
-    """Linearmodels PooledOLS (no fixed effects)."""
+    """Create a linearmodels PooledOLS without fixed effects."""
     from linearmodels import PooledOLS
 
     mod = PooledOLS.from_formula("y ~ x1 + x2", data=panel_df)
@@ -157,7 +196,7 @@ def linearmodels_pooledols(panel_df):
 
 @pytest.fixture
 def linearmodels_absorbingls():
-    """Linearmodels AbsorbingLS with high-dimensional fixed effects."""
+    """Create a linearmodels AbsorbingLS with high-dimensional fixed effects."""
     from linearmodels import AbsorbingLS
 
     np.random.seed(42)
@@ -187,7 +226,7 @@ def linearmodels_absorbingls():
 
 @pytest.fixture
 def linearmodels_iv2sls():
-    """Linearmodels IV2SLS with instrumental variables."""
+    """Create a linearmodels IV2SLS with instrumental variables."""
     from linearmodels.iv import IV2SLS
 
     np.random.seed(42)

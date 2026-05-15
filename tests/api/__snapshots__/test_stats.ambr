@@ -700,3 +700,43 @@
   \end{threeparttable}
   '''
 # ---
+# name: test_btable_mean_std_suppresses_std_for_binary_variables
+  '''
+  ,A,B,
+  ,Mean (Std. Dev.),Mean (Std. Dev.),p-value
+  binary,0.50,0.50,1.000
+  continuous,1.75 (0.65),4.75 (0.65),0.001
+  '''
+# ---
+# name: test_dtable_mean_newline_std_suppresses_std_for_grouped_binary_variables
+  '''
+  ,A,B
+  ,Mean (Std. Dev.),Mean (Std. Dev.)
+  binary,0.50,0.50
+  continuous,"1.75
+  (0.65)","4.75
+  (0.65)"
+  '''
+# ---
+# name: test_dtable_mean_std_suppresses_std_for_binary_variables
+  '''
+  ,Mean (Std. Dev.)
+  binary,0.50
+  continuous,3.25 (1.71)
+  '''
+# ---
+# name: test_is_binary_series_detects_two_unique_nonmissing_values
+  dict({
+    'all_missing': False,
+    'bool_binary': True,
+    'categorical_binary': False,
+    'datetime_binary': False,
+    'float_binary': True,
+    'int_binary': True,
+    'non_indicator_numeric_binary': True,
+    'nullable_bool_binary': True,
+    'single_level': False,
+    'string_binary': False,
+    'three_level': False,
+  })
+# ---
