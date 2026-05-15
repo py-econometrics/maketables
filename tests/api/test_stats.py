@@ -20,6 +20,11 @@ class TestETableModelStats:
         table = mt.ETable([fitted_model], model_stats=["N", "r2", "adj_r2", "rmse"])
         assert table.make(type="tex") == snapshot
 
+    def test_model_stats_extended_typst(self, fitted_model, snapshot):
+        """Extended statistics including adj_r2 and rmse in Typst."""
+        table = mt.ETable([fitted_model], model_stats=["N", "r2", "adj_r2", "rmse"])
+        assert table.make(type="typst") == snapshot
+
     def test_model_stats_minimal_html(self, fitted_model, snapshot):
         """Minimal statistics (only N)."""
         table = mt.ETable([fitted_model], model_stats=["N"])
@@ -30,6 +35,11 @@ class TestETableModelStats:
         table = mt.ETable([fitted_model], model_stats=["N"])
         assert table.make(type="tex") == snapshot
 
+    def test_model_stats_minimal_typst(self, fitted_model, snapshot):
+        """Minimal statistics (only N) in Typst."""
+        table = mt.ETable([fitted_model], model_stats=["N"])
+        assert table.make(type="typst") == snapshot
+
     def test_model_stats_with_se_type_html(self, fitted_model, snapshot):
         """Include standard error type."""
         table = mt.ETable([fitted_model], model_stats=["N", "r2", "se_type"])
@@ -39,6 +49,11 @@ class TestETableModelStats:
         """Include standard error type."""
         table = mt.ETable([fitted_model], model_stats=["N", "r2", "se_type"])
         assert table.make(type="tex") == snapshot
+
+    def test_model_stats_with_se_type_typst(self, fitted_model, snapshot):
+        """Include standard error type in Typst."""
+        table = mt.ETable([fitted_model], model_stats=["N", "r2", "se_type"])
+        assert table.make(type="typst") == snapshot
 
     def test_model_stats_custom_labels_html(self, fitted_model, snapshot):
         """Custom labels for model statistics."""
@@ -58,6 +73,15 @@ class TestETableModelStats:
         )
         assert table.make(type="tex") == snapshot
 
+    def test_model_stats_custom_labels_typst(self, fitted_model, snapshot):
+        """Custom labels for model statistics in Typst."""
+        table = mt.ETable(
+            [fitted_model],
+            model_stats=["N", "r2"],
+            model_stats_labels={"N": "Sample Size", "r2": "R-squared"},
+        )
+        assert table.make(type="typst") == snapshot
+
     def test_model_stats_aic_bic_html(self, fitted_model, snapshot):
         """Information criteria (AIC, BIC)."""
         table = mt.ETable([fitted_model], model_stats=["N", "aic", "bic"])
@@ -67,6 +91,11 @@ class TestETableModelStats:
         """Information criteria (AIC, BIC)."""
         table = mt.ETable([fitted_model], model_stats=["N", "aic", "bic"])
         assert table.make(type="tex") == snapshot
+
+    def test_model_stats_aic_bic_typst(self, fitted_model, snapshot):
+        """Information criteria (AIC, BIC) in Typst."""
+        table = mt.ETable([fitted_model], model_stats=["N", "aic", "bic"])
+        assert table.make(type="typst") == snapshot
 
     @pytest.mark.parametrize(
         ("stats_order", "expected_rows"),

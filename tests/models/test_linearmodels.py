@@ -17,6 +17,11 @@ class TestLinearmodels:
         table = mt.ETable([linearmodels_panelols])
         assert table.make(type="tex") == snapshot
 
+    def test_panelols_typst(self, linearmodels_panelols, snapshot):
+        """Linearmodels PanelOLS Typst output."""
+        table = mt.ETable([linearmodels_panelols])
+        assert table.make(type="typst") == snapshot
+
     def test_pooledols_html(self, linearmodels_pooledols, snapshot):
         """Linearmodels PooledOLS HTML output."""
         table = mt.ETable([linearmodels_pooledols])
@@ -26,6 +31,11 @@ class TestLinearmodels:
         """Linearmodels PooledOLS LaTeX output."""
         table = mt.ETable([linearmodels_pooledols])
         assert table.make(type="tex") == snapshot
+
+    def test_pooledols_typst(self, linearmodels_pooledols, snapshot):
+        """Linearmodels PooledOLS Typst output."""
+        table = mt.ETable([linearmodels_pooledols])
+        assert table.make(type="typst") == snapshot
 
     def test_absorbingls_html(self, linearmodels_absorbingls, snapshot):
         """Linearmodels AbsorbingLS HTML output."""
@@ -37,6 +47,11 @@ class TestLinearmodels:
         table = mt.ETable([linearmodels_absorbingls])
         assert table.make(type="tex") == snapshot
 
+    def test_absorbingls_typst(self, linearmodels_absorbingls, snapshot):
+        """Linearmodels AbsorbingLS Typst output."""
+        table = mt.ETable([linearmodels_absorbingls])
+        assert table.make(type="typst") == snapshot
+
     def test_iv2sls_html(self, linearmodels_iv2sls, snapshot):
         """Linearmodels IV2SLS HTML output."""
         table = mt.ETable([linearmodels_iv2sls])
@@ -46,3 +61,8 @@ class TestLinearmodels:
         """Linearmodels IV2SLS LaTeX output."""
         table = mt.ETable([linearmodels_iv2sls])
         assert table.make(type="tex") == snapshot
+
+    def test_iv2sls_typst(self, linearmodels_iv2sls, snapshot):
+        """Linearmodels IV2SLS Typst output."""
+        table = mt.ETable([linearmodels_iv2sls])
+        assert table.make(type="typst") == snapshot

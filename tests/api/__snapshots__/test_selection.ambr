@@ -128,6 +128,28 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestETableCoefSelection.test_drop_intercept_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
 # name: TestETableCoefSelection.test_exact_match_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -259,6 +281,50 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestETableCoefSelection.test_exact_match_typst
+  '''
+  #table(
+    columns: (auto, 1fr, 1fr), align: (left, center, center),
+    column-gutter: (0em, 0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 2)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 3),
+    [], [(1)], [(2)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.100\*\*\* \ (0.000)], [2.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100], [100],
+    [$R^2$], [1], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 3)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
+# name: TestETableCoefSelection.test_keep_multiple_coefs_typst
+  '''
+  #table(
+    columns: (auto, 1fr, 1fr), align: (left, center, center),
+    column-gutter: (0em, 0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 2)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 3),
+    [], [(1)], [(2)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.100\*\*\* \ (0.000)], [2.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100], [100],
+    [$R^2$], [1], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 3)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---
 # name: TestETableCoefSelection.test_keep_reorders_html
@@ -408,6 +474,30 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestETableCoefSelection.test_keep_reorders_typst
+  '''
+  #table(
+    columns: (auto, 1fr, 1fr), align: (left, center, center),
+    column-gutter: (0em, 0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 2)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 3),
+    [], [(1)], [(2)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [group=B], [], [-0.000 \ (0.000)],
+    [x], [2.100\*\*\* \ (0.000)], [2.100\*\*\* \ (0.000)],
+    [Intercept], [0.000 \ (0.000)], [0.000 \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100], [100],
+    [$R^2$], [1], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 3)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---
 # name: TestETableCoefSelection.test_keep_single_coef_html
@@ -682,5 +772,28 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestETableCoefSelection.test_keep_with_regex_typst
+  '''
+  #table(
+    columns: (auto, 1fr, 1fr), align: (left, center, center),
+    column-gutter: (0em, 0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 2)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 3),
+    [], [(1)], [(2)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.100\*\*\* \ (0.000)], [2.100\*\*\* \ (0.000)],
+    [group=B], [], [-0.000 \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100], [100],
+    [$R^2$], [1], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 3)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---
