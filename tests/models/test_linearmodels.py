@@ -1,8 +1,9 @@
 """Base snapshot tests for linearmodels models."""
 
-import maketables as mt
 import pytest
 from helpers import OUTPUT_TYPES, render_table
+
+import maketables as mt
 
 
 class TestLinearmodels:
