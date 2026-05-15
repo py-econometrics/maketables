@@ -1,5 +1,3 @@
-from typing import ClassVar
-
 import numpy as np
 import pandas as pd
 
@@ -99,14 +97,18 @@ class DTable(MTable):
             # normalize to plain python strings for reliable lookup
             var = str(var) if var is not None else None
             stat = str(stat) if stat is not None else None
-            #print("FORMAT_LOOKUP:", repr(var), repr(stat))
+            # print("FORMAT_LOOKUP:", repr(var), repr(stat))
             if isinstance(self.format_specs, dict):
                 # most specific first
                 if (var, stat) in self.format_specs:
                     return self.format_specs[(var, stat)]
-                if var in self.format_specs and not isinstance(self.format_specs[var], dict):
+                if var in self.format_specs and not isinstance(
+                    self.format_specs[var], dict
+                ):
                     return self.format_specs[var]
-                if stat in self.format_specs and not isinstance(self.format_specs[stat], dict):
+                if stat in self.format_specs and not isinstance(
+                    self.format_specs[stat], dict
+                ):
                     return self.format_specs[stat]
             return None
 
@@ -148,7 +150,9 @@ class DTable(MTable):
             if byrow is not None:
                 counts_row_below = False
             elif "count" not in stats:
-                stats = ["count"] + stats
+                stats = ["count", *stats]
+
+        binary_vars = {var for var in vars if _is_binary_series(df[var])}
 
         def mean_std(x):
             # Use get_format_spec for mean and std
@@ -161,6 +165,7 @@ class DTable(MTable):
                 newline=False,
                 format_specs={"mean": mean_fmt, "std": std_fmt},
                 format_number_func=self._format_number,
+                suppress_std=var_name in binary_vars,
             )
 
         def mean_newline_std(x):
@@ -174,6 +179,7 @@ class DTable(MTable):
                 newline=True,
                 format_specs={"mean": mean_fmt, "std": std_fmt},
                 format_number_func=self._format_number,
+                suppress_std=var_name in binary_vars,
             )
 
         custom_funcs = {"mean_std": mean_std, "mean_newline_std": mean_newline_std}
@@ -214,11 +220,15 @@ class DTable(MTable):
                 if stat_name in ["mean_std", "mean_newline_std"]:
                     continue
                 # Only format numeric columns or when a format_spec exists for this stat or any var
-                if not (pd.api.types.is_numeric_dtype(res[col]) or stat_name in self.format_specs or any(str(v) in self.format_specs for v in res.index)):
+                if not (
+                    pd.api.types.is_numeric_dtype(res[col])
+                    or stat_name in self.format_specs
+                    or any(str(v) in self.format_specs for v in res.index)
+                ):
                     continue
                 # Format each cell using the row index as the variable name
                 formatted = []
-                for var_label, val in zip(res.index, res[col]):
+                for var_label, val in zip(res.index, res[col], strict=False):
                     var_name = str(var_label) if var_label is not None else None
                     fmt = get_format_spec(var_name, stat_name)
                     formatted.append(self._format_number(val, fmt, digits=digits))
@@ -247,11 +257,19 @@ class DTable(MTable):
                     counts_row_below = False
 
             for col in res.columns:
-                stat_name = col[-1] if isinstance(res.columns, pd.MultiIndex) else (res[col].name if hasattr(res[col], "name") else col)
+                stat_name = (
+                    col[-1]
+                    if isinstance(res.columns, pd.MultiIndex)
+                    else (res[col].name if hasattr(res[col], "name") else col)
+                )
                 var_name = col[0] if isinstance(res.columns, pd.MultiIndex) else col
                 if stat_name in ["mean_std", "mean_newline_std"]:
                     continue
-                elif (pd.api.types.is_numeric_dtype(res[col])) or stat_name in self.format_specs or var_name in self.format_specs:
+                elif (
+                    (pd.api.types.is_numeric_dtype(res[col]))
+                    or stat_name in self.format_specs
+                    or var_name in self.format_specs
+                ):
                     res[col] = res[col].apply(
                         lambda x, sn=stat_name, vn=var_name: self._format_number(
                             x, get_format_spec(vn, sn), digits=digits
@@ -294,10 +312,11 @@ class DTable(MTable):
         # Call MTable constructor with processed table and metadata
         super().__init__(res, notes=notes, rgroup_display=rgroup_display, **kwargs)
 
-    def _format_number(self, x: float, format_spec: str | None = None, digits: int = 2) -> str:
+    def _format_number(
+        self, x: float, format_spec: str | None = None, digits: int = 2
+    ) -> str:
         """Format a number with optional format specifier or sensible default."""
         import pandas as pd
-        import numpy as np
 
         if pd.isna(x) or (isinstance(x, float) and np.isnan(x)):
             return "-"
@@ -306,23 +325,22 @@ class DTable(MTable):
             abs_x = abs(x)
             if abs_x < 0.001 and abs_x > 0:
                 return f"{x:.6f}".rstrip("0").rstrip(".")
-            elif abs_x < 1:
-                return f"{x:.{digits}f}"
-            elif abs_x < 1000:
+            elif abs_x < 1 or abs_x < 1000:
                 return f"{x:.{digits}f}"
             elif abs_x >= 10000:
                 return f"{x:,.0f}"
             elif abs_x >= 1000:
                 if abs(x - round(x)) < 1e-10:
-                    return f"{int(round(x)):,}"
+                    return f"{round(x):,}"
                 else:
                     return f"{x:,.2f}"
             else:
                 return f"{x:.{digits}f}"
         try:
             if format_spec == "d":
-                return f"{int(round(x)):d}"
-            return f"{x:{format_spec}}"
+                return f"{round(x):d}"
+            else:
+                return f"{x:{format_spec}}"
         except (ValueError, TypeError):
             # fallback to sensible default
             return self._format_number(x, None, digits=digits)
@@ -353,26 +371,39 @@ def _relabel_index(index, labels=None, stats_labels=None):
     return index
 
 
+def _is_binary_series(data: pd.Series) -> bool:
+    """Return True for numeric/bool series with two distinct non-missing values."""
+    return (
+        pd.api.types.is_numeric_dtype(data) or pd.api.types.is_bool_dtype(data)
+    ) and data.nunique(dropna=True) == 2
+
+
 def _format_mean_std(
     data: pd.Series,
     digits: int = 2,
     newline: bool = True,
     format_specs: dict | None = None,
     format_number_func=None,
+    suppress_std: bool = False,
 ) -> str:
     """
-    Calculate the mean and standard deviation of a pandas Series and return as a string of the format "mean /n (std)".
+    Calculate the mean and standard deviation of a pandas Series and return
+    as a string.
 
     Parameters
     ----------
     data : pd.Series
         The pandas Series for which to calculate the mean and standard deviation.
     digits : int, optional
-        The number of decimal places to round the mean and standard deviation to. The default is 2.
+        The number of decimal places to round the mean and standard deviation to.
+        The default is 2.
     newline : bool, optional
-        Whether to add a newline character between the mean and standard deviation. The default is True.
+        Whether to add a newline character between the mean and standard deviation.
+        The default is True.
     format_specs : dict, optional
         Format specifications for mean and std. Keys should be 'mean' and 'std'.
+    suppress_std : bool, optional
+        Whether to return only the formatted mean. The default is False.
 
     Returns
     -------
@@ -386,8 +417,18 @@ def _format_mean_std(
         mean_str = f"{mean:.{digits}f}"
         std_str = f"{std:.{digits}f}"
     else:
-        mean_str = format_number_func(mean, format_specs.get("mean") if format_specs else None, digits)
-        std_str = format_number_func(std, format_specs.get("std") if format_specs else None, digits)
+        mean_str = format_number_func(
+            mean,
+            format_specs.get("mean") if format_specs else None,
+            digits,
+        )
+        std_str = format_number_func(
+            std,
+            format_specs.get("std") if format_specs else None,
+            digits,
+        )
+    if suppress_std:
+        return mean_str
     if newline:
         return f"{mean_str}\n({std_str})"
     else:
