@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: TestLinearmodels.test_absorbingls_html
+# name: TestLinearmodels.test_model[absorbingls-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -107,7 +107,7 @@
           
   '''
 # ---
-# name: TestLinearmodels.test_absorbingls_latex
+# name: TestLinearmodels.test_model[absorbingls-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -146,7 +146,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestLinearmodels.test_absorbingls_typst
+# name: TestLinearmodels.test_model[absorbingls-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -172,7 +172,7 @@
   )
   '''
 # ---
-# name: TestLinearmodels.test_iv2sls_html
+# name: TestLinearmodels.test_model[iv2sls-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -277,7 +277,7 @@
           
   '''
 # ---
-# name: TestLinearmodels.test_iv2sls_latex
+# name: TestLinearmodels.test_model[iv2sls-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -315,7 +315,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestLinearmodels.test_iv2sls_typst
+# name: TestLinearmodels.test_model[iv2sls-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -339,7 +339,7 @@
   )
   '''
 # ---
-# name: TestLinearmodels.test_panelols_html
+# name: TestLinearmodels.test_model[panelols-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -447,7 +447,7 @@
           
   '''
 # ---
-# name: TestLinearmodels.test_panelols_latex
+# name: TestLinearmodels.test_model[panelols-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -486,7 +486,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestLinearmodels.test_panelols_typst
+# name: TestLinearmodels.test_model[panelols-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
@@ -512,7 +512,7 @@
   )
   '''
 # ---
-# name: TestLinearmodels.test_pooledols_html
+# name: TestLinearmodels.test_model[pooledols-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -613,7 +613,7 @@
           
   '''
 # ---
-# name: TestLinearmodels.test_pooledols_latex
+# name: TestLinearmodels.test_model[pooledols-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -648,7 +648,7 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestLinearmodels.test_pooledols_typst
+# name: TestLinearmodels.test_model[pooledols-typst]
   '''
   #table(
     columns: (auto, 1fr), align: (left, center),
