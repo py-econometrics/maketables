@@ -1,9 +1,10 @@
-"""Snapshot tests for ETable model statistics."""
+"""Snapshot tests for table statistics."""
 
 import pytest
 from helpers import OUTPUT_TYPES, render_table
 
 import maketables as mt
+from maketables.dtable import _is_binary_series
 
 
 class TestETableModelStats:
@@ -39,3 +40,56 @@ class TestETableModelStats:
             model_stats_labels=model_stats_labels,
         )
         assert render_table(table, output_type) == snapshot
+
+
+def test_dtable_mean_std_suppresses_std_for_binary_variables(
+    dtable_binary_df,
+    snapshot,
+):
+    table = mt.DTable(
+        dtable_binary_df,
+        vars=["binary", "continuous"],
+        stats=["mean_std"],
+    )
+
+    assert table.df.to_csv().strip() == snapshot
+
+
+def test_dtable_mean_newline_std_suppresses_std_for_grouped_binary_variables(
+    dtable_binary_df,
+    snapshot,
+):
+    table = mt.DTable(
+        dtable_binary_df,
+        vars=["binary", "continuous"],
+        stats=["mean_newline_std"],
+        bycol=["group"],
+    )
+
+    assert table.df.to_csv().strip() == snapshot
+
+
+def test_btable_mean_std_suppresses_std_for_binary_variables(
+    dtable_binary_df,
+    snapshot,
+):
+    pytest.importorskip("pyfixest")
+    table = mt.BTable(
+        dtable_binary_df,
+        vars=["binary", "continuous"],
+        group="group",
+        stats=["mean_std"],
+    )
+
+    assert table.df.to_csv().strip() == snapshot
+
+
+def test_is_binary_series_detects_two_unique_nonmissing_values(
+    binary_type_df,
+    snapshot,
+):
+    results = {
+        col: _is_binary_series(binary_type_df[col]) for col in binary_type_df.columns
+    }
+
+    assert results == snapshot
