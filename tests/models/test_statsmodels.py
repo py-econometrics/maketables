@@ -17,6 +17,11 @@ class TestStatsmodels:
         table = mt.ETable([statsmodels_ols])
         assert table.make(type="tex") == snapshot
 
+    def test_ols_typst(self, statsmodels_ols, snapshot):
+        """Statsmodels OLS Typst output."""
+        table = mt.ETable([statsmodels_ols])
+        assert table.make(type="typst") == snapshot
+
     def test_logit_html(self, statsmodels_logit, snapshot):
         """Statsmodels Logit HTML output."""
         table = mt.ETable([statsmodels_logit])
@@ -27,6 +32,11 @@ class TestStatsmodels:
         table = mt.ETable([statsmodels_logit])
         assert table.make(type="tex") == snapshot
 
+    def test_logit_typst(self, statsmodels_logit, snapshot):
+        """Statsmodels Logit Typst output."""
+        table = mt.ETable([statsmodels_logit])
+        assert table.make(type="typst") == snapshot
+
     def test_probit_html(self, statsmodels_probit, snapshot):
         """Statsmodels Probit HTML output."""
         table = mt.ETable([statsmodels_probit])
@@ -36,3 +46,8 @@ class TestStatsmodels:
         """Statsmodels Probit LaTeX output."""
         table = mt.ETable([statsmodels_probit])
         assert table.make(type="tex") == snapshot
+
+    def test_probit_typst(self, statsmodels_probit, snapshot):
+        """Statsmodels Probit Typst output."""
+        table = mt.ETable([statsmodels_probit])
+        assert table.make(type="typst") == snapshot

@@ -139,6 +139,31 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestPyfixest.test_fixed_effects_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [group], [x],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
 # name: TestPyfixest.test_multi_fixest_with_stepwise_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -340,6 +365,34 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestPyfixest.test_multi_fixest_with_stepwise_typst
+  '''
+  #table(
+    columns: (auto, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr), align: (left, center, center, center, center, center, center),
+    column-gutter: (0em, 0em, 0em, 0em, 0em, 0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 6)[Y]],
+    table.hline(stroke: 0.03em, start: 1, end: 7),
+    [], [(1)], [(2)], [(3)], [(4)], [(5)], [(6)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [X1], [0.862\*\*\* \ (0.225)], [0.736\*\* \ (0.206)], [0.947\*\*\* \ (0.217)], [], [], [],
+    [X2], [], [], [], [-0.209\*\*\* \ (0.052)], [-0.147\*\*\* \ (0.039)], [-0.210\*\*\* \ (0.043)],
+    [Intercept], [0.929\*\*\* \ (0.272)], [], [], [1.560\*\*\* \ (0.180)], [], [],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [f1], [-], [x], [-], [-], [x], [-],
+    [f2], [-], [-], [x], [-], [-], [x],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [98], [97], [98], [99], [98], [99],
+    [$R^2$], [0.133], [0.614], [0.162], [0.145], [0.574], [0.157],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 7)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
 # name: TestPyfixest.test_multi_model_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -489,6 +542,30 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestPyfixest.test_multi_model_typst
+  '''
+  #table(
+    columns: (auto, 1fr, 1fr), align: (left, center, center),
+    column-gutter: (0em, 0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 2)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 3),
+    [], [(1)], [(2)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.100\*\*\* \ (0.000)], [2.100\*\*\* \ (0.000)],
+    [group=B], [], [-0.000 \ (0.000)],
+    [Intercept], [0.000 \ (0.000)], [0.000 \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100], [100],
+    [$R^2$], [1], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 3)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
 # name: TestPyfixest.test_single_model_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -623,5 +700,28 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestPyfixest.test_single_model_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---

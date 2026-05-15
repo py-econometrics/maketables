@@ -17,6 +17,11 @@ class TestETableCoefFormat:
         table = mt.ETable([fitted_model])
         assert table.make(type="tex") == snapshot
 
+    def test_coef_fmt_default_typst(self, fitted_model, snapshot):
+        """Default coefficient format (b with SE) in Typst."""
+        table = mt.ETable([fitted_model])
+        assert table.make(type="typst") == snapshot
+
     def test_coef_fmt_with_tstat_html(self, fitted_model, snapshot):
         """Coefficient with t-statistic in brackets."""
         table = mt.ETable([fitted_model], coef_fmt="b:.3f \n [t:.2f]")
@@ -26,6 +31,11 @@ class TestETableCoefFormat:
         """Coefficient with t-statistic in brackets."""
         table = mt.ETable([fitted_model], coef_fmt="b:.3f \n [t:.2f]")
         assert table.make(type="tex") == snapshot
+
+    def test_coef_fmt_with_tstat_typst(self, fitted_model, snapshot):
+        """Coefficient with t-statistic in brackets in Typst."""
+        table = mt.ETable([fitted_model], coef_fmt="b:.3f \n [t:.2f]")
+        assert table.make(type="typst") == snapshot
 
     def test_coef_fmt_with_pvalue_html(self, fitted_model, snapshot):
         """Coefficient with p-value."""
@@ -37,6 +47,11 @@ class TestETableCoefFormat:
         table = mt.ETable([fitted_model], coef_fmt="b:.3f \n (p:.4f)")
         assert table.make(type="tex") == snapshot
 
+    def test_coef_fmt_with_pvalue_typst(self, fitted_model, snapshot):
+        """Coefficient with p-value in Typst."""
+        table = mt.ETable([fitted_model], coef_fmt="b:.3f \n (p:.4f)")
+        assert table.make(type="typst") == snapshot
+
     def test_coef_fmt_all_stats_html(self, fitted_model, snapshot):
         """Coefficient with SE and t-statistic."""
         table = mt.ETable([fitted_model], coef_fmt="b:.3f \n (se:.3f) \n [t:.2f]")
@@ -47,6 +62,11 @@ class TestETableCoefFormat:
         table = mt.ETable([fitted_model], coef_fmt="b:.3f \n (se:.3f) \n [t:.2f]")
         assert table.make(type="tex") == snapshot
 
+    def test_coef_fmt_all_stats_typst(self, fitted_model, snapshot):
+        """Coefficient with SE and t-statistic in Typst."""
+        table = mt.ETable([fitted_model], coef_fmt="b:.3f \n (se:.3f) \n [t:.2f]")
+        assert table.make(type="typst") == snapshot
+
     def test_coef_fmt_different_decimals_html(self, fitted_model, snapshot):
         """Different decimal places for coefficient and SE."""
         table = mt.ETable([fitted_model], coef_fmt="b:.4f \n (se:.2f)")
@@ -56,3 +76,8 @@ class TestETableCoefFormat:
         """Different decimal places for coefficient and SE."""
         table = mt.ETable([fitted_model], coef_fmt="b:.4f \n (se:.2f)")
         assert table.make(type="tex") == snapshot
+
+    def test_coef_fmt_different_decimals_typst(self, fitted_model, snapshot):
+        """Different decimal places for coefficient and SE in Typst."""
+        table = mt.ETable([fitted_model], coef_fmt="b:.4f \n (se:.2f)")
+        assert table.make(type="typst") == snapshot

@@ -142,6 +142,30 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestStatsmodels.test_logit_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y\_binary]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [1933.784 \ (614063.360)],
+    [Intercept], [8.106 \ (6267.036)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [Pseudo $R^2$], [1],
+    [Log-likelihood], [-0],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
 # name: TestStatsmodels.test_ols_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -276,6 +300,29 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestStatsmodels.test_ols_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.100\*\*\* \ (0.000)],
+    [Intercept], [0.000\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---
 # name: TestStatsmodels.test_probit_html
@@ -419,5 +466,29 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestStatsmodels.test_probit_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y\_binary]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [940.384 \ (140417681969.216)],
+    [Intercept], [4.646 \ (1895244764.470)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [Pseudo $R^2$], [1],
+    [Log-likelihood], [0],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---

@@ -17,6 +17,14 @@ class TestETableCoefSelection:
         table = mt.ETable(fitted_models, keep=["x"])
         assert table.make(type="tex") == snapshot
 
+    def test_keep_multiple_coefs_typst(self, fitted_models, snapshot):
+        """Keep multiple coefficients (x and C(group)) in Typst."""
+        table = mt.ETable(
+            fitted_models,
+            keep=["x"],
+        )
+        assert table.make(type="typst") == snapshot
+
     def test_drop_intercept_html(self, fitted_model, snapshot):
         """Drop intercept from table."""
         table = mt.ETable([fitted_model], drop=["Intercept"])
@@ -26,6 +34,11 @@ class TestETableCoefSelection:
         """Drop intercept from table."""
         table = mt.ETable([fitted_model], drop=["Intercept"])
         assert table.make(type="tex") == snapshot
+
+    def test_drop_intercept_typst(self, fitted_model, snapshot):
+        """Drop intercept from table in Typst."""
+        table = mt.ETable([fitted_model], drop=["Intercept"])
+        assert table.make(type="typst") == snapshot
 
     def test_keep_with_regex_html(self, fitted_models, snapshot):
         """Keep coefficients using regex pattern."""
@@ -37,6 +50,11 @@ class TestETableCoefSelection:
         table = mt.ETable(fitted_models, keep=["x", "C\\(group\\)"])
         assert table.make(type="tex") == snapshot
 
+    def test_keep_with_regex_typst(self, fitted_models, snapshot):
+        """Keep coefficients using regex pattern in Typst."""
+        table = mt.ETable(fitted_models, keep=["x", "C\\(group\\)"])
+        assert table.make(type="typst") == snapshot
+
     def test_exact_match_html(self, fitted_models, snapshot):
         """Exact match mode (no regex)."""
         table = mt.ETable(fitted_models, keep=["x"], exact_match=True)
@@ -47,6 +65,11 @@ class TestETableCoefSelection:
         table = mt.ETable(fitted_models, keep=["x"], exact_match=True)
         assert table.make(type="tex") == snapshot
 
+    def test_exact_match_typst(self, fitted_models, snapshot):
+        """Exact match mode (no regex) in Typst."""
+        table = mt.ETable(fitted_models, keep=["x"], exact_match=True)
+        assert table.make(type="typst") == snapshot
+
     def test_keep_reorders_html(self, fitted_models, snapshot):
         """Keep reorders coefficients according to pattern order."""
         table = mt.ETable(fitted_models, keep=["C\\(group\\)", "x", "Intercept"])
@@ -56,3 +79,8 @@ class TestETableCoefSelection:
         """Keep reorders coefficients according to pattern order."""
         table = mt.ETable(fitted_models, keep=["C\\(group\\)", "x", "Intercept"])
         assert table.make(type="tex") == snapshot
+
+    def test_keep_reorders_typst(self, fitted_models, snapshot):
+        """Keep reorders coefficients according to pattern order in Typst."""
+        table = mt.ETable(fitted_models, keep=["C\\(group\\)", "x", "Intercept"])
+        assert table.make(type="typst") == snapshot

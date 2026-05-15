@@ -135,6 +135,29 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestETableCoefFormat.test_coef_fmt_all_stats_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000 \ (0.000) \ \[16501042479138636.00\]],
+    [Intercept], [0.100 \ (0.000) \ \[248762575240997.72\]],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   (Std. Error)   \[t-stats\]]]],
+  )
+  '''
+# ---
 # name: TestETableCoefFormat.test_coef_fmt_default_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -269,6 +292,29 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestETableCoefFormat.test_coef_fmt_default_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---
 # name: TestETableCoefFormat.test_coef_fmt_different_decimals_html
@@ -407,6 +453,29 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestETableCoefFormat.test_coef_fmt_different_decimals_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.0000 \ (0.00)],
+    [Intercept], [0.1000 \ (0.00)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
 # name: TestETableCoefFormat.test_coef_fmt_with_pvalue_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -543,6 +612,29 @@
   \end{threeparttable}
   '''
 # ---
+# name: TestETableCoefFormat.test_coef_fmt_with_pvalue_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000 \ (0.0000)],
+    [Intercept], [0.100 \ (0.0000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   (p-value)]]],
+  )
+  '''
+# ---
 # name: TestETableCoefFormat.test_coef_fmt_with_tstat_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
@@ -677,5 +769,28 @@
   Format of coefficient cell: Coefficient   [t-stats]\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestETableCoefFormat.test_coef_fmt_with_tstat_typst
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000 \ \[16501042479138636.00\]],
+    [Intercept], [0.100 \ \[248762575240997.72\]],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   \[t-stats\]]]],
+  )
   '''
 # ---
