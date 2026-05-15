@@ -7,14 +7,63 @@ import pytest
 
 @pytest.fixture
 def simple_df():
-    """Simple DataFrame for basic table tests."""
+    """Create a simple DataFrame for basic table tests."""
     np.random.seed(42)
     n = 100
-    return pd.DataFrame({
-        "x": np.random.randn(n),
-        "y": np.random.randn(n),
-        "group": np.random.choice(["A", "B"], n),
-    })
+    return pd.DataFrame(
+        {
+            "x": np.random.randn(n),
+            "y": np.random.randn(n),
+            "group": np.random.choice(["A", "B"], n),
+        }
+    )
+
+
+@pytest.fixture
+def btable_factorial_df():
+    """Create 2x2 grouped data for BTable tests."""
+    return pd.DataFrame(
+        {
+            "x": [
+                1.0,
+                1.2,
+                2.0,
+                2.2,
+                3.0,
+                3.2,
+                4.0,
+                4.2,
+                1.5,
+                1.7,
+                2.5,
+                2.7,
+                3.5,
+                3.7,
+                4.5,
+                4.7,
+            ],
+            "z": [
+                2.0,
+                2.2,
+                2.5,
+                2.7,
+                3.5,
+                3.7,
+                4.0,
+                4.2,
+                2.1,
+                2.3,
+                2.6,
+                2.8,
+                3.6,
+                3.8,
+                4.1,
+                4.3,
+            ],
+            "treatment": ["control"] * 8 + ["treated"] * 8,
+            "period": ["pre", "pre", "post", "post"] * 4,
+        }
+    )
 
 
 @pytest.fixture
@@ -23,10 +72,12 @@ def fitted_model(simple_df):
     import pyfixest as pf
 
     # Create fully deterministic data (no random component)
-    df = pd.DataFrame({
-        "x": [1.0, 2.0, 3.0, 4.0, 5.0] * 20,  # 100 rows
-        "y": [2.1, 4.1, 6.1, 8.1, 10.1] * 20,  # Deterministic: y ≈ 2*x + 0.1
-    })
+    df = pd.DataFrame(
+        {
+            "x": [1.0, 2.0, 3.0, 4.0, 5.0] * 20,  # 100 rows
+            "y": [2.1, 4.1, 6.1, 8.1, 10.1] * 20,  # Deterministic: y ≈ 2*x + 0.1
+        }
+    )
     return pf.feols("y ~ x", data=df)
 
 
@@ -116,12 +167,14 @@ def panel_df():
     time_effects = np.random.randn(n_periods)
 
     # Create panel data
-    df = pd.DataFrame({
-        "entity": entity_id,
-        "time": time_id,
-        "x1": np.random.randn(n_obs),
-        "x2": np.random.randn(n_obs),
-    })
+    df = pd.DataFrame(
+        {
+            "entity": entity_id,
+            "time": time_id,
+            "x1": np.random.randn(n_obs),
+            "x2": np.random.randn(n_obs),
+        }
+    )
 
     # Create outcome with entity effects
     df["y"] = (
@@ -168,13 +221,20 @@ def linearmodels_absorbingls():
     firm_id = np.random.choice(n_firms, size=n_obs)
     firm_effects = np.random.randn(n_firms)
 
-    df = pd.DataFrame({
-        "firm_id": firm_id,
-        "x1": np.random.randn(n_obs),
-        "x2": np.random.randn(n_obs),
-    })
+    df = pd.DataFrame(
+        {
+            "firm_id": firm_id,
+            "x1": np.random.randn(n_obs),
+            "x2": np.random.randn(n_obs),
+        }
+    )
 
-    df["y"] = 2 * df["x1"] + 0.5 * df["x2"] + firm_effects[firm_id] + np.random.randn(n_obs) * 0.1
+    df["y"] = (
+        2 * df["x1"]
+        + 0.5 * df["x2"]
+        + firm_effects[firm_id]
+        + np.random.randn(n_obs) * 0.1
+    )
 
     # Fit AbsorbingLS
     mod = AbsorbingLS(
@@ -199,12 +259,14 @@ def linearmodels_iv2sls():
     x_exog = np.random.randn(n_obs)  # Exogenous regressor
     y = 2 * x_endog + 0.5 * x_exog + np.random.randn(n_obs) * 0.1
 
-    df = pd.DataFrame({
-        "y": y,
-        "x_endog": x_endog,
-        "x_exog": x_exog,
-        "z": z,
-    })
+    df = pd.DataFrame(
+        {
+            "y": y,
+            "x_endog": x_endog,
+            "x_exog": x_exog,
+            "z": z,
+        }
+    )
 
     # IV2SLS: y ~ x_exog + [x_endog ~ z]
     mod = IV2SLS.from_formula("y ~ 1 + x_exog + [x_endog ~ z]", data=df)
