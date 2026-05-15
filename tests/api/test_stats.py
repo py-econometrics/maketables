@@ -84,6 +84,21 @@ def test_btable_mean_std_suppresses_std_for_binary_variables(
     assert table.df.to_csv().strip() == snapshot
 
 
+def test_btable_accepts_list_group_for_column_combinations(
+    btable_factorial_df,
+    snapshot,
+):
+    pytest.importorskip("pyfixest")
+    table = mt.BTable(
+        btable_factorial_df,
+        vars=["x", "z"],
+        group=["treatment", "period"],
+        stats=["mean"],
+    )
+
+    assert table.df.to_csv().strip() == snapshot
+
+
 def test_is_binary_series_detects_two_unique_nonmissing_values(
     binary_type_df,
     snapshot,

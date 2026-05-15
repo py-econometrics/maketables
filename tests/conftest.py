@@ -32,6 +32,53 @@ def dtable_binary_df():
 
 
 @pytest.fixture
+def btable_factorial_df():
+    """Create 2x2 grouped data for BTable tests."""
+    return pd.DataFrame(
+        {
+            "x": [
+                1.0,
+                1.2,
+                2.0,
+                2.2,
+                3.0,
+                3.2,
+                4.0,
+                4.2,
+                1.5,
+                1.7,
+                2.5,
+                2.7,
+                3.5,
+                3.7,
+                4.5,
+                4.7,
+            ],
+            "z": [
+                2.0,
+                2.2,
+                2.5,
+                2.7,
+                3.5,
+                3.7,
+                4.0,
+                4.2,
+                2.1,
+                2.3,
+                2.6,
+                2.8,
+                3.6,
+                3.8,
+                4.1,
+                4.3,
+            ],
+            "treatment": ["control"] * 8 + ["treated"] * 8,
+            "period": ["pre", "pre", "post", "post"] * 4,
+        }
+    )
+
+
+@pytest.fixture
 def binary_type_df():
     """Create binary and non-binary columns across several dtypes."""
     return pd.DataFrame(
