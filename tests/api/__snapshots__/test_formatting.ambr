@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: TestETableCoefFormat.test_coef_fmt_all_stats_html
+# name: TestETableCoefFormat.test_coef_fmt[all_stats-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -8,7 +8,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -47,11 +47,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -68,11 +68,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000 <br> (0.000) <br> [inf]</td>
+      <td class="gt_row gt_center">2.000 <br> (0.000) <br> [16501042479138636.00]</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100 <br> (0.000) <br> [inf]</td>
+      <td class="gt_row gt_center">0.100 <br> (0.000) <br> [248762575240997.72]</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -87,20 +87,20 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   (Std. Error)   [t-stats]</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_all_stats_latex
+# name: TestETableCoefFormat.test_coef_fmt[all_stats-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -114,10 +114,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000 \\ (0.000) \\ [inf]} \\
+  x & \makecell{2.000 \\ (0.000) \\ [16501042479138636.00]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100 \\ (0.000) \\ [inf]} \\
+  Intercept & \makecell{0.100 \\ (0.000) \\ [248762575240997.72]} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -131,11 +131,34 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Format of coefficient cell: Coefficient   (Std. Error)   [t-stats]\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_default_html
+# name: TestETableCoefFormat.test_coef_fmt[all_stats-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000 \ (0.000) \ \[16501042479138636.00\]],
+    [Intercept], [0.100 \ (0.000) \ \[248762575240997.72\]],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   (Std. Error)   \[t-stats\]]]],
+  )
+  '''
+# ---
+# name: TestETableCoefFormat.test_coef_fmt[default-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -144,7 +167,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -183,11 +206,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -223,20 +246,20 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_default_latex
+# name: TestETableCoefFormat.test_coef_fmt[default-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -267,11 +290,34 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_different_decimals_html
+# name: TestETableCoefFormat.test_coef_fmt[default-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
+# name: TestETableCoefFormat.test_coef_fmt[different_decimals-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -280,7 +326,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -319,11 +365,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -359,20 +405,20 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_different_decimals_latex
+# name: TestETableCoefFormat.test_coef_fmt[different_decimals-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -403,11 +449,34 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_pvalue_html
+# name: TestETableCoefFormat.test_coef_fmt[different_decimals-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.0000 \ (0.00)],
+    [Intercept], [0.1000 \ (0.00)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
+# name: TestETableCoefFormat.test_coef_fmt[with_pvalue-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -416,7 +485,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -455,11 +524,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -495,20 +564,20 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   (p-value)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_pvalue_latex
+# name: TestETableCoefFormat.test_coef_fmt[with_pvalue-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -539,11 +608,34 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Format of coefficient cell: Coefficient   (p-value)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_tstat_html
+# name: TestETableCoefFormat.test_coef_fmt[with_pvalue-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000 \ (0.0000)],
+    [Intercept], [0.100 \ (0.0000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   (p-value)]]],
+  )
+  '''
+# ---
+# name: TestETableCoefFormat.test_coef_fmt[with_tstat-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -552,7 +644,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -591,11 +683,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -612,11 +704,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000 <br> [inf]</td>
+      <td class="gt_row gt_center">2.000 <br> [16501042479138636.00]</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100 <br> [inf]</td>
+      <td class="gt_row gt_center">0.100 <br> [248762575240997.72]</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -631,20 +723,20 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Format of coefficient cell: Coefficient   [t-stats]</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
-# name: TestETableCoefFormat.test_coef_fmt_with_tstat_latex
+# name: TestETableCoefFormat.test_coef_fmt[with_tstat-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -658,10 +750,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000 \\ [inf]} \\
+  x & \makecell{2.000 \\ [16501042479138636.00]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100 \\ [inf]} \\
+  Intercept & \makecell{0.100 \\ [248762575240997.72]} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -675,7 +767,30 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Format of coefficient cell: Coefficient   [t-stats]\end{minipage}
-  
+
   \end{threeparttable}
+  '''
+# ---
+# name: TestETableCoefFormat.test_coef_fmt[with_tstat-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000 \ \[16501042479138636.00\]],
+    [Intercept], [0.100 \ \[248762575240997.72\]],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Format of coefficient cell: Coefficient   \[t-stats\]]]],
+  )
   '''
 # ---
