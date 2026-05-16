@@ -8,7 +8,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -47,11 +47,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y_binary">
@@ -91,17 +91,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
 # name: TestStatsmodels.test_logit_latex
@@ -138,7 +138,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
@@ -151,7 +151,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -190,11 +190,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -230,17 +230,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
 # name: TestStatsmodels.test_ols_latex
@@ -274,7 +274,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
@@ -287,7 +287,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-  
+
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -326,11 +326,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-   
+
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-  
+
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y_binary">
@@ -347,11 +347,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">940.384 <br> (140417681969.961)</td>
+      <td class="gt_row gt_center">940.384 <br> (140417681969.216)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">4.646 <br> (1895244764.480)</td>
+      <td class="gt_row gt_center">4.646 <br> (1895244764.470)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -370,17 +370,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-    
+
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-  
+
   </tfoot>
-  
+
   </table>
-  
+
   </div>
-          
+
   '''
 # ---
 # name: TestStatsmodels.test_probit_latex
@@ -397,10 +397,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{940.384 \\ (140417681969.961)} \\
+  x & \makecell{940.384 \\ (140417681969.216)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{4.646 \\ (1895244764.480)} \\
+  Intercept & \makecell{4.646 \\ (1895244764.470)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -417,7 +417,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-  
+
   \end{threeparttable}
   '''
 # ---
