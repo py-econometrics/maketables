@@ -68,11 +68,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">1933.784 <br> (614063.360)</td>
+      <td class="gt_row gt_center">0.960*** <br> (0.293)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">8.106 <br> (6267.036)</td>
+      <td class="gt_row gt_center">-0.778*** <br> (0.233)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -83,11 +83,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Pseudo R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.104</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Log-likelihood</th>
-      <td class="gt_row gt_center">-0</td>
+      <td class="gt_row gt_center">-56.156</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -118,20 +118,20 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{1933.784 \\ (614063.360)} \\
+  x & \makecell{0.960*** \\ (0.293)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{8.106 \\ (6267.036)} \\
+  Intercept & \makecell{-0.778*** \\ (0.233)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Observations & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Pseudo $R^2$ & 1 \\
+  Pseudo $R^2$ & 0.104 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Log-likelihood & -0 \\
+  Log-likelihood & -56.156 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -347,11 +347,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">940.384 <br> (140417681969.216)</td>
+      <td class="gt_row gt_center">193.729 <br> (80726.837)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">4.646 <br> (1895244764.470)</td>
+      <td class="gt_row gt_center">-27.343 <br> (11642.817)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -366,7 +366,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Log-likelihood</th>
-      <td class="gt_row gt_center">0</td>
+      <td class="gt_row gt_center">-0</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -397,10 +397,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{940.384 \\ (140417681969.216)} \\
+  x & \makecell{193.729 \\ (80726.837)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{4.646 \\ (1895244764.470)} \\
+  Intercept & \makecell{-27.343 \\ (11642.817)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -410,7 +410,7 @@
   Pseudo $R^2$ & 1 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Log-likelihood & 0 \\
+  Log-likelihood & -0 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
