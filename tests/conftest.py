@@ -7,32 +7,76 @@ import pytest
 
 @pytest.fixture
 def simple_df():
-    """Simple DataFrame for basic table tests."""
+    """Create a simple DataFrame for basic table tests."""
     np.random.seed(42)
     n = 100
-    return pd.DataFrame({
-        "x": np.random.randn(n),
-        "y": np.random.randn(n),
-        "group": np.random.choice(["A", "B"], n),
-    })
+    return pd.DataFrame(
+        {
+            "x": np.random.randn(n),
+            "y": np.random.randn(n),
+            "group": np.random.choice(["A", "B"], n),
+        }
+    )
+
+
+@pytest.fixture
+def dtable_binary_df():
+    """Create data with binary and continuous variables for DTable/BTable tests."""
+    return pd.DataFrame(
+        {
+            "binary": [0, 1, 1, 0, 0, 1, 1, 0],
+            "continuous": [1.0, 2.0, 4.0, 5.0, 1.5, 2.5, 4.5, 5.5],
+            "group": ["A", "A", "B", "B", "A", "A", "B", "B"],
+        }
+    )
+
+
+@pytest.fixture
+def binary_type_df():
+    """Create binary and non-binary columns across several dtypes."""
+    return pd.DataFrame(
+        {
+            "int_binary": [0, 1, 1, 0],
+            "non_indicator_numeric_binary": [1, 2, np.nan, 2],
+            "float_binary": [0.0, 1.0, np.nan, 1.0],
+            "bool_binary": [True, False, True, False],
+            "nullable_bool_binary": pd.Series(
+                [True, False, pd.NA, True],
+                dtype="boolean",
+            ),
+            "string_binary": ["yes", "no", None, "yes"],
+            "categorical_binary": pd.Categorical(
+                ["treated", "control", None, "treated"],
+            ),
+            "datetime_binary": pd.to_datetime(
+                ["2020-01-01", "2020-01-02", None, "2020-01-01"],
+            ),
+            "single_level": [1, 1, np.nan, 1],
+            "three_level": ["a", "b", "c", None],
+            "all_missing": [None, None, None, None],
+        }
+    )
 
 
 @pytest.fixture
 def fitted_model(simple_df):
-    """Single fitted pyfixest model."""
+    """Create a single fitted pyfixest model."""
     import pyfixest as pf
 
-    # Create fully deterministic data (no random component)
-    df = pd.DataFrame({
-        "x": [1.0, 2.0, 3.0, 4.0, 5.0] * 20,  # 100 rows
-        "y": [2.1, 4.1, 6.1, 8.1, 10.1] * 20,  # Deterministic: y ≈ 2*x + 0.1
-    })
+    np.random.seed(42)
+    df = pd.DataFrame(
+        {
+            "x": [1.0, 2.0, 3.0, 4.0, 5.0] * 20,  # 100 rows
+            "y": [2.1, 4.1, 6.1, 8.1, 10.1] * 20,
+        }
+    )
+    df["y"] = df["y"] + np.random.randn(len(df)) * 0.1
     return pf.feols("y ~ x", data=df)
 
 
 @pytest.fixture
 def fitted_models(simple_df):
-    """Multiple fitted pyfixest models for multi-column tables."""
+    """Create multiple fitted pyfixest models for multi-column tables."""
     import pyfixest as pf
 
     np.random.seed(42)
@@ -47,7 +91,7 @@ def fitted_models(simple_df):
 
 @pytest.fixture
 def fitted_model_fe(simple_df):
-    """Pyfixest model with fixed effects."""
+    """Create a pyfixest model with fixed effects."""
     import pyfixest as pf
 
     np.random.seed(42)
@@ -63,7 +107,7 @@ def fitted_model_fe(simple_df):
 
 @pytest.fixture
 def statsmodels_ols(simple_df):
-    """Statsmodels OLS model."""
+    """Create a statsmodels OLS model."""
     import statsmodels.formula.api as smf
 
     np.random.seed(42)
@@ -74,25 +118,26 @@ def statsmodels_ols(simple_df):
 
 @pytest.fixture
 def statsmodels_logit(simple_df):
-    """Statsmodels Logit model."""
+    """Create a statsmodels Logit model."""
     import statsmodels.formula.api as smf
 
     np.random.seed(42)
     df = simple_df.copy()
-    # Create binary outcome based on x
-    df["y_binary"] = (df["x"] > 0).astype(int)
+    logits = -0.25 + 1.1 * df["x"]
+    probs = 1 / (1 + np.exp(-logits))
+    df["y_binary"] = np.random.binomial(1, probs)
     return smf.logit("y_binary ~ x", data=df).fit(disp=0)
 
 
 @pytest.fixture
 def statsmodels_probit(simple_df):
-    """Statsmodels Probit model."""
+    """Create a statsmodels Probit model."""
     import statsmodels.formula.api as smf
 
     np.random.seed(42)
     df = simple_df.copy()
-    # Create binary outcome based on x
-    df["y_binary"] = (df["x"] > 0).astype(int)
+    latent = -0.25 + 1.1 * df["x"] + np.random.randn(len(df)) * 0.6
+    df["y_binary"] = (latent > 0).astype(int)
     return smf.probit("y_binary ~ x", data=df).fit(disp=0)
 
 
@@ -101,7 +146,7 @@ def statsmodels_probit(simple_df):
 
 @pytest.fixture
 def panel_df():
-    """Panel DataFrame for linearmodels tests."""
+    """Create a panel DataFrame for linearmodels tests."""
     np.random.seed(42)
     n_entities = 20
     n_periods = 5
@@ -116,12 +161,14 @@ def panel_df():
     time_effects = np.random.randn(n_periods)
 
     # Create panel data
-    df = pd.DataFrame({
-        "entity": entity_id,
-        "time": time_id,
-        "x1": np.random.randn(n_obs),
-        "x2": np.random.randn(n_obs),
-    })
+    df = pd.DataFrame(
+        {
+            "entity": entity_id,
+            "time": time_id,
+            "x1": np.random.randn(n_obs),
+            "x2": np.random.randn(n_obs),
+        }
+    )
 
     # Create outcome with entity effects
     df["y"] = (
@@ -139,7 +186,7 @@ def panel_df():
 
 @pytest.fixture
 def linearmodels_panelols(panel_df):
-    """Linearmodels PanelOLS with entity effects."""
+    """Create a linearmodels PanelOLS with entity effects."""
     from linearmodels import PanelOLS
 
     mod = PanelOLS.from_formula("y ~ x1 + x2 + EntityEffects", data=panel_df)
@@ -148,7 +195,7 @@ def linearmodels_panelols(panel_df):
 
 @pytest.fixture
 def linearmodels_pooledols(panel_df):
-    """Linearmodels PooledOLS (no fixed effects)."""
+    """Create a linearmodels PooledOLS without fixed effects."""
     from linearmodels import PooledOLS
 
     mod = PooledOLS.from_formula("y ~ x1 + x2", data=panel_df)
@@ -157,7 +204,7 @@ def linearmodels_pooledols(panel_df):
 
 @pytest.fixture
 def linearmodels_absorbingls():
-    """Linearmodels AbsorbingLS with high-dimensional fixed effects."""
+    """Create a linearmodels AbsorbingLS with high-dimensional fixed effects."""
     from linearmodels import AbsorbingLS
 
     np.random.seed(42)
@@ -168,13 +215,20 @@ def linearmodels_absorbingls():
     firm_id = np.random.choice(n_firms, size=n_obs)
     firm_effects = np.random.randn(n_firms)
 
-    df = pd.DataFrame({
-        "firm_id": firm_id,
-        "x1": np.random.randn(n_obs),
-        "x2": np.random.randn(n_obs),
-    })
+    df = pd.DataFrame(
+        {
+            "firm_id": firm_id,
+            "x1": np.random.randn(n_obs),
+            "x2": np.random.randn(n_obs),
+        }
+    )
 
-    df["y"] = 2 * df["x1"] + 0.5 * df["x2"] + firm_effects[firm_id] + np.random.randn(n_obs) * 0.1
+    df["y"] = (
+        2 * df["x1"]
+        + 0.5 * df["x2"]
+        + firm_effects[firm_id]
+        + np.random.randn(n_obs) * 0.1
+    )
 
     # Fit AbsorbingLS
     mod = AbsorbingLS(
@@ -187,7 +241,7 @@ def linearmodels_absorbingls():
 
 @pytest.fixture
 def linearmodels_iv2sls():
-    """Linearmodels IV2SLS with instrumental variables."""
+    """Create a linearmodels IV2SLS with instrumental variables."""
     from linearmodels.iv import IV2SLS
 
     np.random.seed(42)
@@ -199,12 +253,14 @@ def linearmodels_iv2sls():
     x_exog = np.random.randn(n_obs)  # Exogenous regressor
     y = 2 * x_endog + 0.5 * x_exog + np.random.randn(n_obs) * 0.1
 
-    df = pd.DataFrame({
-        "y": y,
-        "x_endog": x_endog,
-        "x_exog": x_exog,
-        "z": z,
-    })
+    df = pd.DataFrame(
+        {
+            "y": y,
+            "x_endog": x_endog,
+            "x_exog": x_exog,
+            "z": z,
+        }
+    )
 
     # IV2SLS: y ~ x_exog + [x_endog ~ z]
     mod = IV2SLS.from_formula("y ~ 1 + x_exog + [x_endog ~ z]", data=df)

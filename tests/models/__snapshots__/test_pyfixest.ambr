@@ -558,11 +558,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.986*** <br> (0.006)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.131*** <br> (0.021)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -573,7 +573,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.999</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -604,17 +604,17 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000*** \\ (0.000)} \\
+  x & \makecell{1.986*** \\ (0.006)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100*** \\ (0.000)} \\
+  Intercept & \makecell{0.131*** \\ (0.021)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Observations & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  $R^2$ & 1 \\
+  $R^2$ & 0.999 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}

@@ -68,11 +68,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.986*** <br> (0.006)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.131*** <br> (0.021)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -118,10 +118,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000*** \\ (0.000)} \\
+  x & \makecell{1.986*** \\ (0.006)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100*** \\ (0.000)} \\
+  Intercept & \makecell{0.131*** \\ (0.021)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -211,11 +211,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.986*** <br> (0.006)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.131*** <br> (0.021)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -226,7 +226,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R-squared</th>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.999</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -257,17 +257,17 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000*** \\ (0.000)} \\
+  x & \makecell{1.986*** \\ (0.006)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100*** \\ (0.000)} \\
+  Intercept & \makecell{0.131*** \\ (0.021)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Sample Size & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  R-squared & 1 \\
+  R-squared & 0.999 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -347,11 +347,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.986*** <br> (0.006)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.131*** <br> (0.021)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -362,7 +362,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.999</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Adj. R<sup>2</sup></th>
@@ -370,7 +370,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">RMSE</th>
-      <td class="gt_row gt_center">0</td>
+      <td class="gt_row gt_center">0.088</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -401,23 +401,23 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000*** \\ (0.000)} \\
+  x & \makecell{1.986*** \\ (0.006)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100*** \\ (0.000)} \\
+  Intercept & \makecell{0.131*** \\ (0.021)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Observations & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  $R^2$ & 1 \\
+  $R^2$ & 0.999 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Adj. $R^2$ & - \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  RMSE & 0 \\
+  RMSE & 0.088 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -497,11 +497,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.986*** <br> (0.006)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.131*** <br> (0.021)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -539,10 +539,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000*** \\ (0.000)} \\
+  x & \makecell{1.986*** \\ (0.006)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100*** \\ (0.000)} \\
+  Intercept & \makecell{0.131*** \\ (0.021)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -626,11 +626,11 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.986*** <br> (0.006)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.131*** <br> (0.021)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">stats</th>
@@ -641,7 +641,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.999</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">S.E. type</th>
@@ -676,17 +676,17 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.000*** \\ (0.000)} \\
+  x & \makecell{1.986*** \\ (0.006)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.100*** \\ (0.000)} \\
+  Intercept & \makecell{0.131*** \\ (0.021)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Observations & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  $R^2$ & 1 \\
+  $R^2$ & 0.999 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   S.E. type & iid \\
@@ -699,4 +699,44 @@
   
   \end{threeparttable}
   '''
+# ---
+# name: test_btable_mean_std_suppresses_std_for_binary_variables
+  '''
+  ,A,B,
+  ,Mean (Std. Dev.),Mean (Std. Dev.),p-value
+  binary,0.50,0.50,1.000
+  continuous,1.75 (0.65),4.75 (0.65),0.001
+  '''
+# ---
+# name: test_dtable_mean_newline_std_suppresses_std_for_grouped_binary_variables
+  '''
+  ,A,B
+  ,Mean (Std. Dev.),Mean (Std. Dev.)
+  binary,0.50,0.50
+  continuous,"1.75
+  (0.65)","4.75
+  (0.65)"
+  '''
+# ---
+# name: test_dtable_mean_std_suppresses_std_for_binary_variables
+  '''
+  ,Mean (Std. Dev.)
+  binary,0.50
+  continuous,3.25 (1.71)
+  '''
+# ---
+# name: test_is_dummy_series_detects_two_unique_nonmissing_values
+  dict({
+    'all_missing': False,
+    'bool_binary': True,
+    'categorical_binary': False,
+    'datetime_binary': False,
+    'float_binary': True,
+    'int_binary': True,
+    'non_indicator_numeric_binary': False,
+    'nullable_bool_binary': True,
+    'single_level': False,
+    'string_binary': False,
+    'three_level': False,
+  })
 # ---

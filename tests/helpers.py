@@ -5,6 +5,7 @@ import re
 
 def normalize_html(html: str) -> str:
     """Normalize HTML output by replacing random IDs with a stable placeholder."""
+    html = html.replace("\r\n", "\n").replace("\r", "\n")
     normalized = re.sub(r'id="([a-z]{10})"', 'id="STABLE_ID"', html)
     normalized = re.sub(r"#[a-z]{10}", "#STABLE_ID", normalized)
     return normalized
