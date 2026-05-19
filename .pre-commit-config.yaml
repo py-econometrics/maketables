@@ -1,6 +1,8 @@
 ci:
   autofix_prs: false
 
+exclude: ^.*/__snapshots__/.*\.ambr$
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
