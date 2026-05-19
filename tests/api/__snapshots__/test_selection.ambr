@@ -8,7 +8,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-
+  
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -47,11 +47,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-
+   
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-
+  
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="1" scope="col" id="y">
@@ -83,17 +83,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-
+    
     <tr>
       <td class="gt_sourcenote" colspan="2">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-
+  
   </tfoot>
-
+  
   </table>
-
+  
   </div>
-
+          
   '''
 # ---
 # name: TestETableCoefSelection.test_drop_intercept_latex
@@ -124,7 +124,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-
+  
   \end{threeparttable}
   '''
 # ---
@@ -137,7 +137,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-
+  
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -176,11 +176,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-
+   
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-
+  
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="2" scope="colgroup" id="y">
@@ -216,17 +216,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-
+    
     <tr>
       <td class="gt_sourcenote" colspan="3">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-
+  
   </tfoot>
-
+  
   </table>
-
+  
   </div>
-
+          
   '''
 # ---
 # name: TestETableCoefSelection.test_exact_match_latex
@@ -257,7 +257,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-
+  
   \end{threeparttable}
   '''
 # ---
@@ -270,7 +270,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-
+  
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -309,11 +309,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-
+   
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-
+  
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="2" scope="colgroup" id="y">
@@ -332,7 +332,7 @@
     <tr>
       <th class="gt_row gt_left gt_stub">group=B</th>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">-0.000 <br> (0.000)</td>
+      <td class="gt_row gt_center">-0.000*** <br> (0.000)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
@@ -341,8 +341,8 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.000 <br> (0.000)</td>
-      <td class="gt_row gt_center">0.000 <br> (0.000)</td>
+      <td class="gt_row gt_center">0.000** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.000*** <br> (0.000)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="3">stats</th>
@@ -359,17 +359,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-
+    
     <tr>
       <td class="gt_sourcenote" colspan="3">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-
+  
   </tfoot>
-
+  
   </table>
-
+  
   </div>
-
+          
   '''
 # ---
 # name: TestETableCoefSelection.test_keep_reorders_latex
@@ -386,13 +386,13 @@
    & (1) & (2) \\
   \midrule
   \addlinespace[1ex]
-  group=B &  & \makecell{-0.000 \\ (0.000)} \\
+  group=B &  & \makecell{-0.000*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   x & \makecell{2.100*** \\ (0.000)} & \makecell{2.100*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.000 \\ (0.000)} & \makecell{0.000 \\ (0.000)} \\
+  Intercept & \makecell{0.000** \\ (0.000)} & \makecell{0.000*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -406,7 +406,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-
+  
   \end{threeparttable}
   '''
 # ---
@@ -419,7 +419,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-
+  
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -458,11 +458,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-
+   
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-
+  
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="2" scope="colgroup" id="y">
@@ -498,17 +498,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-
+    
     <tr>
       <td class="gt_sourcenote" colspan="3">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-
+  
   </tfoot>
-
+  
   </table>
-
+  
   </div>
-
+          
   '''
 # ---
 # name: TestETableCoefSelection.test_keep_single_coef_latex
@@ -539,7 +539,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-
+  
   \end{threeparttable}
   '''
 # ---
@@ -552,7 +552,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
           }
-
+  
   #STABLE_ID thead, tbody, tfoot, tr, td, th { border-style: none; }
    tr { background-color: transparent; }
   #STABLE_ID p { margin: 0; padding: 0; }
@@ -591,11 +591,11 @@
    #STABLE_ID .gt_super { font-size: 65%; }
    #STABLE_ID .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
    #STABLE_ID .gt_asterisk { font-size: 100%; vertical-align: 0; }
-
+   
   </style>
   <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
   <thead>
-
+  
   <tr class="gt_col_headings gt_spanner_row">
     <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="2" colspan="1" scope="col" id=""></th>
     <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="2" scope="colgroup" id="y">
@@ -619,7 +619,7 @@
     <tr>
       <th class="gt_row gt_left gt_stub">group=B</th>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">-0.000 <br> (0.000)</td>
+      <td class="gt_row gt_center">-0.000*** <br> (0.000)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="3">stats</th>
@@ -636,17 +636,17 @@
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
-
+    
     <tr>
       <td class="gt_sourcenote" colspan="3">Significance levels: * p &lt; 0.1, ** p &lt; 0.05, *** p &lt; 0.01. Format of coefficient cell: Coefficient   (Std. Error)</td>
     </tr>
-
+  
   </tfoot>
-
+  
   </table>
-
+  
   </div>
-
+          
   '''
 # ---
 # name: TestETableCoefSelection.test_keep_with_regex_latex
@@ -666,7 +666,7 @@
   x & \makecell{2.100*** \\ (0.000)} & \makecell{2.100*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  group=B &  & \makecell{-0.000 \\ (0.000)} \\
+  group=B &  & \makecell{-0.000*** \\ (0.000)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -680,7 +680,7 @@
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
-
+  
   \end{threeparttable}
   '''
 # ---
