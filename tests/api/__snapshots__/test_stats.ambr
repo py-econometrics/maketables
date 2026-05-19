@@ -725,7 +725,7 @@
   continuous,3.25 (1.71)
   '''
 # ---
-# name: test_is_binary_series_detects_two_unique_nonmissing_values
+# name: test_is_dummy_series_detects_two_unique_nonmissing_values
   dict({
     'all_missing': False,
     'bool_binary': True,
@@ -733,7 +733,7 @@
     'datetime_binary': False,
     'float_binary': True,
     'int_binary': True,
-    'non_indicator_numeric_binary': True,
+    'non_indicator_numeric_binary': False,
     'nullable_bool_binary': True,
     'single_level': False,
     'string_binary': False,

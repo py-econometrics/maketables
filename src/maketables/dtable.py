@@ -152,7 +152,7 @@ class DTable(MTable):
             elif "count" not in stats:
                 stats = ["count", *stats]
 
-        binary_vars = {var for var in vars if _is_binary_series(df[var])}
+        binary_vars = {var for var in vars if _is_dummy_series(df[var])}
 
         def mean_std(x):
             # Use get_format_spec for mean and std
@@ -371,11 +371,11 @@ def _relabel_index(index, labels=None, stats_labels=None):
     return index
 
 
-def _is_binary_series(data: pd.Series) -> bool:
-    """Return True for numeric/bool series with two distinct non-missing values."""
-    return (
-        pd.api.types.is_numeric_dtype(data) or pd.api.types.is_bool_dtype(data)
-    ) and data.nunique(dropna=True) == 2
+def _is_dummy_series(data: pd.Series) -> bool:
+    if not (pd.api.types.is_numeric_dtype(data) or pd.api.types.is_bool_dtype(data)):
+        return False
+    unique_vals = set(data.dropna().unique())
+    return unique_vals == {0, 1}
 
 
 def _format_mean_std(

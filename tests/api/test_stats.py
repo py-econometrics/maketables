@@ -1,10 +1,10 @@
 """Snapshot tests for table statistics."""
 
 import pytest
+from helpers import normalize_html
 
 import maketables as mt
-from helpers import normalize_html
-from maketables.dtable import _is_binary_series
+from maketables.dtable import _is_dummy_series
 
 
 class TestETableModelStats:
@@ -111,12 +111,12 @@ def test_btable_mean_std_suppresses_std_for_binary_variables(
     assert table.df.to_csv().strip() == snapshot
 
 
-def test_is_binary_series_detects_two_unique_nonmissing_values(
+def test_is_dummy_series_detects_two_unique_nonmissing_values(
     binary_type_df,
     snapshot,
 ):
     results = {
-        col: _is_binary_series(binary_type_df[col]) for col in binary_type_df.columns
+        col: _is_dummy_series(binary_type_df[col]) for col in binary_type_df.columns
     }
 
     assert results == snapshot
