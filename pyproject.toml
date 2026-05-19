@@ -48,7 +48,7 @@ Issues = "https://github.com/py-econometrics/maketables/issues"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
+    "pytest>=9.0.3,<10",
     "pytest-cov>=4.0",
     "syrupy>=4.0.0",
     "pyfixest>=0.13.0",

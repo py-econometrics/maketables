@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: TestETableModelStats.test_model_stats_aic_bic_html
+# name: TestETableModelStats.test_model_stats[aic_bic-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -104,7 +104,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_aic_bic_latex
+# name: TestETableModelStats.test_model_stats[aic_bic-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -142,7 +142,31 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_custom_labels_html
+# name: TestETableModelStats.test_model_stats[aic_bic-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [AIC], [-],
+    [BIC], [-],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
+# name: TestETableModelStats.test_model_stats[custom_labels-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -243,7 +267,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_custom_labels_latex
+# name: TestETableModelStats.test_model_stats[custom_labels-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -278,7 +302,30 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_extended_html
+# name: TestETableModelStats.test_model_stats[custom_labels-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Sample Size], [100],
+    [R-squared], [1],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
+# name: TestETableModelStats.test_model_stats[extended-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -387,7 +434,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_extended_latex
+# name: TestETableModelStats.test_model_stats[extended-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -428,7 +475,32 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_minimal_html
+# name: TestETableModelStats.test_model_stats[extended-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    [Adj. $R^2$], [-],
+    [RMSE], [0],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
+# name: TestETableModelStats.test_model_stats[minimal-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -525,7 +597,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_minimal_latex
+# name: TestETableModelStats.test_model_stats[minimal-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -557,7 +629,29 @@
   \end{threeparttable}
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_with_se_type_html
+# name: TestETableModelStats.test_model_stats[minimal-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---
+# name: TestETableModelStats.test_model_stats[with_se_type-html]
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
   <style>
@@ -662,7 +756,7 @@
           
   '''
 # ---
-# name: TestETableModelStats.test_model_stats_with_se_type_latex
+# name: TestETableModelStats.test_model_stats[with_se_type-latex]
   '''
   \begin{threeparttable}
   \begingroup
@@ -698,5 +792,29 @@
   Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
+  '''
+# ---
+# name: TestETableModelStats.test_model_stats[with_se_type-typst]
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [2.000\*\*\* \ (0.000)],
+    [Intercept], [0.100\*\*\* \ (0.000)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [1],
+    [S.E. type], [iid],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
   '''
 # ---

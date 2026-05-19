@@ -1,66 +1,41 @@
 """Snapshot tests for ETable model statistics."""
 
+import pytest
+from helpers import OUTPUT_TYPES, render_table
+
 import maketables as mt
-from helpers import normalize_html
 
 
 class TestETableModelStats:
     """Snapshot tests for model_stats variations."""
 
-    def test_model_stats_extended_html(self, fitted_model, snapshot):
-        """Extended statistics including adj_r2 and rmse."""
-        table = mt.ETable([fitted_model], model_stats=["N", "r2", "adj_r2", "rmse"])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_model_stats_extended_latex(self, fitted_model, snapshot):
-        """Extended statistics including adj_r2 and rmse."""
-        table = mt.ETable([fitted_model], model_stats=["N", "r2", "adj_r2", "rmse"])
-        assert table.make(type="tex") == snapshot
-
-    def test_model_stats_minimal_html(self, fitted_model, snapshot):
-        """Minimal statistics (only N)."""
-        table = mt.ETable([fitted_model], model_stats=["N"])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_model_stats_minimal_latex(self, fitted_model, snapshot):
-        """Minimal statistics (only N)."""
-        table = mt.ETable([fitted_model], model_stats=["N"])
-        assert table.make(type="tex") == snapshot
-
-    def test_model_stats_with_se_type_html(self, fitted_model, snapshot):
-        """Include standard error type."""
-        table = mt.ETable([fitted_model], model_stats=["N", "r2", "se_type"])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_model_stats_with_se_type_latex(self, fitted_model, snapshot):
-        """Include standard error type."""
-        table = mt.ETable([fitted_model], model_stats=["N", "r2", "se_type"])
-        assert table.make(type="tex") == snapshot
-
-    def test_model_stats_custom_labels_html(self, fitted_model, snapshot):
-        """Custom labels for model statistics."""
+    @pytest.mark.parametrize("output_type", OUTPUT_TYPES)
+    @pytest.mark.parametrize(
+        "model_stats, model_stats_labels",
+        [
+            pytest.param(["N", "r2", "adj_r2", "rmse"], None, id="extended"),
+            pytest.param(["N"], None, id="minimal"),
+            pytest.param(["N", "r2", "se_type"], None, id="with_se_type"),
+            pytest.param(
+                ["N", "r2"],
+                {"N": "Sample Size", "r2": "R-squared"},
+                id="custom_labels",
+            ),
+            pytest.param(["N", "aic", "bic"], None, id="aic_bic"),
+        ],
+    )
+    def test_model_stats(
+        self,
+        fitted_model,
+        snapshot,
+        model_stats,
+        model_stats_labels,
+        output_type,
+    ):
+        """Model statistics variations."""
         table = mt.ETable(
             [fitted_model],
-            model_stats=["N", "r2"],
-            model_stats_labels={"N": "Sample Size", "r2": "R-squared"},
+            model_stats=model_stats,
+            model_stats_labels=model_stats_labels,
         )
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_model_stats_custom_labels_latex(self, fitted_model, snapshot):
-        """Custom labels for model statistics."""
-        table = mt.ETable(
-            [fitted_model],
-            model_stats=["N", "r2"],
-            model_stats_labels={"N": "Sample Size", "r2": "R-squared"},
-        )
-        assert table.make(type="tex") == snapshot
-
-    def test_model_stats_aic_bic_html(self, fitted_model, snapshot):
-        """Information criteria (AIC, BIC)."""
-        table = mt.ETable([fitted_model], model_stats=["N", "aic", "bic"])
-        assert normalize_html(table.make(type="gt").as_raw_html()) == snapshot
-
-    def test_model_stats_aic_bic_latex(self, fitted_model, snapshot):
-        """Information criteria (AIC, BIC)."""
-        table = mt.ETable([fitted_model], model_stats=["N", "aic", "bic"])
-        assert table.make(type="tex") == snapshot
+        assert render_table(table, output_type) == snapshot
