@@ -27,7 +27,7 @@ Balancing table: descriptive stats by group + per-variable p-values from group t
 Inherits DTable to build the stats table, then adds a 'p-value' column:
 - For 2 groups: p-value of the single group indicator (t test).
 - For >2 groups: joint Wald test that all group indicators are zero.
-You can add fixed_effects and specify the `vcov` option, for instance 
+You can add fixed_effects and specify the `vcov` option, for instance
 to implement clustering (see pyfixest documentation).
 
 ## Parameters {.doc-section .doc-section-parameters}
@@ -36,7 +36,7 @@ to implement clustering (see pyfixest documentation).
 |------------------|--------------------------|----------------------------------------------------------------------------------------------------------|------------|
 | df               | pd.DataFrame             | Source data.                                                                                             | _required_ |
 | vars             | list\[str\]              | Variables to include.                                                                                    | _required_ |
-| group            | str                      | Grouping column in df.                                                                                   | _required_ |
+| group            | str \| list\[str\]       | Grouping column(s) in df.                                                                                | _required_ |
 | labels           | dict                     | Variable labels (used for display and in notes).                                                         | `None`     |
 | digits           | int                      | Rounding for stats in the DTable. Default 2.                                                             | `2`        |
 | pdigits          | int                      | Rounding for p-values. Default 3.                                                                        | `3`        |

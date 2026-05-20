@@ -69,6 +69,26 @@ class TestETableModelStats:
         assert table.make(type="tex") == snapshot
 
 
+class TestBTableStats:
+    """Snapshot tests for BTable statistics."""
+
+    def test_accepts_list_group_for_column_combinations(
+        self,
+        btable_factorial_df,
+        snapshot,
+    ):
+        """Accept list-valued groups for column combinations."""
+        pytest.importorskip("pyfixest")
+        table = mt.BTable(
+            btable_factorial_df,
+            vars=["x", "z"],
+            group=["treatment", "period"],
+            stats=["mean"],
+        )
+
+        assert table.df.to_csv().strip() == snapshot
+
+
 def test_dtable_mean_std_suppresses_std_for_binary_variables(
     dtable_binary_df,
     snapshot,
