@@ -51,7 +51,7 @@ dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "syrupy>=4.0.0",
-    "pyfixest>=0.13.0",
+    "pyfixest>=0.13.0,<0.31",
     "statsmodels>=0.13.0",
     "linearmodels>=4.0",
     "mypy>=1.0",
@@ -61,7 +61,7 @@ dev = [
 docs = [
     "sphinx>=5.0",
     "sphinx-rtd-theme>=1.0",
-    "pyfixest>=0.13.0",
+    "pyfixest>=0.13.0,<0.31",
     "statsmodels>=0.13.0",
     "ipykernel>=6.0.0,<7",
     "nbconvert>=7.0.0",
@@ -90,7 +90,7 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
-python = "~=3.13.0"
+python = ">=3.10,<3.15"
 quarto = ">=1.8.27,<2"
 ipywidgets = ">=8.1.8,<9"
 
@@ -98,13 +98,33 @@ ipywidgets = ">=8.1.8,<9"
 maketables = { path = ".", editable = true }
 
 [tool.pixi.environments]
-default = { solve-group = "default" }
-dev = { features = ["dev"], solve-group = "default" }
-docs = { features = ["docs"], solve-group = "default" }
-pystata = { features = ["pystata", "docs"], solve-group = "default" }
-linearmodels = { features = ["linearmodels", "docs"], solve-group = "default" }
-lifelines = { features = ["lifelines", "docs"], solve-group = "default" }
-publish = { features = ["publish"], solve-group = "default" }
+default = { features = ["dev", "py313"], solve-group = "py313" }
+dev = { features = ["dev", "py313"], solve-group = "py313" }
+docs = { features = ["docs", "py313"], solve-group = "py313" }
+pystata = { features = ["pystata", "docs", "py313"], solve-group = "py313" }
+linearmodels = { features = ["linearmodels", "docs", "py313"], solve-group = "py313" }
+lifelines = { features = ["lifelines", "docs", "py313"], solve-group = "py313" }
+publish = { features = ["publish", "py313"], solve-group = "py313" }
+py310 = { features = ["dev", "py310"], solve-group = "py310" }
+py311 = { features = ["dev", "py311"], solve-group = "py311" }
+py312 = { features = ["dev", "py312"], solve-group = "py312" }
+py313 = { features = ["dev", "py313"], solve-group = "py313" }
+py314 = { features = ["dev", "py314"], solve-group = "py314" }
+
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
+
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
+
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
 
 [tool.pixi.feature.dev.pypi-dependencies]
 maketables = { path = ".", editable = true, extras = ["dev"] }
@@ -112,6 +132,7 @@ maketables = { path = ".", editable = true, extras = ["dev"] }
 [tool.pixi.feature.dev.tasks]
 check = "pre-commit run --all-files"
 tests = "pytest tests/ -v"
+tests-with-cov = "pytest tests/ -v --cov=src/maketables --cov-report=xml"
 tests-update-snapshots = "pytest tests/ --snapshot-update -v"
 
 [tool.pytest.ini_options]
