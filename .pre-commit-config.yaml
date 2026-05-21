@@ -39,6 +39,22 @@ repos:
         args:
           - --branch
           - main
+
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.21.2
+    hooks:
+      - id: pyproject-fmt
+
+  - repo: https://github.com/lyz-code/yamlfix
+    rev: 1.19.1
+    hooks:
+      - id: yamlfix
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.34.0
     hooks:
@@ -66,3 +82,32 @@ repos:
         args: [--ignore-missing-imports]
         files: ^src/maketables/
         additional_dependencies: [numpy>=1.20, pandas-stubs]
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
+        args:
+          - --extra-keys
+          - metadata.language_info.version metadata.vscode
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-gfm-alerts
+          - mdformat-ruff
+        args:
+          - --wrap
+          - "88"
+        files: (CLAUDE\.md|README\.md)
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-myst
+          - mdformat-ruff
+        args:
+          - --wrap
+          - "88"
+        files: docs/.*\.md$
