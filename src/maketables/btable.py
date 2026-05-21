@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -135,7 +137,7 @@ class BTable(DTable):
 
         for i, var in enumerate(vars):
             formula = f"{var} ~ i({pvalue_group}){fe_suffix}"
-            model = pf.feols(formula, data=pvalue_df, vcov=vcov)
+            model: Any = pf.feols(formula, data=pvalue_df, vcov=vcov)  # ty: ignore[invalid-argument-type]
 
             if n_groups == 2:
                 # p-value of the single group indicator

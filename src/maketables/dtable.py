@@ -191,15 +191,16 @@ class DTable(MTable):
         if (byrow is not None) and (bycol is not None):
             bylist = [byrow, *bycol]
             res = df.groupby(bylist, observed=observed).agg(agg_funcs)
-        if (byrow is None) and (bycol is None):
+        elif (byrow is None) and (bycol is None):
             res = df.agg(agg_funcs)
         elif (byrow is not None) and (bycol is None):
             res = df.groupby(byrow, observed=observed).agg(agg_funcs)
-        elif (byrow is None) and (bycol is not None):
+        else:
             res = df.groupby(bycol, observed=observed).agg(agg_funcs)
 
         if (byrow is not None) or ("count" not in stats):
             counts_row_below = False
+        nobs = None
 
         if res.columns.nlevels == 1:
             if counts_row_below:
@@ -235,6 +236,7 @@ class DTable(MTable):
                 res[col] = formatted
 
             if counts_row_below:
+                assert nobs is not None
                 obs_row = [
                     self._format_number(
                         nobs, get_format_spec(None, "count"), digits=digits
@@ -282,6 +284,7 @@ class DTable(MTable):
                 res = pd.DataFrame(res.unstack(level=tuple(bycol)))
                 if not isinstance(res.columns, pd.MultiIndex):
                     res.columns = pd.MultiIndex.from_tuples(res.columns)
+                assert isinstance(res.columns, pd.MultiIndex)
                 res.columns = res.columns.reorder_levels([*bycol, "Statistics"])
                 levels_to_sort = list(range(res.columns.nlevels - 1))
                 res = res.sort_index(axis=1, level=levels_to_sort, sort_remaining=False)
@@ -347,6 +350,7 @@ class DTable(MTable):
 
 
 def _relabel_index(index, labels=None, stats_labels=None):
+    labels = {} if labels is None else labels
     if stats_labels is None:
         if isinstance(index, pd.MultiIndex):
             index = pd.MultiIndex.from_tuples(

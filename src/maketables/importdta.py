@@ -5,6 +5,7 @@ import os
 import warnings
 from datetime import datetime
 from os import PathLike
+from typing import Any, cast
 
 import pandas as pd
 from pandas.io.stata import StataReader
@@ -64,7 +65,9 @@ def import_dta(
     --------
     >>> df = import_dta("../data/auto.dta")
     >>> df.attrs["variable_labels"]["price"]
-    >>> df, labels = import_dta("../data/auto.dta", update_mtable_defaults=True, return_labels=True)
+    >>> df, labels = import_dta(
+    ...     "../data/auto.dta", update_mtable_defaults=True, return_labels=True
+    ... )
     """
     try:
         with StataReader(path, convert_categoricals=convert_categoricals) as rdr:
@@ -194,13 +197,13 @@ def export_dta(
     try:
         df.to_stata(
             path,
-            write_index=write_index,
+            write_index=cast(Any, write_index),
             version=version,
             variable_labels=var_labels if var_labels else None,
             data_label=data_label,
-            convert_strl=True,
+            convert_strl=cast(Any, True),
             time_stamp=time_stamp,
-            compression=compression,
+            compression=cast(Any, compression),
         )
     except TypeError:
         warnings.warn(
@@ -210,12 +213,12 @@ def export_dta(
         )
         df.to_stata(
             path,
-            write_index=write_index,
+            write_index=cast(Any, write_index),
             version=version,
             data_label=data_label,
-            convert_strl=True,
+            convert_strl=cast(Any, True),
             time_stamp=time_stamp,
-            compression=compression,
+            compression=cast(Any, compression),
         )
 
 
@@ -312,3 +315,4 @@ def set_var_labels(
                     merged[k] = v
             MTable.DEFAULT_LABELS = merged
 
+    return current

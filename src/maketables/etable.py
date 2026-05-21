@@ -2,9 +2,8 @@ import contextlib
 import math
 import re
 import warnings
-from collections import Counter
 from collections.abc import ValuesView
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import numpy as np
 import pandas as pd
@@ -22,9 +21,9 @@ class ETable(MTable):
 
     Parameters
     ----------
-    models : 
-        One or more fitted models. Accepts single models, lists, or multi-model 
-        containers (e.g., pyfixest's FixestMulti). Supported packages are 
+    models :
+        One or more fitted models. Accepts single models, lists, or multi-model
+        containers (e.g., pyfixest's FixestMulti). Supported packages are
         automatically detected via registered extractors (see extractors.py).
         Built-in support: pyfixest, statsmodels, linearmodels.
     signif_code : list[float], optional
@@ -68,7 +67,7 @@ class ETable(MTable):
     exact_match : bool, default False
         If True, treat keep/drop patterns as exact names (no regex).
     order : list[str], optional
-        Explicit order for coefficients in the output table. Provide a list of 
+        Explicit order for coefficients in the output table. Provide a list of
         coefficient names (after keep/drop filtering) to specify the exact order.
         Any coefficients not in the list will appear at the end in their original order.
         This is applied after keep/drop filtering.
@@ -171,7 +170,7 @@ class ETable(MTable):
 
     def __init__(
         self,
-        models: Any, 
+        models: Any,
         *,
         signif_code: list | None = None,
         coef_fmt: str | None = None,
@@ -252,7 +251,6 @@ class ETable(MTable):
         if model_heads is not None:
             assert len(model_heads) == len(models)
 
-
         assert head_order in ["dh", "hd", "d", "h", ""]
 
         # --- metadata from models (modular) ---
@@ -267,15 +265,16 @@ class ETable(MTable):
             # For mixed model types, collect default stats from all models and use their union
             try:
                 from .extractors import get_extractor
+
                 if models:
                     all_defaults = []
                     has_custom_defaults = False
-                    
+
                     # Collect defaults from each model
                     for model in models:
                         try:
                             extractor = get_extractor(model)
-                            if hasattr(extractor, 'default_stat_keys'):
+                            if hasattr(extractor, "default_stat_keys"):
                                 ext_defaults = extractor.default_stat_keys(model)
                                 if ext_defaults is not None:
                                     all_defaults.extend(ext_defaults)
@@ -289,7 +288,7 @@ class ETable(MTable):
                         except Exception:
                             # If extractor lookup fails, use general defaults
                             all_defaults.extend(self.DEFAULT_MODEL_STATS)
-                    
+
                     # Use union of all defaults, preserving order
                     if all_defaults:
                         seen = set()
@@ -315,10 +314,10 @@ class ETable(MTable):
             coef_fmt=coef_fmt,
             signif_code=signif_code,
             custom_stats=custom_stats,
-            keep=keep,
-            drop=drop,
-            order=order,
-            exact_match=exact_match,
+            keep=[] if keep is None else ([keep] if isinstance(keep, str) else keep),
+            drop=[] if drop is None else ([drop] if isinstance(drop, str) else drop),
+            order=[] if order is None else order,
+            exact_match=True if exact_match is None else exact_match,
             labels=labels,
             cat_template=cat_template,
         )
@@ -385,25 +384,27 @@ class ETable(MTable):
     def _normalize_models(self, models: Any) -> list[Any]:
         """
         Normalize models to a list, expanding multi-model containers.
-        
+
         Uses duck typing to detect FixestMulti-like objects (anything with a to_list() method).
         This keeps etable.py package-agnostic. Recursively expands containers within lists.
         """
         # Check for multi-model container (has to_list method)
-        if hasattr(models, 'to_list') and callable(getattr(models, 'to_list', None)):
+        if hasattr(models, "to_list") and callable(getattr(models, "to_list", None)):
             return models.to_list()
-        
+
         # Handle lists/tuples/ValuesView - recursively expand any containers within
         if isinstance(models, (list, tuple, ValuesView)):
             result = []
             for item in models:
                 # Recursively normalize each item to handle lists of FixestMulti objects
-                if hasattr(item, 'to_list') and callable(getattr(item, 'to_list', None)):
+                if hasattr(item, "to_list") and callable(
+                    getattr(item, "to_list", None)
+                ):
                     result.extend(item.to_list())
                 else:
                     result.append(item)
             return result
-        
+
         # Single model
         return [models]
 
@@ -473,7 +474,9 @@ class ETable(MTable):
             pass
         return merged
 
-    def _collect_fixef_list(self, models: list[Any], show_fe: bool, feorder: list[str] | None = None) -> list[str]:
+    def _collect_fixef_list(
+        self, models: list[Any], show_fe: bool, feorder: list[str] | None = None
+    ) -> list[str]:
         if not show_fe:
             return []
         fixef_list: list[str] = []
@@ -516,14 +519,14 @@ class ETable(MTable):
         cat_template: str,
     ) -> tuple[pd.DataFrame, str]:
         lbcode = self.DEFAULT_LINEBREAK
-        
+
         # Get column names from first model to validate tokens
         first_tidy = self._extract_tidy_df(models[0])
         available_columns = set(first_tidy.columns)
         coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(
             coef_fmt, custom_stats, available_columns
         )
-        
+
         cols_per_model = []
         for i, model in enumerate(models):
             tidy = self._extract_tidy_df(model)
@@ -537,9 +540,7 @@ class ETable(MTable):
 
                 if token == "b":
                     # Add coefficient (with stars if marked with *)
-                    formatted = tidy["b"].apply(
-                        _format_number, format_spec=format_spec
-                    )
+                    formatted = tidy["b"].apply(_format_number, format_spec=format_spec)
                     if add_stars:
                         formatted = formatted + stars
                     cell += formatted
@@ -553,7 +554,9 @@ class ETable(MTable):
                     )
                 elif token in tidy.columns:
                     # Any column from tidy (se, t, p, ci95l, ci95u, etc.)
-                    formatted = tidy[token].apply(_format_number, format_spec=format_spec)
+                    formatted = tidy[token].apply(
+                        _format_number, format_spec=format_spec
+                    )
                     # Add stars if marked with *
                     if add_stars:
                         formatted = formatted + stars
@@ -624,15 +627,17 @@ class ETable(MTable):
                     and (fx in fx_str.split("+"))
                     and not getattr(m, "_use_mundlak", False)
                 )
-                row.append(self.DEFAULT_FE_MARKER[0] if has else self.DEFAULT_FE_MARKER[1])
+                row.append(
+                    self.DEFAULT_FE_MARKER[0] if has else self.DEFAULT_FE_MARKER[1]
+                )
             rows[fx] = row
-        fe_df = pd.DataFrame.from_dict(rows, orient="index", columns=list(like_columns))
+        fe_df = pd.DataFrame.from_dict(
+            rows, orient="index", columns=cast(Any, list(like_columns))
+        )
         # relabel FE names
         felabels = felabels or {}
         labels = labels or {}
-        fe_df.index = fe_df.index.to_series().apply(
-            lambda x: felabels.get(x, labels.get(x, x))
-        )
+        fe_df = fe_df.rename(index=lambda x: felabels.get(x, labels.get(x, x)))
         return fe_df
 
     def _build_model_stats(
@@ -728,8 +733,6 @@ class ETable(MTable):
         return pd.MultiIndex.from_arrays(header_levels)
 
 
-
-
 def _format_number(x: float, format_spec: str | None = None) -> str:
     """
     Format a number with optional format specifier.
@@ -789,6 +792,7 @@ def _format_number(x: float, format_spec: str | None = None) -> str:
 
 
 def _relabel_index(index, labels=None, stats_labels=None):
+    labels = {} if labels is None else labels
     if stats_labels is None:
         if isinstance(index, pd.MultiIndex):
             index = pd.MultiIndex.from_tuples(
@@ -821,7 +825,10 @@ def _is_valid_format_spec(spec: str) -> bool:
         return False
     return True
 
-def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
+
+def _parse_coef_fmt(
+    coef_fmt: str, custom_stats: dict[str, Any], available_columns: set[Any]
+):
     """
     Parse the coef_fmt string with format specifiers and star markers.
 
@@ -846,14 +853,12 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     """
     # Reserved tokens that cannot be overridden
     reserved_tokens = ["b", "se", "t", "p"]
-    
+
     # Validate custom_stats don't use reserved tokens
-    custom_elements = list(custom_stats.keys())
+    custom_elements = [str(key) for key in custom_stats]
     if any(x in reserved_tokens for x in custom_elements):
-        raise ValueError(
-            f"Custom stats cannot use reserved tokens: {reserved_tokens}"
-        )
-    
+        raise ValueError(f"Custom stats cannot use reserved tokens: {reserved_tokens}")
+
     # Validate custom_stats don't conflict with available columns
     if available_columns:
         conflicting = [x for x in custom_elements if x in available_columns]
@@ -864,7 +869,7 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
             )
 
     # Title mappings
-    title_map = {
+    title_map: dict[str, str] = {
         "b": "Coefficient",
         "se": "Std. Error",
         "t": "t-stats",
@@ -878,18 +883,21 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
 
     # Build list of all valid tokens
     # Priority: reserved > available columns > custom_stats
-    all_tokens = reserved_tokens.copy()
-    
+    all_tokens: list[str] = reserved_tokens.copy()
+
     if available_columns:
         # Add tidy columns that aren't reserved
         tidy_tokens = [
-            col for col in available_columns 
-            if col not in reserved_tokens
+            str(col) for col in available_columns if col not in reserved_tokens
         ]
         all_tokens.extend(tidy_tokens)
-    
+
     # Add custom stats last (lowest priority, already validated for conflicts)
     all_tokens.extend(custom_elements)
+    token_strings: list[str] = []
+    for token in all_tokens:
+        token_strings.append(str(token))
+    token_strings.sort(key=len, reverse=True)
 
     coef_fmt_elements = []
     title_parts = []
@@ -900,7 +908,7 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
 
         # Check for tokens with potential format specifiers
         # Sort by length descending to match longer tokens first (e.g., "Std. Error" before "Std")
-        for token in sorted(all_tokens, key=len, reverse=True):
+        for token in token_strings:
             if coef_fmt[i:].startswith(token):
                 # Check if followed by format specifier
                 after_token_pos = i + len(token)
@@ -913,13 +921,16 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
                     # (thousands separator) rather than a literal delimiter.
                     while (
                         format_end < len(coef_fmt)
-                        and coef_fmt[format_end] not in [" ", "\n", "(", ")", "[", "]", "\\", "*"]
+                        and coef_fmt[format_end]
+                        not in [" ", "\n", "(", ")", "[", "]", "\\", "*"]
                         and (
                             coef_fmt[format_end] != ","
-                            or _is_valid_format_spec(coef_fmt[format_start:format_end + 1])
+                            or _is_valid_format_spec(
+                                coef_fmt[format_start : format_end + 1]
+                            )
                         )
                         and not any(
-                            coef_fmt[format_end:].startswith(t) for t in all_tokens
+                            coef_fmt[format_end:].startswith(t) for t in token_strings
                         )
                     ):
                         format_end += 1
@@ -930,17 +941,24 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
                     if format_end < len(coef_fmt) and coef_fmt[format_end] == "*":
                         add_stars = True
                         format_end += 1
-                    coef_fmt_elements.append({"token": token, "format": format_spec, "add_stars": add_stars})
-                    title_parts.append(title_map.get(token, token))
+                    coef_fmt_elements.append(
+                        {"token": token, "format": format_spec, "add_stars": add_stars}
+                    )
+                    title_parts.append(str(title_map.get(token, token)))
                     i = format_end
                 else:
                     # No format specifier, check for * suffix
                     add_stars = False
-                    if after_token_pos < len(coef_fmt) and coef_fmt[after_token_pos] == "*":
+                    if (
+                        after_token_pos < len(coef_fmt)
+                        and coef_fmt[after_token_pos] == "*"
+                    ):
                         add_stars = True
                         after_token_pos += 1
-                    coef_fmt_elements.append({"token": token, "format": None, "add_stars": add_stars})
-                    title_parts.append(title_map.get(token, token))
+                    coef_fmt_elements.append(
+                        {"token": token, "format": None, "add_stars": add_stars}
+                    )
+                    title_parts.append(str(title_map.get(token, token)))
                     i = after_token_pos
                 found_token = True
                 break
@@ -948,18 +966,24 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
         if not found_token:
             # Handle special sequences and single characters
             if coef_fmt[i : i + 2] == "\\n":
-                coef_fmt_elements.append({"token": "\n", "format": None, "add_stars": False})
+                coef_fmt_elements.append(
+                    {"token": "\n", "format": None, "add_stars": False}
+                )
                 title_parts.append("\n")
                 i += 2
             elif coef_fmt[i : i + 2] in ["\\(", "\\)", "\\[", "\\]"]:
-                escaped_char = coef_fmt[i+1]
-                coef_fmt_elements.append({"token": coef_fmt[i:i+2], "format": None, "add_stars": False})
+                escaped_char = coef_fmt[i + 1]
+                coef_fmt_elements.append(
+                    {"token": coef_fmt[i : i + 2], "format": None, "add_stars": False}
+                )
                 title_parts.append(escaped_char)
                 i += 2
             else:
                 # Single character literal
                 char = coef_fmt[i]
-                coef_fmt_elements.append({"token": char, "format": None, "add_stars": False})
+                coef_fmt_elements.append(
+                    {"token": char, "format": None, "add_stars": False}
+                )
                 title_parts.append(char)
                 i += 1
 
@@ -999,7 +1023,7 @@ def _select_order_coefs(
         If True, the pattern will be matched exactly to the coefficient name
         instead of using regular expressions.
     order: list[str], optional
-        Explicit order for coefficients in the output table. Provide a list of 
+        Explicit order for coefficients in the output table. Provide a list of
         coefficient names (after keep/drop filtering) to specify the exact order.
         Any coefficients not in the list will appear at the end in their original order.
         This is applied after keep/drop filtering.
@@ -1022,7 +1046,7 @@ def _select_order_coefs(
 
     coefs = list(coefs)
     res = [] if keep else coefs[:]  # Store matched coefs
-    
+
     # Apply keep patterns
     for pattern in keep:
         _coefs = []  # Store remaining coefs
@@ -1051,12 +1075,12 @@ def _select_order_coefs(
     if order is not None:
         ordered_res = []
         remaining = list(res)
-        
+
         for coef_name in order:
             if coef_name in remaining:
                 ordered_res.append(coef_name)
                 remaining.remove(coef_name)
-        
+
         # Append any remaining coefficients not in order list
         ordered_res.extend(remaining)
         res = ordered_res
