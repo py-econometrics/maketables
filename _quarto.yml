@@ -1,10 +1,10 @@
+---
 project:
   type: website
   output-dir: _site
-
 website:
-  title: "MakeTables"
-  description: "A Python package for creating publication-ready tables"
+  title: MakeTables
+  description: A Python package for creating publication-ready tables
   navbar:
     left:
       - href: docs/getting-started.ipynb
@@ -24,48 +24,41 @@ website:
       - text: Further Resources
         menu:
           - href: docs/MTable.ipynb
-            text: "Custom Tables with MTable"
+            text: Custom Tables with MTable
           - href: docs/TypstTables.ipynb
-            text: "Output to Typst"
+            text: Output to Typst
           - href: docs/pystataIntegration.ipynb
-            text: "Stata Integration"
+            text: Stata Integration
           - href: docs/UsingLabels.ipynb
-            text: "Using Variable Labels"
+            text: Using Variable Labels
           - href: docs/Lifelines.ipynb
-            text: "Lifelines Survival Models"
+            text: Lifelines Survival Models
           - href: docs/AddingModelClasses.ipynb
-            text: "Making Packages Compatible"
-          - text: "API Reference"
+            text: Making Packages Compatible
+          - text: API Reference
             file: reference/index.qmd
-
-
     right:
       - icon: github
         href: https://github.com/py-econometrics/maketables
-
-
-
 quartodoc:
   style: pkgdown
   dir: reference
   package: maketables
   sections:
-    - title: "Table Classes"
-      desc: "Main table creation classes"
+    - title: Table Classes
+      desc: Main table creation classes
       contents:
         - MTable
         - DTable
         - BTable
         - ETable
-    - title: "Utilities"
-      desc: "Helper functions"
+    - title: Utilities
+      desc: Helper functions
       contents:
         - importdta.get_var_labels
         - importdta.set_var_labels
         - importdta.import_dta
         - importdta.export_dta
-
-
 format:
   html:
     theme: yeti
@@ -73,13 +66,11 @@ format:
     code-copy: true
     code-fold: false
     html-table-processing: none
-  
 execute:
   freeze: auto
-
 exclude:
-  - "introductions.ipynb"
-  - ".venv/"
-  - "__pycache__/"
-  - "mystuff/"
-  - "output/"
+  - introductions.ipynb
+  - .venv/
+  - __pycache__/
+  - mystuff/
+  - output/

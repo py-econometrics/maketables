@@ -13054,37 +13054,37 @@ packages:
   requires_python: '>=3.8'
 - pypi: .
   name: maketables
-  version: 0.1.9.dev39+g4902726f5.d20260521
-  sha256: 4e8d64e006076c086f12c02b0cfa8a40e61cc4f3cb801a44d975170b9bf35a7b
+  version: 0.1.9.dev43+g1f617fdc4.d20260521
+  sha256: 9da3aff9f3c4707c324f224d932772f7ce23fc39ab971e946e1ed8d9cb670ef4
   requires_dist:
-  - great-tables>=0.2.0
-  - ipython>=7.0.0
-  - numpy>=1.20.0
-  - pandas>=1.3.0
+  - great-tables>=0.2
+  - ipython>=7
+  - numpy>=1.20
+  - pandas>=1.3
   - python-docx>=0.8.11
-  - tabulate>=0.9.0
-  - linearmodels>=4.0 ; extra == 'dev'
-  - mypy>=1.0 ; extra == 'dev'
-  - pre-commit>=4.3.0,<5 ; extra == 'dev'
-  - pyfixest>=0.13.0,<0.31 ; extra == 'dev'
-  - pytest-cov>=4.0 ; extra == 'dev'
-  - pytest>=7.0 ; extra == 'dev'
-  - quartodoc>=0.7.0 ; extra == 'dev'
-  - statsmodels>=0.13.0 ; extra == 'dev'
-  - syrupy>=4.0.0 ; extra == 'dev'
-  - ipykernel>=6.0.0,<7 ; extra == 'docs'
-  - nbconvert>=7.0.0 ; extra == 'docs'
-  - pyfixest>=0.13.0,<0.31 ; extra == 'docs'
+  - tabulate>=0.9
+  - linearmodels>=4 ; extra == 'dev'
+  - mypy>=1 ; extra == 'dev'
+  - pre-commit>=4.3,<5 ; extra == 'dev'
+  - pyfixest>=0.13,<0.31 ; extra == 'dev'
+  - pytest-cov>=4 ; extra == 'dev'
+  - pytest>=7 ; extra == 'dev'
+  - quartodoc>=0.7 ; extra == 'dev'
+  - statsmodels>=0.13 ; extra == 'dev'
+  - syrupy>=4 ; extra == 'dev'
+  - ipykernel>=6,<7 ; extra == 'docs'
+  - nbconvert>=7 ; extra == 'docs'
+  - pyfixest>=0.13,<0.31 ; extra == 'docs'
   - pylatex>=1.4.2,<2 ; extra == 'docs'
-  - pyyaml>=6.0.0,<7 ; extra == 'docs'
-  - sphinx-rtd-theme>=1.0 ; extra == 'docs'
-  - sphinx>=5.0 ; extra == 'docs'
-  - statsmodels>=0.13.0 ; extra == 'docs'
-  - lifelines>=0.27.0 ; extra == 'lifelines'
-  - linearmodels>=4.0 ; extra == 'linearmodels'
-  - statsmodels>=0.13.0 ; extra == 'linearmodels'
+  - pyyaml>=6,<7 ; extra == 'docs'
+  - sphinx-rtd-theme>=1 ; extra == 'docs'
+  - sphinx>=5 ; extra == 'docs'
+  - statsmodels>=0.13 ; extra == 'docs'
+  - lifelines>=0.27 ; extra == 'lifelines'
+  - linearmodels>=4 ; extra == 'linearmodels'
+  - statsmodels>=0.13 ; extra == 'linearmodels'
   - pystata>=0.0.1 ; extra == 'pystata'
-  - stata-setup>=0.1.0 ; extra == 'pystata'
+  - stata-setup>=0.1 ; extra == 'pystata'
   requires_python: '>=3.10'
   editable: true
 - pypi: https://files.pythonhosted.org/packages/94/54/e7d793b573f298e1c9013b8c4dade17d481164aa517d1d7148619c2cedbf/markdown_it_py-4.0.0-py3-none-any.whl

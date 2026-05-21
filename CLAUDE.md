@@ -1,10 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in
+this repository.
 
 ## Project Overview
 
-MakeTables is a Python package for creating publication-ready tables from regression results (pyfixest, statsmodels, linearmodels, lifelines, Stata), descriptive statistics, and balance tables. Outputs to HTML (Great Tables), LaTeX, Word (DOCX), and Typst.
+MakeTables is a Python package for creating publication-ready tables from regression
+results (pyfixest, statsmodels, linearmodels, lifelines, Stata), descriptive statistics,
+and balance tables. Outputs to HTML (Great Tables), LaTeX, Word (DOCX), and Typst.
 
 ## Development Commands
 
@@ -30,9 +33,11 @@ pixi run -e docs docs-preview
 
 ## Architecture
 
-Source code lives in `src/maketables/` (src layout). Build uses hatchling with hatch-vcs for git-tag-based versioning.
+Source code lives in `src/maketables/` (src layout). Build uses hatchling with hatch-vcs
+for git-tag-based versioning.
 
 ### Class Hierarchy
+
 ```
 MTable (base - src/maketables/mtable.py)
 ├── DTable (descriptive stats - src/maketables/dtable.py)
@@ -40,18 +45,25 @@ MTable (base - src/maketables/mtable.py)
 └── ETable (regression tables - src/maketables/etable.py)
 ```
 
-- **MTable**: Base class handling all output formats, styling, captions, notes, row grouping
+- **MTable**: Base class handling all output formats, styling, captions, notes, row
+  grouping
 - **ETable**: Extracts coefficients/stats from fitted models using the extractor system
 - **DTable**: Computes descriptive statistics with grouping support
 - **BTable**: Extends DTable with group difference p-values
 
 ### Extractor System (src/maketables/extractors.py)
 
-Plugin architecture using a runtime-checkable `ModelExtractor` Protocol. Each extractor implements `can_handle()`, `coef_table()`, `depvar()`, `stat()`, etc. Built-in extractors for pyfixest, statsmodels, linearmodels. Optional extractors for Stata (`pystata_extractor.py`) and lifelines via conditional imports. New model types are added by implementing the Protocol and calling `register_extractor()`.
+Plugin architecture using a runtime-checkable `ModelExtractor` Protocol. Each extractor
+implements `can_handle()`, `coef_table()`, `depvar()`, `stat()`, etc. Built-in
+extractors for pyfixest, statsmodels, linearmodels. Optional extractors for Stata
+(`pystata_extractor.py`) and lifelines via conditional imports. New model types are
+added by implementing the Protocol and calling `register_extractor()`.
 
 ### Output Rendering
 
-`make(type='gt'|'tex'|'docx'|'typst')` produces format-specific output. Auto-detects Jupyter vs Quarto for display. `save(path)` exports to file; `update(path)` does in-place DOCX updates.
+`make(type='gt'|'tex'|'docx'|'typst')` produces format-specific output. Auto-detects
+Jupyter vs Quarto for display. `save(path)` exports to file; `update(path)` does
+in-place DOCX updates.
 
 ## Code Style
 

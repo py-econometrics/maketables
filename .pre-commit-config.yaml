@@ -1,15 +1,13 @@
+---
 ci:
   autoupdate_schedule: monthly
   autofix_prs: false
-
 exclude: (^|/)__snapshots__/
-
 repos:
   - repo: meta
     hooks:
       - id: check-hooks-apply
       - id: check-useless-excludes
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -29,7 +27,8 @@ repos:
           - --fix=lf
         description: Forces to replace line ending by the UNIX 'lf' character.
       - id: check-yaml
-        args: [--allow-multiple-documents]
+        args:
+          - --allow-multiple-documents
       - id: check-toml
       - id: check-added-large-files
         args:
@@ -39,50 +38,52 @@ repos:
         args:
           - --branch
           - main
-
   - repo: https://github.com/tox-dev/pyproject-fmt
     rev: v2.21.2
     hooks:
       - id: pyproject-fmt
-
   - repo: https://github.com/lyz-code/yamlfix
     rev: 1.19.1
     hooks:
       - id: yamlfix
-
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.38.0
     hooks:
       - id: yamllint
-
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.34.0
     hooks:
       - id: check-github-workflows
-        args: ["--verbose"]
-
+        args:
+          - --verbose
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.13.1
     hooks:
       - id: ruff
-        args: ["--fix", "--output-format=full"]
+        args:
+          - --fix
+          - --output-format=full
       - id: ruff-format
-
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.9.1
     hooks:
       - id: nbqa-ruff
-        args: ["--fix", "--output-format=full", "--ignore=B018", "--ignore=E402"]
+        args:
+          - --fix
+          - --output-format=full
+          - --ignore=B018
+          - --ignore=E402
         files: ^docs/.*\.ipynb$
-
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.18.2
     hooks:
       - id: mypy
-        args: [--ignore-missing-imports]
+        args:
+          - --ignore-missing-imports
         files: ^src/maketables/
-        additional_dependencies: [numpy>=1.20, pandas-stubs]
-
+        additional_dependencies:
+          - numpy>=1.20
+          - pandas-stubs
   - repo: https://github.com/kynan/nbstripout
     rev: 0.9.1
     hooks:
@@ -90,7 +91,6 @@ repos:
         args:
           - --extra-keys
           - metadata.language_info.version metadata.vscode
-
   - repo: https://github.com/executablebooks/mdformat
     rev: 1.0.0
     hooks:
@@ -101,7 +101,7 @@ repos:
           - mdformat-ruff
         args:
           - --wrap
-          - "88"
+          - '88'
         files: (CLAUDE\.md|README\.md)
       - id: mdformat
         additional_dependencies:
@@ -109,5 +109,5 @@ repos:
           - mdformat-ruff
         args:
           - --wrap
-          - "88"
+          - '88'
         files: docs/.*\.md$

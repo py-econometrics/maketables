@@ -1,173 +1,176 @@
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatch-vcs", "hatchling"]
+requires = [ "hatch-vcs", "hatchling" ]
 
 [project]
 name = "maketables"
-dynamic = ["version"]
-authors = [
-    {name = "Alexander Fischer", email = "alexander-fischer1801@t-online.de"},
-    {name = "Dirk Sliwka", email = "dirk.sliwka@uni-koeln.de"},
-]
-description = "A Python package for creating publication-ready tables from regression results (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables with output to LaTeX, Word, and HTML/Great Tables"
+description = """\
+  A Python package for creating publication-ready tables from regression results \
+  (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables \
+  with output to LaTeX, Word, and HTML/Great Tables\
+  """
 readme = "README.md"
-requires-python = ">=3.10"
+keywords = [
+  "econometrics",
+  "latex",
+  "publication",
+  "pyfixest",
+  "regression",
+  "statistics",
+  "statsmodels",
+  "tables",
+]
 license = { text = "MIT" }
-
-keywords = ["tables", "statistics", "regression", "econometrics", "latex", "publication", "pyfixest", "statsmodels"]
+requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Scientific/Engineering",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering",
 ]
-
-
+dynamic = [ "version" ]
 dependencies = [
-    "numpy>=1.20.0",
-    "pandas>=1.3.0",
-    "great-tables>=0.2.0",
-    "tabulate>=0.9.0",
-    "python-docx>=0.8.11",
-    "ipython>=7.0.0",
+  "great-tables>=0.2",
+  "ipython>=7",
+  "numpy>=1.20",
+  "pandas>=1.3",
+  "python-docx>=0.8.11",
+  "tabulate>=0.9",
 ]
-
+[[project.authors]]
+name = "Alexander Fischer"
+email = "alexander-fischer1801@t-online.de"
+[[project.authors]]
+name = "Dirk Sliwka"
+email = "dirk.sliwka@uni-koeln.de"
+[project.optional-dependencies]
+dev = [
+  "linearmodels>=4",
+  "mypy>=1",
+  "pre-commit>=4.3,<5",
+  "pyfixest>=0.13,<0.31",
+  "pytest>=7",
+  "pytest-cov>=4",
+  "quartodoc>=0.7",
+  "statsmodels>=0.13",
+  "syrupy>=4",
+]
+docs = [
+  "ipykernel>=6,<7",
+  "nbconvert>=7",
+  "pyfixest>=0.13,<0.31",
+  "pylatex>=1.4.2,<2",
+  "pyyaml>=6,<7",
+  "sphinx>=5",
+  "sphinx-rtd-theme>=1",
+  "statsmodels>=0.13",
+]
+pystata = [
+  "pystata>=0.0.1",
+  "stata-setup>=0.1",
+]
+linearmodels = [
+  "linearmodels>=4",
+  "statsmodels>=0.13",
+]
+lifelines = [
+  "lifelines>=0.27",
+]
 [project.urls]
 Homepage = "https://py-econometrics.github.io/maketables/"
 Documentation = "https://py-econometrics.github.io/maketables/"
 Repository = "https://github.com/py-econometrics/maketables"
 Issues = "https://github.com/py-econometrics/maketables/issues"
 
-
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "syrupy>=4.0.0",
-    "pyfixest>=0.13.0,<0.31",
-    "statsmodels>=0.13.0",
-    "linearmodels>=4.0",
-    "mypy>=1.0",
-    "pre-commit>=4.3.0,<5",
-    "quartodoc>=0.7.0",
-]
-docs = [
-    "sphinx>=5.0",
-    "sphinx-rtd-theme>=1.0",
-    "pyfixest>=0.13.0,<0.31",
-    "statsmodels>=0.13.0",
-    "ipykernel>=6.0.0,<7",
-    "nbconvert>=7.0.0",
-    "pylatex>=1.4.2,<2",
-    "pyyaml>=6.0.0,<7",
-]
-pystata = [
-    "pystata>=0.0.1",
-    "stata-setup>=0.1.0",
-]
-
-linearmodels = [
-    "linearmodels>=4.0",
-    "statsmodels>=0.13.0",
-]
-
-lifelines = [
-    "lifelines>=0.27.0",
-]
-
-[tool.pixi.feature.dev.dependencies]
-quarto = ">=1.8.25,<2"
-
-[tool.pixi.workspace]
-channels = ["conda-forge"]
-platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+[tool.hatch.build.hooks.vcs]
+version-file = "src/maketables/_version.py"
+[tool.hatch.build.targets.sdist]
+exclude = [ "tests" ]
+only-packages = true
+[tool.hatch.build.targets.wheel]
+only-include = [ "src" ]
+sources = [ "src" ]
+[tool.hatch.version]
+source = "vcs"
 
 [tool.pixi.dependencies]
 python = ">=3.10,<3.15"
 quarto = ">=1.8.27,<2"
 ipywidgets = ">=8.1.8,<9"
-
-[tool.pixi.pypi-dependencies]
-maketables = { path = ".", editable = true }
-
 [tool.pixi.environments]
-default = { features = ["dev", "py313"], solve-group = "py313" }
-dev = { features = ["dev", "py313"], solve-group = "py313" }
-docs = { features = ["docs", "py313"], solve-group = "py313" }
-pystata = { features = ["pystata", "docs", "py313"], solve-group = "py313" }
-linearmodels = { features = ["linearmodels", "docs", "py313"], solve-group = "py313" }
-lifelines = { features = ["lifelines", "docs", "py313"], solve-group = "py313" }
-publish = { features = ["publish", "py313"], solve-group = "py313" }
-py310 = { features = ["dev", "py310"], solve-group = "py310" }
-py311 = { features = ["dev", "py311"], solve-group = "py311" }
-py312 = { features = ["dev", "py312"], solve-group = "py312" }
-py313 = { features = ["dev", "py313"], solve-group = "py313" }
-py314 = { features = ["dev", "py314"], solve-group = "py314" }
-
-[tool.pixi.feature.py310.dependencies]
-python = "~=3.10.0"
-
-[tool.pixi.feature.py311.dependencies]
-python = "~=3.11.0"
-
-[tool.pixi.feature.py312.dependencies]
-python = "~=3.12.0"
-
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
-
-[tool.pixi.feature.py314.dependencies]
-python = "~=3.14.0"
-
+default = { features = [ "dev", "py313" ], solve-group = "py313" }
+dev = { features = [ "dev", "py313" ], solve-group = "py313" }
+docs = { features = [ "docs", "py313" ], solve-group = "py313" }
+pystata = { features = [ "pystata", "docs", "py313" ], solve-group = "py313" }
+linearmodels = { features = [ "linearmodels", "docs", "py313" ], solve-group = "py313" }
+lifelines = { features = [ "lifelines", "docs", "py313" ], solve-group = "py313" }
+publish = { features = [ "publish", "py313" ], solve-group = "py313" }
+py310 = { features = [ "dev", "py310" ], solve-group = "py310" }
+py311 = { features = [ "dev", "py311" ], solve-group = "py311" }
+py312 = { features = [ "dev", "py312" ], solve-group = "py312" }
+py313 = { features = [ "dev", "py313" ], solve-group = "py313" }
+py314 = { features = [ "dev", "py314" ], solve-group = "py314" }
+[tool.pixi.feature.dev.dependencies]
+quarto = ">=1.8.25,<2"
 [tool.pixi.feature.dev.pypi-dependencies]
-maketables = { path = ".", editable = true, extras = ["dev"] }
-
+maketables = { path = ".", editable = true, extras = [ "dev" ] }
 [tool.pixi.feature.dev.tasks]
 check = "pre-commit run --all-files"
 tests = "pytest tests/ -v"
 tests-with-cov = "pytest tests/ -v --cov=src/maketables --cov-report=xml"
 tests-update-snapshots = "pytest tests/ --snapshot-update -v"
-
-[tool.pytest.ini_options]
-pythonpath = ["tests"]
-
 [tool.pixi.feature.docs.tasks]
-run-all-notebooks = "jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb DocxTables.ipynb LatexTables.ipynb WritingPapers.ipynb getting-started.ipynb"
+run-all-notebooks = """\
+  jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb \
+  DocxTables.ipynb LatexTables.ipynb WritingPapers.ipynb getting-started.ipynb\
+  """
 docs-preview = "quarto preview"
 docs-install-tex = "quarto install tinytex"
-
 [tool.pixi.feature.publish.pypi-dependencies]
 build = ">=1.0"
 twine = ">=5.0"
 [tool.pixi.feature.publish.tasks]
 # Step 1: Clean old builds
 clean = { cmd = "python -c \"import shutil; import pathlib; [shutil.rmtree(p, ignore_errors=True) for p in [pathlib.Path('dist'), pathlib.Path('build')] + list(pathlib.Path('.').glob('*.egg-info'))]\"" }
-
 # Step 2: Build the package (depends on clean, so clean runs first)
-build = { cmd = "python -m build", depends-on = ["clean"] }
-
+build = { cmd = "python -m build", depends-on = [ "clean" ] }
 # Step 3: Check the built package for errors
-check = { cmd = "twine check dist/*", depends-on = ["build"] }
-
+check = { cmd = "twine check dist/*", depends-on = [ "build" ] }
 # Step 4a: Upload to TestPyPI (for testing)
-upload-test = { cmd = "twine upload --repository testpypi dist/*", depends-on = ["check"] }
-
+upload-test = { cmd = "twine upload --repository testpypi dist/*", depends-on = [
+  "check"
+] }
 # Step 4b: Upload to PyPI (production)
-upload = { cmd = "twine upload dist/*", depends-on = ["check"] }
+upload = { cmd = "twine upload dist/*", depends-on = [ "check" ] }
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
+[tool.pixi.pypi-dependencies]
+maketables = { path = ".", editable = true }
+[tool.pixi.workspace]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 
 [tool.ruff]
+target-version = "py310"
 line-length = 88
 fix = true
-
-target-version = "py310"
-
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 88
 [tool.ruff.lint]
 # docs: https://docs.astral.sh/ruff/rules/
 select = [
@@ -182,7 +185,6 @@ select = [
   "RUF", # ruff,
   "TRY", # tryceratops
 ]
-
 ignore = [
   # do not enable if formatting
   # docs: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
@@ -203,32 +205,19 @@ ignore = [
   "D205",   # 1 blank line required between summary line and description
   "W505",   # Doc line too long
 ]
-
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["D100", "D103"]
-
+"tests/**/*.py" = [ "D100", "D103" ]
 [tool.ruff.lint.pycodestyle]
 max-doc-length = 88
-
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = 88
 
 [tool.pyproject-fmt]
 column_width = 88
 max_supported_python = "3.14"
 table_format = "long"
 
-[tool.yamlfix]
-line_length = 88
-none_representation = "null"
-sequence_style = "block_style"
-
 [tool.mypy]
-
 [[tool.mypy.overrides]]
 module = [
   "pandas.*",
@@ -245,16 +234,10 @@ module = [
 ]
 ignore_missing_imports = true
 
-[tool.hatch.version]
-source = "vcs"
+[tool.pytest.ini_options]
+pythonpath = [ "tests" ]
 
-[tool.hatch.build.hooks.vcs]
-version-file = "src/maketables/_version.py"
-
-[tool.hatch.build.targets.sdist]
-exclude = ["tests"]
-only-packages = true
-
-[tool.hatch.build.targets.wheel]
-only-include = ["src"]
-sources = ["src"]
+[tool.yamlfix]
+line_length = 88
+none_representation = "null"
+sequence_style = "block_style"
