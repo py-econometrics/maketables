@@ -1,7 +1,9 @@
-from typing import Any
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
+
+PyfixestVcov = Literal["iid", "hetero", "HC1", "HC2", "HC3", "nid"]
 
 # Optional imports
 try:
@@ -137,7 +139,8 @@ class BTable(DTable):
 
         for i, var in enumerate(vars):
             formula = f"{var} ~ i({pvalue_group}){fe_suffix}"
-            model: Any = pf.feols(formula, data=pvalue_df, vcov=vcov)  # ty: ignore[invalid-argument-type]
+            feols_vcov = cast(PyfixestVcov | dict[str, str], vcov)
+            model: Any = pf.feols(formula, data=pvalue_df, vcov=feols_vcov)
 
             if n_groups == 2:
                 # p-value of the single group indicator

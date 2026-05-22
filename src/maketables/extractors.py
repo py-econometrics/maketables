@@ -17,7 +17,9 @@ from .importdta import get_var_labels
 try:
     from pyfixest.estimation.models.feiv_ import Feiv  # ty: ignore[unresolved-import]
     from pyfixest.estimation.models.feols_ import Feols  # ty: ignore[unresolved-import]
-    from pyfixest.estimation.models.fepois_ import Fepois  # ty: ignore[unresolved-import]
+    from pyfixest.estimation.models.fepois_ import (  # ty: ignore[unresolved-import]
+        Fepois,
+    )
 except ImportError:
     try:
         from pyfixest.estimation.feiv_ import Feiv
