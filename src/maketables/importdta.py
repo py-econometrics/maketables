@@ -197,13 +197,13 @@ def export_dta(
     try:
         df.to_stata(
             path,
-            write_index=cast(Any, write_index),
+            write_index=cast("Any", write_index),
             version=version,
             variable_labels=var_labels if var_labels else None,
             data_label=data_label,
-            convert_strl=cast(Any, True),
+            convert_strl=cast("Any", True),
             time_stamp=time_stamp,
-            compression=cast(Any, compression),
+            compression=cast("Any", compression),
         )
     except TypeError:
         warnings.warn(
@@ -213,12 +213,12 @@ def export_dta(
         )
         df.to_stata(
             path,
-            write_index=cast(Any, write_index),
+            write_index=cast("Any", write_index),
             version=version,
             data_label=data_label,
-            convert_strl=cast(Any, True),
+            convert_strl=cast("Any", True),
             time_stamp=time_stamp,
-            compression=cast(Any, compression),
+            compression=cast("Any", compression),
         )
 
 

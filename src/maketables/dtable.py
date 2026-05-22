@@ -267,7 +267,7 @@ class DTable(MTable):
                 var_name = col[0] if isinstance(res.columns, pd.MultiIndex) else col
                 if stat_name in ["mean_std", "mean_newline_std"]:
                     continue
-                elif (
+                if (
                     (pd.api.types.is_numeric_dtype(res[col]))
                     or stat_name in self.format_specs
                     or var_name in self.format_specs
@@ -328,22 +328,19 @@ class DTable(MTable):
             abs_x = abs(x)
             if abs_x < 0.001 and abs_x > 0:
                 return f"{x:.6f}".rstrip("0").rstrip(".")
-            elif abs_x < 1 or abs_x < 1000:
+            if abs_x < 1 or abs_x < 1000:
                 return f"{x:.{digits}f}"
-            elif abs_x >= 10000:
+            if abs_x >= 10000:
                 return f"{x:,.0f}"
-            elif abs_x >= 1000:
+            if abs_x >= 1000:
                 if abs(x - round(x)) < 1e-10:
                     return f"{round(x):,}"
-                else:
-                    return f"{x:,.2f}"
-            else:
-                return f"{x:.{digits}f}"
+                return f"{x:,.2f}"
+            return f"{x:.{digits}f}"
         try:
             if format_spec == "d":
                 return f"{round(x):d}"
-            else:
-                return f"{x:{format_spec}}"
+            return f"{x:{format_spec}}"
         except (ValueError, TypeError):
             # fallback to sensible default
             return self._format_number(x, None, digits=digits)
@@ -358,20 +355,19 @@ def _relabel_index(index, labels=None, stats_labels=None):
             )
         else:
             index = [labels.get(k, k) for k in index]
-    else:
-        # if stats_labels is provided, we relabel the lowest level of the index with it
-        if isinstance(index, pd.MultiIndex):
-            new_index = []
-            for i in index:
-                new_index.append(
-                    tuple(
-                        [labels.get(k, k) for k in i[:-1]]
-                        + [stats_labels.get(i[-1], i[-1])]
-                    )
+    # if stats_labels is provided, we relabel the lowest level of the index with it
+    elif isinstance(index, pd.MultiIndex):
+        new_index = []
+        for i in index:
+            new_index.append(
+                tuple(
+                    [labels.get(k, k) for k in i[:-1]]
+                    + [stats_labels.get(i[-1], i[-1])]
                 )
-            index = pd.MultiIndex.from_tuples(new_index)
-        else:
-            index = [stats_labels.get(k, k) for k in index]
+            )
+        index = pd.MultiIndex.from_tuples(new_index)
+    else:
+        index = [stats_labels.get(k, k) for k in index]
     return index
 
 
@@ -435,5 +431,4 @@ def _format_mean_std(
         return mean_str
     if newline:
         return f"{mean_str}\n({std_str})"
-    else:
-        return f"{mean_str} ({std_str})"
+    return f"{mean_str} ({std_str})"

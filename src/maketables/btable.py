@@ -3,6 +3,8 @@ from typing import Any, Literal, cast
 import numpy as np
 import pandas as pd
 
+from .dtable import DTable
+
 PyfixestVcov = Literal["iid", "hetero", "HC1", "HC2", "HC3", "nid"]
 
 # Optional imports
@@ -12,8 +14,6 @@ try:
     HAS_PYFIXEST = True
 except ImportError:
     HAS_PYFIXEST = False
-
-from .dtable import DTable
 
 
 class BTable(DTable):
@@ -139,7 +139,7 @@ class BTable(DTable):
 
         for i, var in enumerate(vars):
             formula = f"{var} ~ i({pvalue_group}){fe_suffix}"
-            feols_vcov = cast(PyfixestVcov | dict[str, str], vcov)
+            feols_vcov = cast("PyfixestVcov | dict[str, str]", vcov)
             model: Any = pf.feols(formula, data=pvalue_df, vcov=feols_vcov)
 
             if n_groups == 2:

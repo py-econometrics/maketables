@@ -170,45 +170,133 @@ platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 target-version = "py310"
 line-length = 88
 fix = true
+unsafe-fixes = false
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = 88
 [tool.ruff.lint]
 # docs: https://docs.astral.sh/ruff/rules/
-select = [
-  "B",   # bugbear
-  "F",   # Pyflakes
-  "E",   # pycodestyle errors
-  "W",   # pycodestyle warnings
-  "I",   # isort
-  "D",   # flake8-docstrings
-  "UP",  # pyupgrade
-  "SIM", # flake8-simplify
-  "RUF", # ruff,
-  "TRY", # tryceratops
-]
-ignore = [
+select = [ "ALL" ]
+extend-ignore = [
   # do not enable if formatting
   # docs: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
-  "B028",   # No explicit `stacklevel` keyword argument found
-  "B904",   # Better exception handling
-  "W191",   # tab indentation
-  "E111",   # indentation
-  "E114",   # indentation
-  "E117",   # over indented
-  "D206",   # indent with spaces
-  "D300",   # triple single quotes
-  "E501",   # line length regulated by formatter
-  "D105",   # missing docstring in magic method
-  "D100",   # missing docstring in public module
-  "D104",   # missing docstring in public package
-  "SIM110", # Use all instead of `for` loop
-  "TRY003", # Avoid specifying long messages outside the exception class
-  "D205",   # 1 blank line required between summary line and description
-  "W505",   # Doc line too long
+  "COM812",  # Conflicts with ruff-format
+  "D206",    # Conflicts with ruff-format
+  "D300",    # Conflicts with ruff-format
+  "E111",    # Conflicts with ruff-format
+  "E114",    # Conflicts with ruff-format
+  "E117",    # Conflicts with ruff-format
+  "ISC001",  # Conflicts with ruff-format
+  "W191",    # Conflicts with ruff-format
+  "W505",    # Doc line too long
+  "A002",    # Public APIs currently use names like `type` and `vars`
+  "ANN001",  # Missing type annotation for function argument
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "ANN204",  # Missing return type annotation for special method
+  "ANN401",  # Dynamically typed expressions are used for third-party model APIs
+  "A001",    # Some local names mirror public API terminology
+  "ARG002",  # Interface-compatible methods often leave arguments unused
+  "ARG001",  # Widget callback signatures receive unused event arguments
+  "B028",    # No explicit `stacklevel` keyword argument found
+  "B904",    # Better exception handling
+  "BLE001",  # Optional dependency bridges intentionally catch broad exceptions
+  "C901",    # Existing table-building methods are complex
+  "D100",    # Missing docstring in public module
+  "D102",    # Missing docstring in public method
+  "D104",    # Missing docstring in public package
+  "D105",    # Missing docstring in magic method
+  "D205",    # 1 blank line required between summary line and description
+  "D301",    # Raw docstring rules conflict with examples containing backslashes
+  "E501",    # Line length regulated by formatter
+  "EM101",   # Exception must not use a string literal
+  "EM102",   # Exception must not use an f-string literal
+  "ERA001",  # Commented examples/debug snippets are cleaned up separately
+  "FBT001",  # Public APIs expose boolean positional arguments
+  "FBT002",  # Public APIs expose boolean default positional arguments
+  "FBT003",  # Third-party APIs accept positional boolean arguments
+  "FA100",   # Missing `from __future__ import annotations`
+  "FA102",   # Missing `from __future__ import annotations`
+  "FIX002",  # Line contains TODO
+  "N806",    # External XML/Stata naming conventions use mixed-case local names
+  "PD010",   # Prefer pivot_table over unstack
+  "PD013",   # Prefer melt over stack
+  "PD002",   # Existing pandas code uses inplace operations
+  "PD101",   # Prefer alternative constant-series checks
+  "PERF203", # Optional dependency probes use try/except inside loops
+  "PERF401", # Keep some expanded loops for readability
+  "PLC0415", # Optional imports are intentionally local in some code paths
+  "PLR0911", # Existing helpers have multiple return paths
+  "PLR0912", # Existing table-building methods have many branches
+  "PLR0913", # Public APIs intentionally accept many keyword options
+  "PLR0915", # Existing table-building methods have many statements
+  "PLR2004", # Numeric formatting and tests use local numeric literals
+  "PT018",   # Existing asserts combine validation predicates
+  "PTH110",  # Pathlib migration is outside this config-focused change
+  "PTH112",  # Pathlib migration is outside this config-focused change
+  "PTH117",  # Pathlib migration is outside this config-focused change
+  "PTH118",  # Pathlib migration is outside this config-focused change
+  "PTH120",  # Pathlib migration is outside this config-focused change
+  "PTH122",  # Pathlib migration is outside this config-focused change
+  "PTH123",  # Pathlib migration is outside this config-focused change
+  "RET503",  # Existing save/update helpers return display objects conditionally
+  "RET504",  # Existing code sometimes names values before returning
+  "RUF001",  # Statistical symbols intentionally use Unicode characters
+  "RUF002",  # Statistical symbols intentionally use Unicode characters
+  "RUF005",  # Existing tuple construction is left unchanged
+  "RUF046",  # Existing numeric formatting uses explicit casts
+  "RUF059",  # Existing unpacking names are left unchanged
+  "S101",    # Tests and runtime validation currently use assert
+  "S105",    # Short format tokens are not passwords
+  "S110",    # Optional dependency probes intentionally suppress failures
+  "S112",    # Optional dependency probes intentionally continue on failures
+  "SIM102",  # Existing nested conditionals are left unchanged
+  "SIM105",  # Existing suppressible try blocks are left unchanged
+  "SIM108",  # Existing conditional assignments are left unchanged
+  "SIM110",  # Use `all` instead of `for` loop
+  "SLF001",  # Third-party model APIs expose required data on private attributes
+  "T201",    # inspect_model and examples intentionally print diagnostics
+  "TC001",   # Move application import into a type-checking block
+  "TC002",   # Move third-party import into a type-checking block
+  "TC003",   # Move standard library import into a type-checking block
+  "TRY300",  # Existing try blocks often return directly
+  "TRY301",  # Existing fallback code raises inside try blocks
+  "TRY003",  # Avoid specifying long messages outside the exception class
 ]
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = [ "D100", "D103" ]
+"docs/**/*.ipynb" = [
+  "ANN001",
+  "ANN002",
+  "ANN003",
+  "ANN201",
+  "ANN202",
+  "D103",
+  "E402",
+  "INP001",
+  "NPY002",
+  "PTH103",
+  "PTH120",
+  "PTH123",
+  "RUF001",
+  "RUF003",
+  "SIM118",
+  "T201",
+  "W291",
+  "W293",
+]
+"src/maketables/symbols.py" = [ "RUF001", "RUF002" ]
+"tests/**/*.py" = [
+  "ARG001",
+  "ARG002",
+  "D100",
+  "D103",
+  "INP001",
+  "NPY002",
+  "PLC0415",
+  "S101",
+]
 [tool.ruff.lint.pycodestyle]
 max-doc-length = 88
 [tool.ruff.lint.pydocstyle]

@@ -63,7 +63,9 @@ repos:
         args:
           - --fix
           - --output-format=full
+        exclude: ^docs/.*\.ipynb$
       - id: ruff-format
+        exclude: ^docs/.*\.ipynb$
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.9.1
     hooks:
@@ -72,7 +74,18 @@ repos:
           - --fix
           - --output-format=full
           - --ignore=B018
+          - --ignore=D103
           - --ignore=E402
+          - --ignore=INP001
+          - --ignore=NPY002
+          - --ignore=PTH103
+          - --ignore=PTH120
+          - --ignore=PTH123
+          - --ignore=RET505
+          - --ignore=RUF003
+          - --ignore=SIM118
+          - --ignore=W291
+          - --ignore=W293
         files: ^docs/.*\.ipynb$
   - repo: local
     hooks:

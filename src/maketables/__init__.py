@@ -19,18 +19,22 @@ except PackageNotFoundError:
     __version__ = "unknown"
 
 __all__ = [
+    "PYSTATA_AVAILABLE",
     "BTable",
     "DTable",
     "ETable",
     "MTable",
     "ModelExtractor",
+    "StataResultWrapper",
     "clear_extractors",
     "export_dta",
+    "extract_current_stata_results",
     "get_extractor",
     "get_var_labels",
     "import_dta",
     "inspect_model",
     "register_extractor",
+    "rstata",
     "set_var_labels",
 ]
 

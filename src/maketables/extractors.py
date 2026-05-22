@@ -1,5 +1,5 @@
 """
-Statistical Model Extractor System for MakeTables
+Statistical Model Extractor System for MakeTables.
 
 This module provides a unified interface for extracting statistical information
 from various Python statistical modeling packages (statsmodels, pyfixest, linearmodels).
@@ -494,14 +494,13 @@ def inspect_model(model: Any, long: bool = False) -> None:
                     print(f"  {stat_key:15s} = {stat_values[stat_key]}{marker}")
             else:
                 print("  (no statistics extracted)")
+        # Concise output - just list available stats
+        elif available_stats:
+            print(f"  Available: {', '.join(available_stats)}")
+            if default_stats:
+                print(f"  Defaults: {', '.join(default_stats)}")
         else:
-            # Concise output - just list available stats
-            if available_stats:
-                print(f"  Available: {', '.join(available_stats)}")
-                if default_stats:
-                    print(f"  Defaults: {', '.join(default_stats)}")
-            else:
-                print("  (none)")
+            print("  (none)")
 
     except Exception as e:
         print(f"  Error: {e}")
@@ -1046,7 +1045,7 @@ class LinearmodelsExtractor:
             ("model", "dependent", "pandas", "name"),
             ("model", "dependent", "vars", 0),  # AbsorbingLS stores vars as list
         ]:
-            val = _follow(model, cast(list[Any], list(chain)))
+            val = _follow(model, cast("list[Any]", list(chain)))
             if isinstance(val, str):
                 if chain[-1] == "formula" and "~" in val:
                     return val.split("~", 1)[0].strip()

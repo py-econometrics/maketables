@@ -374,7 +374,7 @@ class StataResultWrapper:
             if p_values is not None and len(p_values) > 0:
                 data["p"] = p_values
 
-            df = pd.DataFrame(data, index=cast(Any, index))
+            df = pd.DataFrame(data, index=cast("Any", index))
             df.index.name = "Coefficient"
 
             return df
@@ -388,7 +388,7 @@ class StataResultWrapper:
                     "t": [np.nan],
                     "p": [np.nan],
                 },
-                index=cast(Any, ["coef"]),
+                index=cast("Any", ["coef"]),
             )
 
     @staticmethod
@@ -778,8 +778,7 @@ def rstata(
             return StataResultWrapper.from_current(
                 formulaic_names=formulaic_names, use_var_labels=use_var_labels
             )
-        else:
-            return None
+        return None
 
     except Exception as e:
         raise RuntimeError(f"Failed to run Stata regression: {e}")

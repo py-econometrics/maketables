@@ -268,7 +268,6 @@ class ETable(MTable):
 
                 if models:
                     all_defaults = []
-                    has_custom_defaults = False
 
                     # Collect defaults from each model
                     for model in models:
@@ -278,7 +277,6 @@ class ETable(MTable):
                                 ext_defaults = extractor.default_stat_keys(model)
                                 if ext_defaults is not None:
                                     all_defaults.extend(ext_defaults)
-                                    has_custom_defaults = True
                                 else:
                                     # Model extractor exists but returns None, use general defaults
                                     all_defaults.extend(self.DEFAULT_MODEL_STATS)
@@ -491,8 +489,7 @@ class ETable(MTable):
             ordered_res = [name for name in feorder if name in fixef_list]
             remaining = sorted(set(fixef_list) - set(feorder))
             return ordered_res + remaining
-        else:
-            return sorted(set(fixef_list))
+        return sorted(set(fixef_list))
 
     def _compute_stars(self, p: pd.Series, signif_code: list[float]) -> pd.Series:
         if not signif_code:
@@ -632,7 +629,7 @@ class ETable(MTable):
                 )
             rows[fx] = row
         fe_df = pd.DataFrame.from_dict(
-            rows, orient="index", columns=cast(Any, list(like_columns))
+            rows, orient="index", columns=cast("Any", list(like_columns))
         )
         # relabel FE names
         felabels = felabels or {}
@@ -761,23 +758,21 @@ def _format_number(x: float, format_spec: str | None = None) -> str:
         if abs(x - round(x)) < 1e-10:  # essentially an integer
             if abs_x >= 1000:
                 return f"{int(round(x)):,}"  # Use comma separators for large integers
-            else:
-                return f"{int(round(x))}"  # No decimals for smaller integers
+            return f"{int(round(x))}"  # No decimals for smaller integers
 
         # For very small numbers (close to zero), show more precision
         if abs_x < 0.001 and abs_x > 0:
             return f"{x:.6f}".rstrip("0").rstrip(".")
         # For small numbers, use standard precision
-        elif abs_x < 1:
+        if abs_x < 1:
             return f"{x:.3f}".rstrip("0").rstrip(".")
         # For medium numbers, use standard precision
-        elif abs_x < 1000:
+        if abs_x < 1000:
             return f"{x:.3f}"
         # For large numbers, use comma separators
-        elif abs_x >= 1000:
+        if abs_x >= 1000:
             return f"{x:,.2f}"
-        else:
-            return f"{x:.3f}"
+        return f"{x:.3f}"
 
     try:
         # Handle integer formatting
@@ -800,20 +795,19 @@ def _relabel_index(index, labels=None, stats_labels=None):
             )
         else:
             index = [labels.get(k, k) for k in index]
-    else:
-        # if stats_labels is provided, we relabel the lowest level of the index with it
-        if isinstance(index, pd.MultiIndex):
-            new_index = []
-            for i in index:
-                new_index.append(
-                    tuple(
-                        [labels.get(k, k) for k in i[:-1]]
-                        + [stats_labels.get(i[-1], i[-1])]
-                    )
+    # if stats_labels is provided, we relabel the lowest level of the index with it
+    elif isinstance(index, pd.MultiIndex):
+        new_index = []
+        for i in index:
+            new_index.append(
+                tuple(
+                    [labels.get(k, k) for k in i[:-1]]
+                    + [stats_labels.get(i[-1], i[-1])]
                 )
-            index = pd.MultiIndex.from_tuples(new_index)
-        else:
-            index = [stats_labels.get(k, k) for k in index]
+            )
+        index = pd.MultiIndex.from_tuples(new_index)
+    else:
+        index = [stats_labels.get(k, k) for k in index]
     return index
 
 
@@ -1067,8 +1061,7 @@ def _select_order_coefs(
                 exact_match is False and re.findall(pattern, coef)
             ):
                 continue
-            else:
-                _coefs.append(coef)
+            _coefs.append(coef)
         res = _coefs
 
     # Apply explicit ordering if provided
@@ -1126,8 +1119,7 @@ def _apply_digits_to_coef_fmt(coef_fmt: str, digits: int) -> str:
     str
         The updated coef_fmt string with format specifiers applied.
     """
-    if digits < 0:
-        digits = 0
+    digits = max(digits, 0)
 
     format_spec = f".{digits}f"
 
@@ -1239,5 +1231,4 @@ def _rename_categorical(
             pass
 
         return template.format(variable=variable, value=value_raw, value_int=value_int)
-    else:
-        return col_name
+    return col_name

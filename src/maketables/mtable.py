@@ -382,14 +382,13 @@ class MTable:
         )
         if type == "gt":
             return self._output_gt(**kwargs)
-        elif type == "tex":
+        if type == "tex":
             return self._output_tex(**kwargs)
-        elif type == "typst":
+        if type == "typst":
             return self._output_typst(**kwargs)
-        elif type == "docx":
+        if type == "docx":
             return self._output_docx(**kwargs)
-        else:
-            return self._output_gt(**kwargs).as_raw_html()
+        return self._output_gt(**kwargs).as_raw_html()
 
     def save(
         self,
@@ -435,7 +434,7 @@ class MTable:
                     f"Default path for type {type} has to be set if file_name is None"
                 )
             # file name will be default path and tab_label:
-            file_name = cast(str, self.default_paths.get(type)) + self.tab_label
+            file_name = cast("str", self.default_paths.get(type)) + self.tab_label
         elif not os.path.splitext(file_name)[1]:
             # if file_name does not have an extension, add the extension
             file_name += f".{type}"
@@ -832,11 +831,11 @@ class MTable:
             str(s.get("caption_align", "center")).lower(), WD_ALIGN_PARAGRAPH.CENTER
         )
         # Font settings
-        rgb = tuple(cast(tuple[int, int, int], s.get("font_color_rgb", (0, 0, 0))))
+        rgb = tuple(cast("tuple[int, int, int]", s.get("font_color_rgb", (0, 0, 0))))
         cap_font_name = str(
             s.get("caption_font_name", s.get("font_name", "Times New Roman"))
         )
-        cap_font_size = Pt(int(cast(Any, s.get("caption_font_size_pt", 11))))
+        cap_font_size = Pt(int(cast("Any", s.get("caption_font_size_pt", 11))))
         for r_ in paragraph.runs:
             r_.font.name = cap_font_name
             r_.font.color.rgb = RGBColor(*rgb)
@@ -874,10 +873,9 @@ class MTable:
                         )
                         prev_col = col
                         prev_cell_index = cell_index
-                    else:
-                        # Only merge if prev_cell_index is not None and cell_index is valid
-                        if prev_cell_index is not None and cell_index < len(hdr_cells):
-                            hdr_cells[prev_cell_index].merge(hdr_cells[cell_index])
+                    # Only merge if prev_cell_index is not None and cell_index is valid
+                    elif prev_cell_index is not None and cell_index < len(hdr_cells):
+                        hdr_cells[prev_cell_index].merge(hdr_cells[cell_index])
         else:
             hdr_cells = table.add_row().cells
             for i, col in enumerate(dfs.columns):
@@ -888,7 +886,7 @@ class MTable:
         if row_groups:
             current_group = None
             for idx, row in dfs.iterrows():
-                row_index = cast(tuple[Any, ...], idx)
+                row_index = cast("tuple[Any, ...]", idx)
                 if row_index[0] != current_group:
                     # New row group
                     current_group = row_index[0]
@@ -971,16 +969,18 @@ class MTable:
             )
             for run in paragraph.runs:
                 run.font.name = str(s.get("font_name", "Times New Roman"))
-                run.font.size = Pt(int(cast(Any, s.get("notes_font_size_pt", 9))))
+                run.font.size = Pt(int(cast("Any", s.get("notes_font_size_pt", 9))))
                 rgb = tuple(
-                    cast(tuple[int, int, int], s.get("font_color_rgb", (0, 0, 0)))
+                    cast("tuple[int, int, int]", s.get("font_color_rgb", (0, 0, 0)))
                 )
                 run.font.color.rgb = RGBColor(*rgb)
 
         # Apply font to all table cells
-        rgb_all = tuple(cast(tuple[int, int, int], s.get("font_color_rgb", (0, 0, 0))))
-        base_size = Pt(int(cast(Any, s.get("font_size_pt", 11))))
-        notes_size = Pt(int(cast(Any, s.get("notes_font_size_pt", 9))))
+        rgb_all = tuple(
+            cast("tuple[int, int, int]", s.get("font_color_rgb", (0, 0, 0)))
+        )
+        base_size = Pt(int(cast("Any", s.get("font_size_pt", 11))))
+        notes_size = Pt(int(cast("Any", s.get("notes_font_size_pt", 9))))
         for ridx, row in enumerate(table.rows):
             is_notes_row = ridx == len(table.rows) - 1
             size = notes_size if is_notes_row else base_size
@@ -1017,7 +1017,7 @@ class MTable:
             top_border = OxmlElement("w:top")
             top_border.set(qn("w:val"), "single")
             top_border.set(
-                qn("w:sz"), str(int(cast(Any, s.get("border_top_rule_sz", 8))))
+                qn("w:sz"), str(int(cast("Any", s.get("border_top_rule_sz", 8))))
             )
             borders.append(top_border)
             tcPr.append(borders)
@@ -1029,7 +1029,7 @@ class MTable:
             bottom_border = OxmlElement("w:bottom")
             bottom_border.set(qn("w:val"), "single")
             bottom_border.set(
-                qn("w:sz"), str(int(cast(Any, s.get("border_header_rule_sz", 4))))
+                qn("w:sz"), str(int(cast("Any", s.get("border_header_rule_sz", 4))))
             )
             borders.append(bottom_border)
             tcPr.append(borders)
@@ -1044,7 +1044,7 @@ class MTable:
                 top_border.set(qn("w:val"), "single")
                 top_border.set(
                     qn("w:sz"),
-                    str(int(cast(Any, s.get("border_header_rule_sz", 4)))),
+                    str(int(cast("Any", s.get("border_header_rule_sz", 4)))),
                 )
                 borders.append(top_border)
                 tcPr.append(borders)
@@ -1059,7 +1059,7 @@ class MTable:
                     top_border.set(qn("w:val"), "single")
                     top_border.set(
                         qn("w:sz"),
-                        str(int(cast(Any, s.get("border_group_rule_sz", 4)))),
+                        str(int(cast("Any", s.get("border_group_rule_sz", 4)))),
                     )
                     borders.append(top_border)
                     tcPr.append(borders)
@@ -1071,7 +1071,7 @@ class MTable:
                     bottom_border.set(qn("w:val"), "single")
                     bottom_border.set(
                         qn("w:sz"),
-                        str(int(cast(Any, s.get("border_group_rule_sz", 4)))),
+                        str(int(cast("Any", s.get("border_group_rule_sz", 4)))),
                     )
                     borders.append(bottom_border)
                     tcPr.append(borders)
@@ -1083,7 +1083,7 @@ class MTable:
             bottom_border = OxmlElement("w:bottom")
             bottom_border.set(qn("w:val"), "single")
             bottom_border.set(
-                qn("w:sz"), str(int(cast(Any, s.get("border_bottom_rule_sz", 8))))
+                qn("w:sz"), str(int(cast("Any", s.get("border_bottom_rule_sz", 8))))
             )
             borders.append(bottom_border)
             tcPr.append(borders)
@@ -1093,7 +1093,7 @@ class MTable:
         tblPr = tc.tblPr
         tblCellMar = OxmlElement("w:tblCellMar")
         _margins = cast(
-            dict[str, int],
+            "dict[str, int]",
             s.get("cell_margins_dxa", {"left": 0, "right": 0, "top": 60, "bottom": 60}),
         )
         for m in ("left", "right", "top", "bottom"):
@@ -1608,10 +1608,9 @@ class MTable:
                 # Join lines with " \ " (backslash is Typst's line break operator)
                 formatted_content = " \\ ".join(escaped_lines)
                 return f"[{formatted_content}]"
-            else:
-                # Single-line content: escape and keep on one line
-                escaped_content = self._escape_typst(content, escape_asterisks=True)
-                return f"[{escaped_content}]"
+            # Single-line content: escape and keep on one line
+            escaped_content = self._escape_typst(content, escape_asterisks=True)
+            return f"[{escaped_content}]"
 
         if row_groups_present:
             start = 0
@@ -1742,13 +1741,12 @@ class MTable:
 
             # Temporarily rename index levels to avoid conflicts
             dfs.index.names = index_names
-        else:
-            if rowindex.name is None or rowindex.name in dfs.columns:
-                # Use a safe default name
-                safe_name = "__index__"
-                while safe_name in dfs.columns:
-                    safe_name = f"__index_{hash(safe_name) % 1000}__"
-                dfs.index.name = safe_name
+        elif rowindex.name is None or rowindex.name in dfs.columns:
+            # Use a safe default name
+            safe_name = "__index__"
+            while safe_name in dfs.columns:
+                safe_name = f"__index_{hash(safe_name) % 1000}__"
+            dfs.index.name = safe_name
 
         dfs.reset_index(inplace=True)
 
