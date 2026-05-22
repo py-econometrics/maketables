@@ -1,7 +1,8 @@
 """Base snapshot tests for statsmodels models."""
 
-import maketables as mt
 from helpers import normalize_html
+
+import maketables as mt
 
 
 class TestStatsmodels:
