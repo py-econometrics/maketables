@@ -1,7 +1,4 @@
 ---
-ci:
-  autoupdate_schedule: monthly
-  autofix_prs: false
 exclude: (^|/)__snapshots__/
 repos:
   - repo: meta
@@ -51,21 +48,27 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.34.0
+    rev: 0.37.2
     hooks:
       - id: check-github-workflows
         args:
           - --verbose
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.1
+    rev: v0.15.12
     hooks:
-      - id: ruff
+      - id: ruff-check
         args:
           - --fix
           - --output-format=full
-        exclude: ^docs/.*\.ipynb$
+        types_or:
+          - jupyter
+          - pyi
+          - python
       - id: ruff-format
-        exclude: ^docs/.*\.ipynb$
+        types_or:
+          - jupyter
+          - pyi
+          - python
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.9.1
     hooks:
@@ -87,14 +90,6 @@ repos:
           - --ignore=W291
           - --ignore=W293
         files: ^docs/.*\.ipynb$
-  - repo: local
-    hooks:
-      - id: ty
-        name: ty
-        entry: ty check --output-format concise
-        language: system
-        files: ^src/maketables/
-        pass_filenames: false
   - repo: https://github.com/kynan/nbstripout
     rev: 0.9.1
     hooks:
@@ -113,7 +108,7 @@ repos:
         args:
           - --wrap
           - '88'
-        files: (CLAUDE\.md|README\.md)
+        files: (AGENTS\.md|CLAUDE\.md|README\.md)
       - id: mdformat
         additional_dependencies:
           - mdformat-myst
@@ -122,3 +117,5 @@ repos:
           - --wrap
           - '88'
         files: docs/.*\.md$
+ci:
+  autoupdate_schedule: monthly
