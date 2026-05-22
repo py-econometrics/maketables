@@ -125,6 +125,7 @@ check = "pre-commit run --all-files"
 tests = "pytest tests/ -v"
 tests-with-cov = "pytest tests/ -v --cov=src/maketables --cov-report=xml"
 tests-update-snapshots = "pytest tests/ --snapshot-update -v"
+ty = "ty check"
 [tool.pixi.feature.docs.tasks]
 run-all-notebooks = """\
   jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb \
@@ -218,7 +219,17 @@ max_supported_python = "3.14"
 table_format = "long"
 
 [tool.ty.rules]
-all = "warn"
+ambiguous-protocol-member = "error"
+deprecated = "error"
+division-by-zero = "error"
+ignore-comment-unknown-rule = "error"
+ineffective-final = "error"
+invalid-enum-member-annotation = "error"
+invalid-ignore-comment = "error"
+invalid-legacy-positional-parameter = "error"
+redundant-cast = "error"
+unused-awaitable = "error"
+unused-ignore-comment = "error"
 [tool.ty.src]
 include = [ "src/maketables" ]
 
