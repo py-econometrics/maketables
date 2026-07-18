@@ -4,13 +4,16 @@ import re
 import warnings
 from collections import Counter
 from collections.abc import ValuesView
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import numpy as np
 import pandas as pd
 
 from .extractors import ModelExtractor, get_extractor
 from .mtable import MTable
+
+HeadOrder = Literal["dh", "hd", "d", "h", ""]
+StatsOrder = Literal["cs", "sc", "c", "s", ""]
 
 
 class ETable(MTable):
@@ -59,6 +62,10 @@ class ETable(MTable):
         custom_stats[key][i] is a list aligned to model i’s coefficient index.
     custom_model_stats : dict, optional
         Additional bottom rows. Shape: {'Row label': [val_m1, val_m2, ...]}.
+    stats_order : {"cs","sc","c","s",""}, optional
+        Bottom-panel order: c=custom model statistics, s=model statistics.
+        ``"cs"`` preserves the default behavior of showing custom statistics first.
+        A single letter displays only that block; ``""`` hides both blocks.
     keep : list[str] | str, optional
         Regex patterns (or exact names with exact_match=True) to keep and order
         coefficients. If provided, output order follows the pattern order.
@@ -135,6 +142,7 @@ class ETable(MTable):
     DEFAULT_SIGNIF_CODE: ClassVar[list[float]] = [0.01, 0.05, 0.10]
     DEFAULT_COEF_FMT: ClassVar[str] = "b:.3f* \n (se:.3f)"
     DEFAULT_MODEL_STATS: ClassVar[list[str]] = ["N", "r2"]
+    DEFAULT_STATS_ORDER: ClassVar[StatsOrder] = "cs"
     # Canonical stat key -> printable label (used if model_stats_labels is None)
     DEFAULT_STAT_LABELS: ClassVar[dict[str, str]] = {
         "N": "Observations",
@@ -163,7 +171,7 @@ class ETable(MTable):
     }
     DEFAULT_SHOW_SE_TYPE = True
     DEFAULT_SHOW_FE = True
-    DEFAULT_HEAD_ORDER = "dh"
+    DEFAULT_HEAD_ORDER: ClassVar[HeadOrder] = "dh"
     DEFAULT_FELABELS: ClassVar[dict[str, str]] = {}
     DEFAULT_CAT_TEMPLATE = "{variable}={value}"
     DEFAULT_LINEBREAK = "\n"
@@ -179,6 +187,7 @@ class ETable(MTable):
         model_stats_labels: dict[str, str] | None = None,
         custom_stats: dict | None = None,
         custom_model_stats: dict | None = None,
+        stats_order: StatsOrder | None = None,
         keep: list | str | None = None,
         drop: list | str | None = None,
         exact_match: bool | None = False,
@@ -190,7 +199,7 @@ class ETable(MTable):
         felabels: dict | None = None,
         notes: str = "",
         model_heads: list | None = None,
-        head_order: str | None = None,
+        head_order: HeadOrder | None = None,
         caption: str | None = None,
         tab_label: str | None = None,
         digits: int | None = None,
@@ -219,6 +228,7 @@ class ETable(MTable):
         show_fe = self.DEFAULT_SHOW_FE if show_fe is None else show_fe
         felabels = dict(self.DEFAULT_FELABELS) if felabels is None else felabels
         head_order = self.DEFAULT_HEAD_ORDER if head_order is None else head_order
+        stats_order = self.DEFAULT_STATS_ORDER if stats_order is None else stats_order
         custom_stats = {} if custom_stats is None else custom_stats
         keep = [] if keep is None else keep
         drop = [] if drop is None else drop
@@ -254,6 +264,7 @@ class ETable(MTable):
 
 
         assert head_order in ["dh", "hd", "d", "h", ""]
+        assert stats_order in ["cs", "sc", "c", "s", ""]
 
         # --- metadata from models (modular) ---
         dep_var_list = [self._extract_depvar(m) for m in models]
@@ -337,6 +348,7 @@ class ETable(MTable):
             stat_keys=model_stats,
             stat_labels=model_stats_labels,
             custom_model_stats=custom_model_stats,
+            stats_order=stats_order,
             like_index=res.index,
             like_columns=res.columns,
         )
@@ -641,6 +653,7 @@ class ETable(MTable):
         stat_keys: list[str],
         stat_labels: dict[str, str] | None,
         custom_model_stats: dict[str, list] | None,
+        stats_order: StatsOrder,
         like_index: pd.Index,
         like_columns: pd.Index,
     ) -> pd.DataFrame:
@@ -675,12 +688,9 @@ class ETable(MTable):
             else pd.DataFrame()
         )
 
-        if not custom_df.empty and not builtin_df.empty:
-            out = pd.concat([custom_df, builtin_df], axis=0)
-        elif not custom_df.empty:
-            out = custom_df
-        else:
-            out = builtin_df
+        blocks = {"c": custom_df, "s": builtin_df}
+        selected_blocks = [blocks[key] for key in stats_order if not blocks[key].empty]
+        out = pd.concat(selected_blocks, axis=0) if selected_blocks else pd.DataFrame()
 
         if out.shape[1] == 0:
             out = pd.DataFrame(
@@ -694,7 +704,7 @@ class ETable(MTable):
         self,
         dep_var_list: list[str],
         model_heads: list[str] | None,
-        head_order: str,
+        head_order: HeadOrder,
         n_models: int,
     ) -> list[str] | pd.MultiIndex:
         id_dep = dep_var_list
