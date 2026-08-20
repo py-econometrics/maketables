@@ -35,6 +35,7 @@ The package supports multiple output formats including:
 - [statsmodels](https://github.com/statsmodels/statsmodels)
 - [linearmodels](https://github.com/bashtage/linearmodels)
 - [lifelines](https://github.com/CamDavidsonPilon/lifelines)
+- [DoubleML](https://github.com/DoubleML/doubleml-for-py)
 
 It is very easy to add support for new models - either in the `maketables` code base, or from within your own package via a maketables **plug-in**. Take a look at the [docs](https://py-econometrics.github.io/maketables/docs/AddingModelClasses.html) to get started, and please feel free to reach out for help!
 
