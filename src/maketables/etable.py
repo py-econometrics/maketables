@@ -104,11 +104,17 @@ class ETable(MTable):
     notes : str, optional
         Table notes. If "", a default note with significance levels and the
         coef cell format is generated.
-    model_heads : list[str], optional
-        Optional model headers (e.g., country names).
+    model_heads : list[str] | list[list[str]], optional
+        Optional model headers (e.g., country names). Pass a flat list (one
+        entry per model) for a single header row, or a list of levels (each
+        an inner list/tuple with one entry per model) for multiple stacked
+        header rows, e.g. [["USA","USA","UK","UK"], ["OLS","IV","OLS","IV"]].
+        Levels are stacked top-to-bottom in the order given. Each level may
+        be left empty ("") for some models to merge cells via spanners.
     head_order : {"dh","hd","d","h",""}, optional
-        Header level order: d=dep var, h=model header. "" shows only model numbers.
-        Default ETable.DEFAULT_HEAD_ORDER = "dh".
+        Header level order: d=dep var, h=model header(s). "" shows only model
+        numbers. When model_heads defines multiple levels, all of them are
+        inserted together wherever "h" appears. Default ETable.DEFAULT_HEAD_ORDER = "dh".
     caption : str, optional
         Table caption (passed to MTable).
     tab_label : str, optional
@@ -198,7 +204,7 @@ class ETable(MTable):
         show_fe: bool | None = None,
         felabels: dict | None = None,
         notes: str = "",
-        model_heads: list | None = None,
+        model_heads: list[str] | list[list[str]] | None = None,
         head_order: HeadOrder | None = None,
         caption: str | None = None,
         tab_label: str | None = None,
@@ -260,7 +266,17 @@ class ETable(MTable):
             if not any(model_heads):
                 model_heads = None
         if model_heads is not None:
-            assert len(model_heads) == len(models)
+            if len(model_heads) > 0 and isinstance(model_heads[0], (list, tuple)):
+                # Multi-level headers: each level must align with the models.
+                for level in model_heads:
+                    assert isinstance(level, (list, tuple)), (
+                        "When model_heads is a list of levels, every level must "
+                        "itself be a list or tuple (one entry per model), not a "
+                        f"plain string: got {level!r}."
+                    )
+                    assert len(level) == len(models)
+            else:
+                assert len(model_heads) == len(models)
 
 
         assert head_order in ["dh", "hd", "d", "h", ""]
@@ -431,7 +447,13 @@ class ETable(MTable):
         return self._get_extractor(model).fixef_string(model)
 
     def _extract_sample_split(self, model: Any) -> str | None:
-        return self._get_extractor(model).sample_split(model)
+        extractor = self._get_extractor(model)
+        # sample_split() was added after the extractor Protocol was first published;
+        # third-party extractors registered against the older interface may not
+        # implement it, so this must degrade gracefully rather than crash on every call.
+        if not hasattr(extractor, "sample_split"):
+            return None
+        return extractor.sample_split(model)
 
     def _extract_vcov_info(self, model: Any) -> dict[str, Any]:
         return self._get_extractor(model).vcov_info(model)
@@ -703,26 +725,32 @@ class ETable(MTable):
     def _build_header_columns(
         self,
         dep_var_list: list[str],
-        model_heads: list[str] | None,
+        model_heads: list[str] | list[list[str]] | None,
         head_order: HeadOrder,
         n_models: int,
     ) -> list[str] | pd.MultiIndex:
         id_dep = dep_var_list
         id_num = [f"({s})" for s in range(1, n_models + 1)]
 
-        id_head = None
+        # Normalize model_heads to a list of header levels (each aligned to models),
+        # supporting both the flat single-level form and the nested multi-level form.
+        head_levels = None
         if model_heads is not None:
-            id_head = list(model_heads)
-            if not any(str(h).strip() for h in id_head):
-                id_head = None
+            if len(model_heads) > 0 and isinstance(model_heads[0], (list, tuple)):
+                head_levels = [list(lvl) for lvl in model_heads]
+            else:
+                head_levels = [list(model_heads)]
+            head_levels = [lvl for lvl in head_levels if any(str(h).strip() for h in lvl)]
+            if not head_levels:
+                head_levels = None
 
         if head_order == "":
             return id_num
 
         header_levels: list[list[str]] = []
         for c in head_order:
-            if c == "h" and id_head is not None:
-                header_levels.append(id_head)
+            if c == "h" and head_levels is not None:
+                header_levels.extend(head_levels)
             if c == "d":
                 header_levels.append(id_dep)
         header_levels.append(id_num)
