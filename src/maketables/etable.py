@@ -739,7 +739,7 @@ class ETable(MTable):
             if len(model_heads) > 0 and isinstance(model_heads[0], (list, tuple)):
                 head_levels = [list(lvl) for lvl in model_heads]
             else:
-                head_levels = [list(model_heads)]
+                head_levels = [[str(h) for h in model_heads]]
             head_levels = [lvl for lvl in head_levels if any(str(h).strip() for h in lvl)]
             if not head_levels:
                 head_levels = None
