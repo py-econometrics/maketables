@@ -2,7 +2,6 @@ import contextlib
 import math
 import re
 import warnings
-from collections import Counter
 from collections.abc import ValuesView
 from typing import Any, ClassVar, Literal
 
@@ -185,7 +184,7 @@ class ETable(MTable):
 
     def __init__(
         self,
-        models: Any, 
+        models: Any,
         *,
         signif_code: list | None = None,
         coef_fmt: str | None = None,
@@ -297,7 +296,7 @@ class ETable(MTable):
                 if models:
                     all_defaults = []
                     has_custom_defaults = False
-                    
+
                     # Collect defaults from each model
                     for model in models:
                         try:
@@ -316,7 +315,7 @@ class ETable(MTable):
                         except Exception:
                             # If extractor lookup fails, use general defaults
                             all_defaults.extend(self.DEFAULT_MODEL_STATS)
-                    
+
                     # Use union of all defaults, preserving order
                     if all_defaults:
                         seen = set()
@@ -420,7 +419,7 @@ class ETable(MTable):
         # Check for multi-model container (has to_list method)
         if hasattr(models, 'to_list') and callable(getattr(models, 'to_list', None)):
             return models.to_list()
-        
+
         # Handle lists/tuples/ValuesView - recursively expand any containers within
         if isinstance(models, (list, tuple, ValuesView)):
             result = []
@@ -431,7 +430,7 @@ class ETable(MTable):
                 else:
                     result.append(item)
             return result
-        
+
         # Single model
         return [models]
 
@@ -550,14 +549,14 @@ class ETable(MTable):
         cat_template: str,
     ) -> tuple[pd.DataFrame, str]:
         lbcode = self.DEFAULT_LINEBREAK
-        
+
         # Get column names from first model to validate tokens
         first_tidy = self._extract_tidy_df(models[0])
         available_columns = set(first_tidy.columns)
         coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(
             coef_fmt, custom_stats, available_columns
         )
-        
+
         cols_per_model = []
         for i, model in enumerate(models):
             tidy = self._extract_tidy_df(model)
@@ -884,14 +883,14 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     """
     # Reserved tokens that cannot be overridden
     reserved_tokens = ["b", "se", "t", "p"]
-    
+
     # Validate custom_stats don't use reserved tokens
     custom_elements = list(custom_stats.keys())
     if any(x in reserved_tokens for x in custom_elements):
         raise ValueError(
             f"Custom stats cannot use reserved tokens: {reserved_tokens}"
         )
-    
+
     # Validate custom_stats don't conflict with available columns
     if available_columns:
         conflicting = [x for x in custom_elements if x in available_columns]
@@ -917,15 +916,15 @@ def _parse_coef_fmt(coef_fmt: str, custom_stats: dict, available_columns: set):
     # Build list of all valid tokens
     # Priority: reserved > available columns > custom_stats
     all_tokens = reserved_tokens.copy()
-    
+
     if available_columns:
         # Add tidy columns that aren't reserved
         tidy_tokens = [
-            col for col in available_columns 
+            col for col in available_columns
             if col not in reserved_tokens
         ]
         all_tokens.extend(tidy_tokens)
-    
+
     # Add custom stats last (lowest priority, already validated for conflicts)
     all_tokens.extend(custom_elements)
 
@@ -1060,7 +1059,7 @@ def _select_order_coefs(
 
     coefs = list(coefs)
     res = [] if keep else coefs[:]  # Store matched coefs
-    
+
     # Apply keep patterns
     for pattern in keep:
         _coefs = []  # Store remaining coefs
@@ -1089,12 +1088,12 @@ def _select_order_coefs(
     if order is not None:
         ordered_res = []
         remaining = list(res)
-        
+
         for coef_name in order:
             if coef_name in remaining:
                 ordered_res.append(coef_name)
                 remaining.remove(coef_name)
-        
+
         # Append any remaining coefficients not in order list
         ordered_res.extend(remaining)
         res = ordered_res
