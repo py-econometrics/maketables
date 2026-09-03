@@ -84,6 +84,10 @@ lifelines = [
 
 [tool.pixi.feature.dev.dependencies]
 quarto = ">=1.8.25,<2"
+typst = ">=0.11"
+
+[tool.pixi.feature.dev.target.win-64.dependencies]
+pywin32 = "*"
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -113,6 +117,7 @@ maketables = { path = ".", editable = true, extras = ["dev"] }
 check = "pre-commit run --all-files"
 tests = "pytest tests/ -v"
 tests-update-snapshots = "pytest tests/ --snapshot-update -v"
+preview-pdf = "python scripts/preview_pdf.py"
 
 [tool.pytest.ini_options]
 pythonpath = ["tests"]

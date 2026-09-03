@@ -26,6 +26,12 @@ pixi run -e dev check
 
 # Preview docs (Quarto)
 pixi run -e docs docs-preview
+
+# Render a table to PDF in every output format (tex/typst/docx), for visually
+# checking a rendering feature. Point it at a script defining `table` or a
+# `TABLES` dict; skips a format if its external tool isn't found on PATH.
+pixi run -e dev preview-pdf my_script.py
+pixi run -e dev preview-pdf my_script.py --formats tex,typst --output-dir ./out
 ```
 
 ## Architecture
