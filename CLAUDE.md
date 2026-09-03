@@ -32,6 +32,7 @@ pixi run -e docs docs-preview
 # `TABLES` dict; skips a format if its external tool isn't found on PATH.
 pixi run -e dev preview-pdf my_script.py
 pixi run -e dev preview-pdf my_script.py --formats tex,typst --output-dir ./out
+pixi run -e dev preview-pdf my_script.py --combine  # also writes one PDF with every format, labelled
 ```
 
 ## Architecture
