@@ -12946,8 +12946,8 @@ packages:
   requires_python: '>=3.8'
 - pypi: ./
   name: maketables
-  version: 0.1.9.dev46+g95d2da202.d20260522
-  sha256: 679e440f86c1722c72657d247c2e1bbeb71313240460e4f3b09af6d7734fc583
+  version: 0.1.9.dev53+gf1539fd2f.d20260522
+  sha256: 48f507a83473f376c9b12b02fbd88e2650512200abe9510620a07916c3843f99
   requires_dist:
   - great-tables>=0.2
   - ipython>=7

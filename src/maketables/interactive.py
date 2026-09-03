@@ -163,7 +163,7 @@ class InteractiveFeols:
             + self.categorical_vars
             + [var for var in self.numeric_vars if self.data[var].nunique() < 20]
         )
-        initial_fe = self.initial_fixef if self.initial_fixef else ["None"]
+        initial_fe = self.initial_fixef or ["None"]
 
         self.fixef_widget = widgets.SelectMultiple(
             options=fe_options,

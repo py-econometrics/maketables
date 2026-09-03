@@ -199,7 +199,7 @@ def export_dta(
             path,
             write_index=cast("Any", write_index),
             version=version,
-            variable_labels=var_labels if var_labels else None,
+            variable_labels=var_labels or None,
             data_label=data_label,
             convert_strl=cast("Any", True),
             time_stamp=time_stamp,

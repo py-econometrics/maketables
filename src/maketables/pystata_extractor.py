@@ -276,7 +276,8 @@ class StataResultWrapper:
                     std_errors = np.sqrt(np.diag(vcov_array))
                     # Calculate t-statistics manually
                     t_stats = coef_vals / std_errors
-                    # Use normal approximation for p-values (Stata default for large samples)
+                    # Use normal approximation for p-values
+                    # (Stata default for large samples)
                     from scipy.stats import norm
 
                     p_values = 2 * (1 - norm.cdf(np.abs(t_stats)))
@@ -304,7 +305,8 @@ class StataResultWrapper:
                 coef_names = Matrix.getColNames("e(b)")
                 if coef_names and len(coef_names) == len(coef_vals):
                     # Filter out base categories (reference levels) that end with 'b.'
-                    # These are Stata's base categories that are always zero and not displayed
+                    # These are Stata's base categories that are always zero
+                    # and not displayed
                     filtered_indices = []
                     filtered_coef_vals = []
                     filtered_std_errors = []
@@ -312,8 +314,9 @@ class StataResultWrapper:
                     filtered_p_values = []
 
                     for i, name in enumerate(coef_names):
-                        # Skip base categories: coefficients that match Stata's base category pattern
-                        # Base categories have pattern: digit + 'b' + '.' (e.g., '1b.price_cat', '0b.foreign')
+                        # Skip coefficients that match Stata's base category pattern
+                        # Base categories have pattern:
+                        # digit + 'b' + '.' (e.g., '1b.price_cat', '0b.foreign')
                         import re
 
                         if re.search(r"\d+b\.", name):
@@ -377,8 +380,6 @@ class StataResultWrapper:
             df = pd.DataFrame(data, index=cast("Any", index))
             df.index.name = "Coefficient"
 
-            return df
-
         except Exception:
             # Fallback: create minimal table with available info
             return pd.DataFrame(
@@ -390,6 +391,8 @@ class StataResultWrapper:
                 },
                 index=cast("Any", ["coef"]),
             )
+        else:
+            return df
 
     @staticmethod
     def _extract_statistics() -> dict[str, Any]:
@@ -469,9 +472,10 @@ class StataResultWrapper:
 
             # Use sfi.Macro for robust access to e(depvar)
             depvar = Macro.getGlobal("e(depvar)")
-            return depvar if depvar else "y"
         except Exception:
             return "y"
+        else:
+            return depvar or "y"
 
     @staticmethod
     def _extract_command() -> str:
@@ -503,7 +507,8 @@ class StataResultWrapper:
             # For xtreg and other panel commands, extract the panel ID variable
             cmd = Macro.getGlobal("e(cmd)")
             if cmd and "xtreg" in cmd.lower():
-                # For xtreg, if we have panel data statistics, it's likely a fixed effects model
+                # For xtreg, if we have panel data statistics,
+                # it's likely a fixed effects model
                 # Check for presence of within R-squared as indicator of FE model
                 try:
                     from sfi import Scalar  # ty: ignore[unresolved-import]
@@ -517,7 +522,8 @@ class StataResultWrapper:
                 except Exception:
                     pass
 
-                # Alternative: always extract panel var for xtreg since it implies panel structure
+                # Alternative: always extract panel var for xtreg,
+                # since it implies panel structure
                 panel_var = Macro.getGlobal("e(ivar)")
                 if panel_var:
                     return f"{panel_var}"
@@ -533,9 +539,9 @@ class StataResultWrapper:
                     panel_var = Macro.getGlobal("e(ivar)")
                     if panel_var:
                         return f"{panel_var}"
-
-            return None
         except Exception:
+            return None
+        else:
             return None
 
     @staticmethod
@@ -562,9 +568,10 @@ class StataResultWrapper:
                 label = Data.getVarLabel(i)
                 if label:  # Only store non-empty labels
                     labels[name] = label
-            return labels
         except Exception:
             return {}
+        else:
+            return labels
 
     @staticmethod
     def _extract_value_labels() -> dict[str, dict[int, str]]:
@@ -609,7 +616,9 @@ class StataResultWrapper:
 
                         # Get formatted value with labels
                         formatted_val = Data.getFormattedValue(
-                            name, obs, True
+                            name,
+                            obs,
+                            True,
                         )  # True = use value labels
 
                         # If formatted differs from numeric, we have a value label
@@ -628,9 +637,10 @@ class StataResultWrapper:
                 if var_labels:
                     value_labels[name] = var_labels
 
-            return value_labels
         except Exception:
             return {}
+        else:
+            return value_labels
 
 
 class PyStataExtractor:
@@ -693,7 +703,7 @@ class PyStataExtractor:
 
     def var_labels(self, model: StataResultWrapper) -> dict[str, str] | None:
         """Extract variable labels from Stata result."""
-        return model._var_labels if model._var_labels else None
+        return model._var_labels or None
 
     def supported_stats(self, model: StataResultWrapper) -> set[str]:
         """Return set of statistics available for the Stata model."""
@@ -711,12 +721,15 @@ class PyStataExtractor:
         return available_stats | mapped_stats
 
     def stat_labels(self, model: StataResultWrapper) -> dict[str, str] | None:
+        """Provide human-friendly labels for model statistics, or None."""
         return None
 
     def default_stat_keys(self, model: StataResultWrapper) -> list[str] | None:
+        """Return preferred ordering of statistic keys for display, or None."""
         return None
 
     def sample_split(self, model: StataResultWrapper) -> str | None:
+        """Return a short label for a sample split/subgroup, or None."""
         return None
 
 
@@ -745,7 +758,8 @@ def rstata(
         If False: keep original Stata names like '2.price_cat'
     use_var_labels : bool, default True
         Whether to replace categorical variable numbers with their value labels.
-        If True: '2.price_cat' with label "High" -> 'C(price_cat)[T.High]' or '2.price_cat (High)'
+        If True: '2.price_cat' with label "High" -> 'C(price_cat)[T.High]'
+        or '2.price_cat (High)'
         If False: keep numeric codes like '2.price_cat'
 
     Returns
@@ -774,14 +788,15 @@ def rstata(
         # Run the Stata code
         pystata.stata.run(stata_code, quietly=quietly)
 
+    except Exception as e:
+        raise RuntimeError("Failed to run Stata regression") from e
+
+    else:
         if auto_extract:
             return StataResultWrapper.from_current(
                 formulaic_names=formulaic_names, use_var_labels=use_var_labels
             )
         return None
-
-    except Exception as e:
-        raise RuntimeError(f"Failed to run Stata regression: {e}")
 
 
 def extract_current_stata_results(

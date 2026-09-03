@@ -522,7 +522,7 @@ def inspect_model(model: Any, long: bool = False) -> None:
                 print(f"Variance-covariance type: {vcov_type}")
                 if clustervar:
                     print(f"Cluster variable: {clustervar}")
-            print(f"Fixed effects: {fixef if fixef else 'None'}")
+            print(f"Fixed effects: {fixef or 'None'}")
         else:
             # Concise output
             parts = [f"depvar={depvar}"]
@@ -1336,10 +1336,8 @@ class LifelinesExtractor:
             getattr(m, "_n_examples", None)
             or _sum_if_not_none(getattr(m, "weights", None))
         ),
-        "events": lambda m: (
-            _sum_observed_events(
-                getattr(m, "weights", None), getattr(m, "event_observed", None)
-            )
+        "events": lambda m: _sum_observed_events(
+            getattr(m, "weights", None), getattr(m, "event_observed", None)
         ),
         # Likelihood
         "ll": lambda m: getattr(m, "log_likelihood_", None),
@@ -1349,8 +1347,10 @@ class LifelinesExtractor:
             if hasattr(m, "AIC_partial_")
             else getattr(m, "AIC_", None)
         ),
-        "concordance": lambda m: getattr(m, "concordance_index_", None)
-        or getattr(m, "concordance_index", None),
+        "concordance": lambda m: (
+            getattr(m, "concordance_index_", None)
+            or getattr(m, "concordance_index", None)
+        ),
         # Log-likelihood ratio test - call the method if it exists
         "llr": lambda m: (
             getattr(m.log_likelihood_ratio_test(), "test_statistic", None)
