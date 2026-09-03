@@ -26,10 +26,12 @@ Requires (only for the formats you actually want a PDF for):
     tex   - a LaTeX distribution providing pdflatex on PATH
     typst - the typst CLI (installed automatically in the `dev` pixi env)
     docx  - LibreOffice (`soffice` on PATH) or Microsoft Word (Windows only)
-    html  - no PDF conversion is attempted; the raw .html is saved for you
-            to open directly in a browser (fully interactive, no conversion
-            needed) - unless --combine is passed, in which case a headless
-            Chrome/Edge screenshot is used instead (see --combine below).
+    html  - no PDF conversion is attempted; the .html file is always saved
+            for you to open directly in a browser (fully interactive, no
+            conversion needed). When --combine is passed, a headless
+            Chrome/Edge screenshot of that same .html is additionally
+            captured for the combined PDF (see --combine below) - the
+            .html file itself is still saved either way.
 
 --combine additionally writes {name}_combined.pdf per table: every
 requested format's own page(s), each headed by a heading naming the format
