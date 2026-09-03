@@ -5,6 +5,7 @@ from typing import ClassVar
 import numpy as np
 import pandas as pd
 from docx import Document
+from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -864,6 +865,8 @@ class MTable:
             # Add multiple headline rows for MultiIndex columns
             for level in range(headline_levels):
                 hdr_cells = table.add_row().cells
+                for cell in hdr_cells:
+                    cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 prev_col = None
                 prev_cell_index = None
                 for i, col in enumerate(dfs.columns.get_level_values(level)):
@@ -880,6 +883,8 @@ class MTable:
                             hdr_cells[prev_cell_index].merge(hdr_cells[cell_index])
         else:
             hdr_cells = table.add_row().cells
+            for cell in hdr_cells:
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             for i, col in enumerate(dfs.columns):
                 hdr_cells[i + 1].text = self._translate_symbols(str(col), "docx")
 
@@ -1156,6 +1161,24 @@ class MTable:
                 return f"{prefix}\\makecell{spec}{{{text}}}"
             return text
 
+        # A header/spanner row can mix single-line and multi-line cells; by
+        # default every cell sits flush at the top of the (taller) row. Shift
+        # shorter cells down by half a line per "missing" line so they sit
+        # vertically centered instead.
+        def _center_row_cells(
+            texts: list[str], align: str | None = None, protect: bool = False
+        ) -> list[str]:
+            line_counts = [text.count("\n") + 1 for text in texts]
+            max_lines = max(line_counts, default=1)
+            wrapped = []
+            for text, n_lines in zip(texts, line_counts, strict=False):
+                cell = _wrap_linebreaks(text, align=align, protect=protect)
+                extra = max_lines - n_lines
+                if extra:
+                    cell = f"\\raisebox{{-{extra / 2:g}\\baselineskip}}{{{cell}}}"
+                wrapped.append(cell)
+            return wrapped
+
         def _prep_cell(x):
             if isinstance(x, float) and np.isnan(x):
                 return ""
@@ -1238,12 +1261,13 @@ class MTable:
             for lvl in range(col_levels - 1):
                 labels_lvl = [dfs.columns[i][lvl] for i in range(len(dfs.columns))]
                 row_cells, row_spans = _make_spanner_row(labels_lvl)
+                centered_cells = _center_row_cells(row_cells)
                 # Build the LaTeX row: prepend stub blanks, then multicolumns
                 parts = [""] * stub_cols
                 cmid_ranges = []
                 left = stub_cols + 1
-                for cell, span in zip(row_cells, row_spans, strict=False):
-                    parts.append(f"\\multicolumn{{{span}}}{{c}}{{{_wrap_linebreaks(cell)}}}")
+                for cell, span in zip(centered_cells, row_spans, strict=False):
+                    parts.append(f"\\multicolumn{{{span}}}{{c}}{{{cell}}}")
                     cmid_ranges.append((left, left + span - 1))
                     left += span
                 # Add the spanner row
@@ -1258,11 +1282,15 @@ class MTable:
                     header_lines.append(cmids)
             # Last level: the actual column names
             last_labels = [dfs.columns[i][-1] for i in range(len(dfs.columns))]
-            last_parts = [""] * stub_cols + [_wrap_linebreaks(str(x)) for x in last_labels]
+            last_parts = [""] * stub_cols + _center_row_cells(
+                [str(x) for x in last_labels]
+            )
             header_lines.append(" & ".join(last_parts) + r" \\")
         else:
             # Single-level columns: one header row with the column names
-            last_parts = [""] * stub_cols + [_wrap_linebreaks(str(c)) for c in dfs.columns]
+            last_parts = [""] * stub_cols + _center_row_cells(
+                [str(c) for c in dfs.columns]
+            )
             header_lines.append(" & ".join(last_parts) + r" \\")
 
         # Build body rows
@@ -1378,7 +1406,7 @@ class MTable:
                 + "]\n"
                 + "\\centering\n"
                 + (
-                    "\\caption{" + _wrap_linebreaks(self.caption, protect=True) + "}\n"
+                    "\\caption{" + self.caption + "}\n"
                     if self.caption is not None
                     else ""
                 )
@@ -1569,7 +1597,9 @@ class MTable:
                 row_parts: list[str] = ["[]"] * stub_cols
                 for cell_label, span in zip(row_cells, row_spans, strict=False):
                     lbl = _join_typst_lines(cell_label, escape_asterisks=False)
-                    row_parts.append(f"[#table.cell(colspan: {span})[{lbl}]]")
+                    row_parts.append(
+                        f"[#table.cell(colspan: {span}, align: horizon)[{lbl}]]"
+                    )
                 lines.append("  " + ", ".join(row_parts) + ",")
 
                 # cmidrule-like partial lines under each spanner
@@ -1589,7 +1619,7 @@ class MTable:
         last_parts: list[str] = ["[]"] * stub_cols
         for label in last_labels:
             lbl = _join_typst_lines(label, escape_asterisks=False)
-            last_parts.append(f"[{lbl}]")
+            last_parts.append(f"[#table.cell(align: horizon)[{lbl}]]")
         lines.append("  " + ", ".join(last_parts) + ",")
 
         # Midrule after headers
@@ -1655,7 +1685,7 @@ class MTable:
             caption_line = ""
             if self.caption is not None:
                 # Escape special characters in caption (but preserve * for bold formatting)
-                caption_escaped = _join_typst_lines(self.caption, escape_asterisks=False)
+                caption_escaped = self._escape_typst(self.caption, escape_asterisks=False)
                 caption_line = f", caption: [{caption_escaped}]"
 
             label_line = ""
@@ -1774,7 +1804,7 @@ class MTable:
 
         # When caption is provided, add it to the table
         if self.caption is not None:
-            gt = gt.tab_header(title=_gt_linebreak(self.caption)).tab_options(
+            gt = gt.tab_header(title=self.caption).tab_options(
                 table_border_top_style="hidden"
             )
 
