@@ -68,6 +68,37 @@ class TestETableModelStats:
         table = mt.ETable([fitted_model], model_stats=["N", "aic", "bic"])
         assert table.make(type="tex") == snapshot
 
+    @pytest.mark.parametrize(
+        ("stats_order", "expected_rows"),
+        [
+            (None, ["Average", "Observations", "R²"]),
+            ("cs", ["Average", "Observations", "R²"]),
+            ("sc", ["Observations", "R²", "Average"]),
+            ("c", ["Average"]),
+            ("s", ["Observations", "R²"]),
+            ("", []),
+        ],
+    )
+    def test_stats_order(self, fitted_model, stats_order, expected_rows):
+        """Order or hide built-in and custom model-statistic blocks."""
+        table = mt.ETable(
+            [fitted_model],
+            model_stats=["N", "r2"],
+            custom_model_stats={"Average": [1.23]},
+            stats_order=stats_order,
+        )
+
+        if "stats" not in table.df.index.get_level_values(0):
+            actual_rows = []
+        else:
+            actual_rows = table.df.xs("stats").index.tolist()
+        assert actual_rows == expected_rows
+
+    def test_stats_order_rejects_invalid_value(self, fitted_model):
+        """Reject unsupported model-statistic block orders."""
+        with pytest.raises(ValueError, match="stats_order"):
+            mt.ETable([fitted_model], stats_order="invalid")
+
 
 class TestBTableStats:
     """Snapshot tests for BTable statistics."""
