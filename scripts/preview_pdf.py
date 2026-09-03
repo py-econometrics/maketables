@@ -32,8 +32,10 @@ Requires (only for the formats you actually want a PDF for):
             Chrome/Edge screenshot is used instead (see --combine below).
 
 --combine additionally writes {name}_combined.pdf per table: every
-requested format's output as its own labelled page (or pages), so you can
-flip through all of them at once. Requires `pymupdf` (installed in the
+requested format's own page(s), each headed by a heading naming the format
+(rendered natively - e.g. a LaTeX \\section*{{}} for the tex page, a Typst
+heading for the typst page - not an inserted image or foreign page), so you
+can flip through all of them at once. Requires `pymupdf` (installed in the
 `dev` pixi env) to build the combined file, and a headless-capable
 Chrome/Edge on PATH to include an HTML page (skipped with a warning if
 either is missing).
@@ -55,6 +57,15 @@ FORMAT_LABELS = {
     "docx": "DOCX",
     "html": "HTML (screenshot)",
 }
+
+# Chrome's --window-size is in CSS pixels (96 per inch by convention); we
+# capture at a higher device-pixel ratio for a sharper screenshot, so the
+# resulting PNG has this many true pixels per inch. When placing it on a PDF
+# page (sized in points, 72 per inch), this is the DPI to convert from -
+# using the raw pixel count as points directly would blow the page up to
+# many times its intended physical size.
+HTML_SCREENSHOT_SCALE = 2
+HTML_SCREENSHOT_DPI = 96 * HTML_SCREENSHOT_SCALE
 
 TEX_PREAMBLE = (
     "\\documentclass{article}\n"
@@ -87,11 +98,15 @@ def load_tables(script_path: Path) -> dict[str, object]:
     )
 
 
-def render_tex(table, out_dir: Path, name: str) -> Path | None:
+def render_tex(
+    table, out_dir: Path, name: str, label: str | None = None
+) -> Path | None:
     """Compile the table's tex output to PDF via pdflatex, if available."""
+    heading = f"\\section*{{{label}}}\n" if label else ""
     tex_path = out_dir / f"{name}.tex"
     tex_path.write_text(
-        TEX_PREAMBLE + table.make(type="tex") + TEX_POSTAMBLE, encoding="utf-8"
+        TEX_PREAMBLE + heading + table.make(type="tex") + TEX_POSTAMBLE,
+        encoding="utf-8",
     )
 
     pdflatex = shutil.which("pdflatex")
@@ -121,10 +136,13 @@ def render_tex(table, out_dir: Path, name: str) -> Path | None:
     return final_pdf
 
 
-def render_typst(table, out_dir: Path, name: str) -> Path | None:
+def render_typst(
+    table, out_dir: Path, name: str, label: str | None = None
+) -> Path | None:
     """Compile the table's typst output to PDF via the typst CLI, if available."""
+    heading = f"= {label}\n\n" if label else ""
     typ_path = out_dir / f"{name}.typ"
-    typ_path.write_text(table.make(type="typst"), encoding="utf-8")
+    typ_path.write_text(heading + table.make(type="typst"), encoding="utf-8")
 
     typst = shutil.which("typst")
     if typst is None:
@@ -148,13 +166,24 @@ def render_typst(table, out_dir: Path, name: str) -> Path | None:
     return pdf_path
 
 
-def render_html(table, out_dir: Path, name: str) -> Path | None:
+def render_html(
+    table, out_dir: Path, name: str, label: str | None = None
+) -> Path | None:
     """Save the table's gt/html output as a standalone .html file (no PDF conversion)."""
+    heading = f"<h1>{label}</h1>" if label else ""
     html_path = out_dir / f"{name}.html"
     body = table.make(type="gt").as_raw_html()
     doc = (
-        "<html><head><meta charset='utf-8'></head>"
-        "<body style='padding:40px;font-family:sans-serif;'>" + body + "</body></html>"
+        "<html><head><meta charset='utf-8'>"
+        # great_tables centers .gt_table via margin-left/right:auto; force it
+        # flush-left so it lines up under the heading instead of leaving an
+        # awkward gap between two differently-aligned elements.
+        "<style>.gt_table{margin-left:0!important;margin-right:0!important;}</style>"
+        "</head>"
+        "<body style='padding:40px;font-family:sans-serif;'>"
+        + heading
+        + body
+        + "</body></html>"
     )
     html_path.write_text(doc, encoding="utf-8")
     print(
@@ -163,10 +192,26 @@ def render_html(table, out_dir: Path, name: str) -> Path | None:
     return html_path
 
 
-def render_docx(table, out_dir: Path, name: str) -> Path | None:
+def render_docx(
+    table, out_dir: Path, name: str, label: str | None = None
+) -> Path | None:
     """Convert the table's docx output to PDF via LibreOffice or Microsoft Word."""
     docx_path = out_dir / f"{name}.docx"
     table.save(type="docx", file_name=str(docx_path), replace=True)
+
+    if label:
+        import docx as docx_lib
+
+        document = docx_lib.Document(str(docx_path))
+        heading = document.add_paragraph(label, style="Heading 1")
+        # The document may start with a table (not a paragraph), so a plain
+        # `insert_paragraph_before` on the first *paragraph* could land after
+        # it; move the new paragraph to the very first body element instead.
+        body = document.element.body
+        body.remove(heading._p)
+        body.insert(0, heading._p)
+        document.save(str(docx_path))
+
     final_pdf = out_dir / f"{name}_docx.pdf"
 
     soffice = shutil.which("soffice") or shutil.which("libreoffice")
@@ -270,6 +315,7 @@ def capture_html_screenshot(html_path: Path, out_dir: Path, name: str) -> Path |
             "--disable-gpu",
             "--no-sandbox",
             "--window-size=1400,2000",
+            f"--force-device-scale-factor={HTML_SCREENSHOT_SCALE}",
             f"--screenshot={png_path}",
             html_path.resolve().as_uri(),
         ],
@@ -296,7 +342,7 @@ def capture_html_screenshot(html_path: Path, out_dir: Path, name: str) -> Path |
 def build_combined_pdf(
     results: dict[str, Path | None], out_dir: Path, name: str
 ) -> None:
-    """Combine each format's output into one PDF, with a labelled page before each."""
+    """Combine each format's output into one PDF (each already carries its own heading)."""
     try:
         import fitz  # PyMuPDF
     except ImportError:
@@ -312,19 +358,16 @@ def build_combined_pdf(
         if path is None or not path.exists():
             continue
 
-        label_page = combined.new_page(width=595, height=120)
-        label_page.insert_text(
-            fitz.Point(40, 75), FORMAT_LABELS[fmt], fontsize=28, fontname="helv"
-        )
-
         if path.suffix.lower() == ".pdf":
             with fitz.open(str(path)) as src:
                 combined.insert_pdf(src)
         else:  # image (the HTML screenshot)
             with fitz.open(str(path)) as img:
-                rect = img[0].rect
-                page = combined.new_page(width=rect.width, height=rect.height)
-                page.insert_image(rect, filename=str(path))
+                px = img[0].rect  # pixel dimensions, not points
+                scale = 72 / HTML_SCREENSHOT_DPI
+                page_rect = fitz.Rect(0, 0, px.width * scale, px.height * scale)
+                page = combined.new_page(width=page_rect.width, height=page_rect.height)
+                page.insert_image(page_rect, filename=str(path))
 
     if combined.page_count == 0:
         print("  [combine] nothing to combine (no format produced output)")
@@ -359,9 +402,9 @@ def main() -> None:
     parser.add_argument(
         "--combine",
         action="store_true",
-        help="Also write {name}_combined.pdf, with each requested format as "
-        "its own labelled page(s) (requires pymupdf; HTML requires a "
-        "headless-capable Chrome/Edge)",
+        help="Also write {name}_combined.pdf: each requested format's own "
+        "page(s), headed by a native heading naming the format (requires "
+        "pymupdf; HTML requires a headless-capable Chrome/Edge)",
     )
     args = parser.parse_args()
 
@@ -380,7 +423,8 @@ def main() -> None:
         print(f"{name}:")
         results: dict[str, Path | None] = {}
         for fmt in formats:
-            results[fmt] = RENDERERS[fmt](table, out_dir, name)
+            label = FORMAT_LABELS[fmt] if args.combine else None
+            results[fmt] = RENDERERS[fmt](table, out_dir, name, label)
 
         if args.combine:
             html_path = results.get("html")
