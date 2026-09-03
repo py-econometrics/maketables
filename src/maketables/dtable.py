@@ -359,7 +359,7 @@ class DTable(MTable):
 
 
 def _relabel_index(
-    index: pd.Index,
+    index: pd.Index | list,
     labels: dict | None = None,
     stats_labels: dict | None = None,
 ) -> pd.Index | list:

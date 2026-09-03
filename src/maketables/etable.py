@@ -812,7 +812,7 @@ def _format_number(x: float, format_spec: str | None = None) -> str:
 
 
 def _relabel_index(
-    index: pd.Index,
+    index: pd.Index | list,
     labels: dict | None = None,
     stats_labels: dict | None = None,
 ) -> pd.Index | list:
