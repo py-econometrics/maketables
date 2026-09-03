@@ -1,9 +1,17 @@
+"""MakeTables: publication-ready tables from regression results and stats."""
+
 from importlib.metadata import PackageNotFoundError, version
 
 from .btable import BTable
 from .dtable import DTable
 from .etable import ETable
-from .extractors import ModelExtractor, clear_extractors, register_extractor, inspect_model, get_extractor
+from .extractors import (
+    ModelExtractor,
+    clear_extractors,
+    get_extractor,
+    inspect_model,
+    register_extractor,
+)
 from .importdta import export_dta, get_var_labels, import_dta, set_var_labels
 from .mtable import MTable
 
@@ -13,28 +21,32 @@ except PackageNotFoundError:
     __version__ = "unknown"
 
 __all__ = [
-    "MTable",
+    "PYSTATA_AVAILABLE",
     "BTable",
     "DTable",
     "ETable",
-    "register_extractor",
-    "clear_extractors",
+    "MTable",
     "ModelExtractor",
-    "inspect_model",
-    "get_extractor",
-    "import_dta",
+    "StataResultWrapper",
+    "clear_extractors",
     "export_dta",
+    "extract_current_stata_results",
+    "get_extractor",
     "get_var_labels",
+    "import_dta",
+    "inspect_model",
+    "register_extractor",
+    "rstata",
     "set_var_labels",
 ]
 
 # Conditionally import PyStata integration if available
 try:
     from .pystata_extractor import (
+        PYSTATA_AVAILABLE,
         StataResultWrapper,
-        rstata,
         extract_current_stata_results,
-        PYSTATA_AVAILABLE
+        rstata,
     )
 except ImportError:
     # PyStata not available, these functions won't be accessible

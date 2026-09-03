@@ -96,7 +96,7 @@ class TestETableModelStats:
 
     def test_stats_order_rejects_invalid_value(self, fitted_model):
         """Reject unsupported model-statistic block orders."""
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError, match="stats_order"):
             mt.ETable([fitted_model], stats_order="invalid")
 
 

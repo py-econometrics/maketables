@@ -1,39 +1,69 @@
+---
 name: Tests
-
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
+    branches:
+      - main
+  pull_request: null
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   test:
-    name: "Tests"
+    name: Tests on ${{ matrix.os }} / ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        os: ["windows-latest"]
-        python-version: ["3.13"]
-
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        environment:
+          - py310
+          - py311
+          - py312
+          - py313
+          - py314
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
-
-      - name: Setup python
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-
       - uses: prefix-dev/setup-pixi@v0.10.2
         with:
-          pixi-version: v0.41.4
+          pixi-version: v0.68.1
           cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          environments: ${{ matrix.environment }}
           frozen: true
-
       - name: Run tests
-        run: pixi run -e dev tests
-
+        if: runner.os != 'Linux' || matrix.environment != 'py314'
+        run: pixi run -e ${{ matrix.environment }} tests
+        shell: bash -el {0}
+      - name: Run tests with coverage
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        run: pixi run -e ${{ matrix.environment }} tests-with-cov
+        shell: bash -el {0}
+      - name: Upload coverage report
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Check snapshots are up to date
-        run: pixi run -e dev pytest tests/ --snapshot-warn-unused
+        run: pixi run -e ${{ matrix.environment }} pytest tests/ --snapshot-warn-unused
+        shell: bash -el {0}
+  run-ty:
+    name: Run ty
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          pixi-version: v0.68.1
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          environments: py313
+          frozen: true
+      - name: Run ty
+        run: pixi run -e py313 ty
+        shell: bash -el {0}

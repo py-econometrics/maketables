@@ -1,229 +1,355 @@
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatch-vcs", "hatchling"]
+requires = [ "hatch-vcs", "hatchling" ]
 
 [project]
 name = "maketables"
-dynamic = ["version"]
-authors = [
-    {name = "Alexander Fischer", email = "alexander-fischer1801@t-online.de"},
-    {name = "Dirk Sliwka", email = "dirk.sliwka@uni-koeln.de"},
-]
-description = "A Python package for creating publication-ready tables from regression results (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables with output to LaTeX, Word, and HTML/Great Tables"
+description = """\
+  A Python package for creating publication-ready tables from regression results \
+  (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables \
+  with output to LaTeX, Word, and HTML/Great Tables\
+  """
 readme = "README.md"
-requires-python = ">=3.10"
+keywords = [
+  "econometrics",
+  "latex",
+  "publication",
+  "pyfixest",
+  "regression",
+  "statistics",
+  "statsmodels",
+  "tables",
+]
 license = { text = "MIT" }
-
-keywords = ["tables", "statistics", "regression", "econometrics", "latex", "publication", "pyfixest", "statsmodels"]
+requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Scientific/Engineering",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering",
+  "Typing :: Typed",
 ]
-
-
+dynamic = [ "version" ]
 dependencies = [
-    "numpy>=1.20.0",
-    "pandas>=1.3.0",
-    "great-tables>=0.2.0",
-    "tabulate>=0.9.0",
-    "python-docx>=0.8.11",
-    "ipython>=7.0.0",
+  "great-tables==0.18.*",
+  "ipython>=7",
+  "numpy>=1.20",
+  "pandas>=1.3",
+  "python-docx>=0.8.11",
+  "tabulate>=0.9",
 ]
-
+[[project.authors]]
+name = "Alexander Fischer"
+email = "alexander-fischer1801@t-online.de"
+[[project.authors]]
+name = "Dirk Sliwka"
+email = "dirk.sliwka@uni-koeln.de"
+[project.optional-dependencies]
+dev = [
+  "linearmodels>=4",
+  "pre-commit>=4.3,<5",
+  "pyfixest>=0.13,<0.31",
+  "pytest>=7",
+  "pytest-cov>=4",
+  "quartodoc>=0.7",
+  "statsmodels>=0.13",
+  "syrupy>=4",
+  "ty>=0.0.1a20",
+]
+docs = [
+  "ipykernel>=6,<7",
+  "nbconvert>=7",
+  "pyfixest>=0.13,<0.31",
+  "pylatex>=1.4.2,<2",
+  "pyyaml>=6,<7",
+  "sphinx>=5",
+  "sphinx-rtd-theme>=1",
+  "statsmodels>=0.13",
+]
+pystata = [
+  "pystata>=0.0.1",
+  "stata-setup>=0.1",
+]
+linearmodels = [
+  "linearmodels>=4",
+  "statsmodels>=0.13",
+]
+lifelines = [
+  "lifelines>=0.27",
+]
 [project.urls]
 Homepage = "https://py-econometrics.github.io/maketables/"
 Documentation = "https://py-econometrics.github.io/maketables/"
 Repository = "https://github.com/py-econometrics/maketables"
 Issues = "https://github.com/py-econometrics/maketables/issues"
 
-
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "syrupy>=4.0.0",
-    "pyfixest>=0.13.0",
-    "statsmodels>=0.13.0",
-    "linearmodels>=4.0",
-    "mypy>=1.0",
-    "pre-commit>=4.3.0,<5",
-    "quartodoc>=0.7.0",
-]
-docs = [
-    "sphinx>=5.0",
-    "sphinx-rtd-theme>=1.0",
-    "pyfixest>=0.13.0",
-    "statsmodels>=0.13.0",
-    "ipykernel>=6.0.0,<7",
-    "nbconvert>=7.0.0",
-    "pylatex>=1.4.2,<2",
-    "pyyaml>=6.0.0,<7",
-]
-pystata = [
-    "pystata>=0.0.1",
-    "stata-setup>=0.1.0",
-]
-
-linearmodels = [
-    "linearmodels>=4.0",
-    "statsmodels>=0.13.0",
-]
-
-lifelines = [
-    "lifelines>=0.27.0",
-]
-
-[tool.pixi.feature.dev.dependencies]
-quarto = ">=1.8.25,<2"
-
-[tool.pixi.workspace]
-channels = ["conda-forge"]
-platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+[tool.hatch.build.hooks.vcs]
+version-file = "src/maketables/_version.py"
+[tool.hatch.build.targets.sdist]
+exclude = [ "tests" ]
+only-packages = true
+[tool.hatch.build.targets.wheel]
+only-include = [ "src" ]
+sources = [ "src" ]
+[tool.hatch.version]
+source = "vcs"
 
 [tool.pixi.dependencies]
-python = "~=3.13.0"
+python = ">=3.10,<3.15"
 quarto = ">=1.8.27,<2"
 ipywidgets = ">=8.1.8,<9"
-
-[tool.pixi.pypi-dependencies]
-maketables = { path = ".", editable = true }
-
 [tool.pixi.environments]
-default = { solve-group = "default" }
-dev = { features = ["dev"], solve-group = "default" }
-docs = { features = ["docs"], solve-group = "default" }
-pystata = { features = ["pystata", "docs"], solve-group = "default" }
-linearmodels = { features = ["linearmodels", "docs"], solve-group = "default" }
-lifelines = { features = ["lifelines", "docs"], solve-group = "default" }
-publish = { features = ["publish"], solve-group = "default" }
-
+default = { features = [ "dev", "py313" ], solve-group = "py313" }
+dev = { features = [ "dev", "py313" ], solve-group = "py313" }
+docs = { features = [ "docs", "py313" ], solve-group = "py313" }
+pystata = { features = [ "pystata", "docs", "py313" ], solve-group = "py313" }
+linearmodels = { features = [ "linearmodels", "docs", "py313" ], solve-group = "py313" }
+lifelines = { features = [ "lifelines", "docs", "py313" ], solve-group = "py313" }
+publish = { features = [ "publish", "py313" ], solve-group = "py313" }
+py310 = { features = [ "dev", "py310" ], solve-group = "py310" }
+py311 = { features = [ "dev", "py311" ], solve-group = "py311" }
+py312 = { features = [ "dev", "py312" ], solve-group = "py312" }
+py313 = { features = [ "dev", "py313" ], solve-group = "py313" }
+py314 = { features = [ "dev", "py314" ], solve-group = "py314" }
+[tool.pixi.feature.dev.dependencies]
+quarto = ">=1.8.25,<2"
 [tool.pixi.feature.dev.pypi-dependencies]
-maketables = { path = ".", editable = true, extras = ["dev"] }
-
+maketables = { path = ".", editable = true, extras = [ "dev" ] }
 [tool.pixi.feature.dev.tasks]
 check = "pre-commit run --all-files"
 tests = "pytest tests/ -v"
+tests-with-cov = "pytest tests/ -v --cov=src/maketables --cov-report=xml"
 tests-update-snapshots = "pytest tests/ --snapshot-update -v"
-
-[tool.pytest.ini_options]
-pythonpath = ["tests"]
-
+ty = "ty check"
 [tool.pixi.feature.docs.tasks]
-run-all-notebooks = "jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb DocxTables.ipynb LatexTables.ipynb WritingPapers.ipynb getting-started.ipynb"
+run-all-notebooks = """\
+  jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb \
+  DocxTables.ipynb LatexTables.ipynb WritingPapers.ipynb getting-started.ipynb\
+  """
 docs-preview = "quarto preview"
 docs-install-tex = "quarto install tinytex"
-
 [tool.pixi.feature.publish.pypi-dependencies]
 build = ">=1.0"
 twine = ">=5.0"
 [tool.pixi.feature.publish.tasks]
 # Step 1: Clean old builds
 clean = { cmd = "python -c \"import shutil; import pathlib; [shutil.rmtree(p, ignore_errors=True) for p in [pathlib.Path('dist'), pathlib.Path('build')] + list(pathlib.Path('.').glob('*.egg-info'))]\"" }
-
 # Step 2: Build the package (depends on clean, so clean runs first)
-build = { cmd = "python -m build", depends-on = ["clean"] }
-
+build = { cmd = "python -m build", depends-on = [ "clean" ] }
 # Step 3: Check the built package for errors
-check = { cmd = "twine check dist/*", depends-on = ["build"] }
-
+check = { cmd = "twine check dist/*", depends-on = [ "build" ] }
 # Step 4a: Upload to TestPyPI (for testing)
-upload-test = { cmd = "twine upload --repository testpypi dist/*", depends-on = ["check"] }
-
+upload-test = { cmd = "twine upload --repository testpypi dist/*", depends-on = [
+  "check"
+] }
 # Step 4b: Upload to PyPI (production)
-upload = { cmd = "twine upload dist/*", depends-on = ["check"] }
+upload = { cmd = "twine upload dist/*", depends-on = [ "check" ] }
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
+[tool.pixi.pypi-dependencies]
+maketables = { path = ".", editable = true }
+[tool.pixi.workspace]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "osx-64", "osx-arm64", "win-64" ]
 
 [tool.ruff]
+target-version = "py310"
 line-length = 88
 fix = true
-
-target-version = "py310"
-
-[tool.ruff.lint]
-# docs: https://docs.astral.sh/ruff/rules/
-select = [
-  "B",   # bugbear
-  "F",   # Pyflakes
-  "E",   # pycodestyle errors
-  "W",   # pycodestyle warnings
-  "I",   # isort
-  "D",   # flake8-docstrings
-  "UP",  # pyupgrade
-  "SIM", # flake8-simplify
-  "RUF", # ruff,
-  "TRY", # tryceratops
-]
-
-ignore = [
-  # do not enable if formatting
-  # docs: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
-  "B028",   # No explicit `stacklevel` keyword argument found
-  "B904",   # Better exception handling
-  "W191",   # tab indentation
-  "E111",   # indentation
-  "E114",   # indentation
-  "E117",   # over indented
-  "D206",   # indent with spaces
-  "D300",   # triple single quotes
-  "E501",   # line length regulated by formatter
-  "D105",   # missing docstring in magic method
-  "D100",   # missing docstring in public module
-  "D104",   # missing docstring in public package
-  "SIM110", # Use all instead of `for` loop
-  "TRY003", # Avoid specifying long messages outside the exception class
-  "D205",   # 1 blank line required between summary line and description
-  "W505",   # Doc line too long
-]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["D100", "D103"]
-
-[tool.ruff.lint.pycodestyle]
-max-doc-length = 88
-
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"
-
+unsafe-fixes = false
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = 88
-
-[tool.mypy]
-
-[[tool.mypy.overrides]]
-module = [
-  "pandas.*",
-  "numpy.*",
-  "scipy.*",
-  "numba.*",
-  "lets_plot.*",
-  "formulaic.*",
-  "wildboottest.*",
-  "tabulate.*",
-  "joblib.*",
-  "narwhals.*",
-  "tqdm.*",
+[tool.ruff.lint]
+# docs: https://docs.astral.sh/ruff/rules/
+select = [ "ALL" ]
+extend-ignore = [
+  "COM812", # Conflicts with ruff-format
+  "EM101",  # Exception must not use a string literal
+  "EM102",  # Exception must not use an f-string literal
+  "FIX002", # Line contains TODO
+  "ISC001", # Conflicts with ruff-format
+  "W505",   # Doc line too long; keep E501 as primary line-length signal
+  "TC001",  # Move application import into a type-checking block
+  "TC002",  # Move third-party import into a type-checking block
+  "TC003",  # Move standard library import into a type-checking block
+  "TRY003", # Long messages outside exception class
+  "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+  "FA100",  # Missing from __future__ import annotations
+  "FA102",  # Missing from __future__ import annotations
 ]
-ignore_missing_imports = true
+[tool.ruff.lint.per-file-ignores]
+"src/**/*.py" = [
+  "SIM",     # Keep explicit conditionals in src during iterative Ruff migration
+  "ARG002",  # Temporary: unused callback/interface arguments across model adapters
+  "BLE001",  # Temporary: optional-dependency bridges intentionally catch broad exceptions
+  "C901",    # Temporary: keep complex extractors stable during migration
+  "FBT001",  # Temporary: public APIs still accept positional booleans
+  "FBT002",  # Temporary: public APIs still expose boolean defaults
+  "PLR0912", # Temporary: table/extractor methods still branch heavily
+  "PLR0913", # Temporary: public APIs currently require many parameters
+  "PLR0915", # Temporary: table/extractor methods still have many statements
+  "PLR2004", # Temporary: numeric formatting/tests rely on local literals
+  "SLF001",  # Temporary: third-party model internals are required by adapter layer
+  "T201",    # Temporary: diagnostic printing helpers are still part of API
+]
+"src/maketables/symbols.py" = [
+  "RUF001", # Statistical symbols intentionally use Unicode characters
+  "RUF002", # Statistical symbols intentionally use Unicode characters
+]
+"src/maketables/pystata_extractor.py" = [
+  "PLC0415", # Temporary: sfi import inside method to avoid global dependency on pystata
+  "TRY301",  # Raises are used deliberately to trigger the surrounding
+  # try/except fallback path when probing optional sfi results
+  "S110",    # Optional sfi scalar/macro probes intentionally continue past
+  "S112",    # values that don't exist for a given Stata command/version
+  "PERF203", # Broad per-item try/except is required when probing many
+  # independently-optional sfi scalars in a loop
+  "PLR0911", # _extract_fixed_effects has many early returns, one per
+  # panel/xtreg detection heuristic; each is independently clear
+  "FBT003",  # Positional bool required by sfi's Data.getFormattedValue API
+]
+"src/maketables/extractors.py" = [
+  "S110",    # get_extractor/inspect_model intentionally probe multiple
+  "S112",    # optional model backends and skip ones that error or don't
+  "PERF203", # apply; catch-and-continue/pass is the point, not an oversight
+]
+"src/maketables/interactive.py" = [
+  "A002", # `vars` is the established public parameter name (matches
+  # DTable/ETable); renaming breaks caller code using vars=
+]
+"src/maketables/mtable.py" = [
+  "N806",   # Variable names mirror OOXML/python-docx element tags (pPr, tcPr, ...)
+  "A002",   # `type` is the established public parameter name across
+  # make/save/__call__; renaming breaks caller code using type=
+  "PTH103", # save/update_docx/update_typst/update_tex use os.path for file
+  "PTH110", # resolution (splitext/isabs/join/dirname/exists); migrating to
+  "PTH112", # pathlib is a real behavior-adjacent refactor of core save/load
+  "PTH117", # logic, not a cosmetic swap - tracked as follow-up work rather
+  "PTH118", # than rushed into this lint-only branch.
+  "PTH120",
+  "PTH122",
+  "PTH123",
+]
+"src/maketables/dtable.py" = [
+  "A002",    # `type`/`vars` are the established public constructor parameter
+  # names; renaming breaks caller code using type=/vars=
+  "PD101",   # nunique()==1 is the clearest way to check a count column is
+  # constant across the (small) result frame; not a hot path
+  "PD013",   # .stack(level=..., future_stack=True) targets a specific
+  # MultiIndex level; .melt has different reshape semantics here
+  "PD010",   # .unstack(level=tuple(bycol)) targets specific named levels;
+  # .pivot_table has different reshape semantics here
+  "PLR0911", # _format_number has several early returns for readability
+  # across numeric-magnitude cases; each branch is a distinct rule
+  "TRY300",  # the final statement in the try can itself raise (invalid
+  # format_spec), so it must stay inside try to be caught -
+  # moving it to else would break the fallback
+]
+"src/maketables/etable.py" = [
+  "PERF203", # get_extractor lookups for default model stats intentionally
+  # probe per-model and fall back on any failure inside the loop
+  "S110",    # optional label/stat collection intentionally continues past
+  # a model whose extractor lookup fails
+  "S105",    # `token` here is a coef_fmt parsing token, not a credential
+  "RUF001",  # "×" is the conventional interaction-term display symbol
+  "PLR0911", # _format_number has several early returns for readability
+  # across numeric-magnitude cases; each branch is a distinct rule
+  "TRY300",  # the final statement in the try can itself raise (invalid
+  # format_spec), so it must stay inside try to be caught -
+  # moving it to else would break the fallback
+]
+"src/maketables/btable.py" = [
+  "A002", # `vars` is the established public constructor parameter name;
+  # renaming breaks caller code using vars=
+  "N806", # `R` is the standard notation for a Wald-test restriction matrix
+]
+"docs/**/*" = [
+  "ANN001",  # Missing type annotation for function argument
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "ARG001",  # Unused function argument
+  "D100",    # Missing docstring in public module
+  "D103",    # Missing docstring in public function
+  "D104",    # Missing docstring in public package
+  "T201",    # print found
+  "NPY002",  # Legacy np.random API used for reproducible pedagogical examples
+  "E402",    # Notebook cells import after prose/markdown by convention
+  "PLR2004", # Magic values used for illustrative example parameters
+  "RUF001",  # Prose cells intentionally use Unicode punctuation
+  "RUF003",  # Prose comments intentionally use Unicode punctuation
+  "SIM118",  # Illustrative code favors explicit .keys() for clarity
+  "E501",    # Long lines occur in explanatory prose cells
+  "W291",    # Trailing whitespace occurs in rendered notebook prose
+  "W293",    # Blank lines with whitespace occur in rendered notebook prose
+  "PTH103",  # Example scripts use os.path for readability, not app code
+  "PTH120",  # Example scripts use os.path for readability, not app code
+  "PTH123",  # Example scripts use os.path for readability, not app code
+]
+"tests/**/*.py" = [
+  "ANN001",  # Missing type annotation for function argument
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "D100",    # Missing docstring in public module
+  "D103",    # Missing docstring in public function
+  "D104",    # Missing docstring in public package
+  "D401",    # First line of docstring should be in imperative mood
+  "FBT001",  # Boolean-typed positional argument in function definition
+  "INP001",  # Implicit namespace packages
+  "PLC2401", # Variable name contains a non-ASCII character
+  "PLR2004", # Magic value used in comparison
+  "S101",    # Use of assert
+  "NPY002",  # Legacy np.random seeding required for deterministic snapshot fixtures
+  "PLC0415", # Optional-dependency imports are intentionally local in test setup
+  "ARG001",  # Pytest fixtures are requested for side effects, not read
+]
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 88
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
-[tool.hatch.version]
-source = "vcs"
+[tool.pyproject-fmt]
+column_width = 88
+max_supported_python = "3.14"
+table_format = "long"
 
-[tool.hatch.build.hooks.vcs]
-version-file = "src/maketables/_version.py"
+[tool.ty.rules]
+ambiguous-protocol-member = "error"
+deprecated = "error"
+division-by-zero = "error"
+ignore-comment-unknown-rule = "error"
+ineffective-final = "error"
+invalid-enum-member-annotation = "error"
+invalid-ignore-comment = "error"
+invalid-legacy-positional-parameter = "error"
+redundant-cast = "error"
+unused-awaitable = "error"
+unused-ignore-comment = "error"
+[tool.ty.src]
+include = [ "src/maketables" ]
 
-[tool.hatch.build.targets.sdist]
-exclude = ["tests"]
-only-packages = true
+[tool.pytest.ini_options]
+pythonpath = [ "tests" ]
 
-[tool.hatch.build.targets.wheel]
-only-include = ["src"]
-sources = ["src"]
+[tool.yamlfix]
+line_length = 88
+none_representation = "null"
+sequence_style = "block_style"
