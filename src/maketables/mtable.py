@@ -1140,10 +1140,20 @@ class MTable:
         # \makecell{} when needed: a bare \\ does not behave as a line break
         # directly inside a tabular cell position (data cell, header/spanner
         # multicolumn, or row label) without it.
-        def _wrap_linebreaks(text: str) -> str:
+        def _wrap_linebreaks(
+            text: str, align: str | None = None, protect: bool = False
+        ) -> str:
             text = text.replace("\n", r"\\")
             if r"\\" in text:
-                return f"\\makecell{{{text}}}"
+                # \makecell is a fragile command: inside a moving argument
+                # (e.g. \caption{}, also used for the list of tables) it must
+                # be \protect-ed or LaTeX mis-parses its braces.
+                prefix = r"\protect" if protect else ""
+                # Omit the [align] spec for makecell's own default (center) so
+                # data-cell output (the common case) is byte-identical to
+                # before this function gained an align parameter.
+                spec = f"[{align}]" if align else ""
+                return f"{prefix}\\makecell{spec}{{{text}}}"
             return text
 
         def _prep_cell(x):
@@ -1279,7 +1289,7 @@ class MTable:
                     if s.get("data_addlinespace") is not None and ridx > start:
                         body_lines.append(rf"\addlinespace[{s['data_addlinespace']}]")
 
-                    row_label = _wrap_linebreaks(str(dfs.index[ridx]))
+                    row_label = _wrap_linebreaks(str(dfs.index[ridx]), align="l")
                     vals = [dfs.iloc[ridx, j] for j in range(data_cols)]
                     row_parts = [row_label] + [str(v) for v in vals]
                     body_lines.append(" & ".join(row_parts) + r" \\")
@@ -1308,7 +1318,7 @@ class MTable:
                 elif s.get("data_addlinespace") is not None and ridx > 0:
                     body_lines.append(rf"\addlinespace[{s['data_addlinespace']}]")
 
-                row_label = _wrap_linebreaks(str(dfs.index[ridx]))
+                row_label = _wrap_linebreaks(str(dfs.index[ridx]), align="l")
                 vals = [dfs.iloc[ridx, j] for j in range(data_cols)]
                 row_parts = [row_label] + [str(v) for v in vals]
                 body_lines.append(" & ".join(row_parts) + r" \\")
@@ -1368,7 +1378,7 @@ class MTable:
                 + "]\n"
                 + "\\centering\n"
                 + (
-                    "\\caption{" + self.caption.replace("\n", r"\\") + "}\n"
+                    "\\caption{" + _wrap_linebreaks(self.caption, protect=True) + "}\n"
                     if self.caption is not None
                     else ""
                 )

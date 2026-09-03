@@ -418,7 +418,7 @@
   '''
   \begin{table}[htbp]
   \centering
-  \caption{Line one\\Line two}
+  \caption{\protect\makecell{Line one\\Line two}}
   \smallskip
   \begin{threeparttable}
   \begingroup
@@ -505,7 +505,7 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  \makecell{Line one\\Line two} & \makecell{1.986*** \\ (0.006)} \\
+  \makecell[l]{Line one\\Line two} & \makecell{1.986*** \\ (0.006)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Intercept & \makecell{0.131*** \\ (0.021)} \\
