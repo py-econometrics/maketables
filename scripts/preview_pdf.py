@@ -362,12 +362,26 @@ def build_combined_pdf(
             with fitz.open(str(path)) as src:
                 combined.insert_pdf(src)
         else:  # image (the HTML screenshot)
+            # A wide-but-short table crops to a small landscape image; giving
+            # the page those exact dimensions looks inconsistent next to the
+            # other formats' standard portrait pages. Use a standard page
+            # size instead, and place the image within margins at the top,
+            # scaled down (never up, to avoid blur) if it doesn't fit.
+            page_w, page_h, margin = 595, 842, 40  # A4 portrait, in points
             with fitz.open(str(path)) as img:
                 px = img[0].rect  # pixel dimensions, not points
-                scale = 72 / HTML_SCREENSHOT_DPI
-                page_rect = fitz.Rect(0, 0, px.width * scale, px.height * scale)
-                page = combined.new_page(width=page_rect.width, height=page_rect.height)
-                page.insert_image(page_rect, filename=str(path))
+                native_w = px.width * 72 / HTML_SCREENSHOT_DPI
+                native_h = px.height * 72 / HTML_SCREENSHOT_DPI
+                fit = min(
+                    1.0,
+                    (page_w - 2 * margin) / native_w,
+                    (page_h - 2 * margin) / native_h,
+                )
+                draw_rect = fitz.Rect(
+                    margin, margin, margin + native_w * fit, margin + native_h * fit
+                )
+                page = combined.new_page(width=page_w, height=page_h)
+                page.insert_image(draw_rect, filename=str(path))
 
     if combined.page_count == 0:
         print("  [combine] nothing to combine (no format produced output)")
