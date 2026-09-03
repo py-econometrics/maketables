@@ -13,22 +13,26 @@ from IPython.display import clear_output, display
 
 try:
     import ipywidgets as widgets
-except ImportError:
+except ImportError as e:
     raise ImportError(
-        "ipywidgets is required for interactive functionality. Install with: pip install ipywidgets"
-    )
+        "ipywidgets is required for interactive functionality. "
+        "Install with: pip install ipywidgets"
+    ) from e
 
 try:
     import pyfixest as pf
-except ImportError:
-    raise ImportError("pyfixest is required. Install with: pip install pyfixest")
+except ImportError as e:
+    raise ImportError("pyfixest is required. Install with: pip install pyfixest") from e
 
 from . import DTable, ETable
 
 
 def _parse_formula(formula: str) -> tuple[str, list[str], list[str]]:
     """
-    Parse a PyFixest formula to extract dependent variable, independent variables, and fixed effects.
+    Parse a PyFixest formula into its dependent variable, regressors, and FEs.
+
+    Extracts the dependent variable, independent variables, and fixed
+    effects.
 
     Parameters
     ----------
@@ -92,7 +96,7 @@ class InteractiveFeols:
         vcov: str = "iid",
         show_code: bool = False,
         title: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize the interactive regression dashboard.
 
@@ -121,7 +125,7 @@ class InteractiveFeols:
                 _parse_formula(initial_formula)
             )
         except Exception as e:
-            raise ValueError(f"Error parsing initial formula: {e}")
+            raise ValueError(f"Error parsing initial formula: {e}") from e
 
         # Identify variable types
         self.numeric_vars = data.select_dtypes(include=[np.number]).columns.tolist()
@@ -135,7 +139,7 @@ class InteractiveFeols:
         # Suppress warnings for cleaner output
         warnings.filterwarnings("ignore")
 
-    def _create_widgets(self):
+    def _create_widgets(self) -> None:
         """Create all the interactive widgets."""
         # Dependent variable widget
         self.depvar_widget = widgets.Dropdown(
@@ -208,11 +212,11 @@ class InteractiveFeols:
             disabled=False,  # Allow users to select/copy the code
         )
 
-    def _setup_output_area(self):
+    def _setup_output_area(self) -> None:
         """Set up the output area and result update function."""
         self.output_area = widgets.Output()
 
-        def update_results(change=None):
+        def update_results(_change: dict | None = None) -> None:
             """Update regression results when widget values change."""
             with self.output_area:
                 clear_output(wait=True)
@@ -245,7 +249,8 @@ class InteractiveFeols:
                         # Estimate model
                         model = pf.feols(formula, data=self.data, vcov=vcov)
 
-                        # Generate Python code for the current model configuration (only if show_code is enabled)
+                        # Generate Python code for the current model
+                        # configuration (only if show_code is enabled)
                         if self.show_code:
                             self._generate_code(formula, vcov, cluster_var)
 
@@ -266,7 +271,9 @@ class InteractiveFeols:
         self.cluster_widget.observe(update_results, names="value")
         self.vcov_widget.observe(update_results, names="value")
 
-    def _generate_code(self, formula, vcov, cluster_var):
+    def _generate_code(
+        self, formula: str, vcov: str | dict[str, str], cluster_var: str | None
+    ) -> None:
         """Generate Python code for the current regression configuration."""
         # Build the code string
         code_lines = [
@@ -296,7 +303,7 @@ class InteractiveFeols:
         # Update the code widget
         self.code_widget.value = "\n".join(code_lines)
 
-    def display(self):
+    def display(self) -> None:
         """Display the interactive regression dashboard."""
         # Create the main dashboard components
         dashboard_components = []
@@ -346,7 +353,8 @@ class InteractiveFeols:
             dashboard_components.extend(
                 [
                     widgets.HTML(
-                        "<p>Copy this code to reproduce the regression in your analysis:</p>"
+                        "<p>Copy this code to reproduce the regression in "
+                        "your analysis:</p>"
                     ),
                     self.code_widget,
                 ]
@@ -434,7 +442,7 @@ class InteractiveDTable:
         initial_vars: list[str] | None = None,
         show_code: bool = False,
         title: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize the interactive descriptive statistics dashboard.
 
@@ -443,7 +451,8 @@ class InteractiveDTable:
         data : pd.DataFrame
             The dataset to use for descriptive statistics analysis
         initial_vars : list[str], optional
-            Initial variables to include in the table. If None, selects first few numeric variables.
+            Initial variables to include in the table. If None, selects
+            first few numeric variables.
         show_code : bool, optional
             Whether to display the Python code section. Default is False.
         title : str, optional
@@ -471,9 +480,10 @@ class InteractiveDTable:
         # Suppress warnings for cleaner output
         warnings.filterwarnings("ignore")
 
-    def _create_widgets(self):
+    def _create_widgets(self) -> None:
         """Create all the interactive widgets."""
-        # Variables selection widget - only show numerical variables for descriptive statistics
+        # Variables selection widget - only show numerical variables for
+        # descriptive statistics
         self.vars_widget = widgets.SelectMultiple(
             options=self.numeric_vars,
             value=self.initial_vars,
@@ -579,11 +589,11 @@ class InteractiveDTable:
             disabled=False,  # Allow users to select/copy the code
         )
 
-    def _setup_output_area(self):
+    def _setup_output_area(self) -> None:
         """Set up the output area and result update function."""
         self.output_area = widgets.Output()
 
-        def update_results(change=None):
+        def update_results(_change: dict | None = None) -> None:
             """Update descriptive statistics when widget values change."""
             with self.output_area:
                 clear_output(wait=True)
@@ -622,7 +632,8 @@ class InteractiveDTable:
                         "median": f".{digits}f",
                         "min": f".{digits}f",
                         "max": f".{digits}f",
-                        "var": f".{max(digits + 1, 3)}f",  # Variance needs more precision
+                        # Variance needs more precision
+                        "var": f".{max(digits + 1, 3)}f",
                         "sum": f",.{digits}f",
                     }
 
@@ -637,7 +648,8 @@ class InteractiveDTable:
                         counts_row_below=counts_row_below,
                     )
 
-                    # Generate Python code for the DTable call (only if show_code is enabled)
+                    # Generate Python code for the DTable call (only if
+                    # show_code is enabled)
                     if self.show_code:
                         self._generate_code(
                             vars_selected,
@@ -671,14 +683,14 @@ class InteractiveDTable:
 
     def _generate_code(
         self,
-        vars_selected,
-        stats_selected,
-        bycol,
-        byrow,
-        digits,
-        hide_stats,
-        counts_row_below,
-    ):
+        vars_selected: list[str],
+        stats_selected: list[str],
+        bycol: list[str] | None,
+        byrow: str | None,
+        digits: int,
+        hide_stats: bool,
+        counts_row_below: bool,
+    ) -> None:
         """Generate Python code for the current DTable configuration."""
         # Build the code string
         code_lines = [
@@ -738,7 +750,7 @@ class InteractiveDTable:
         # Update the code widget
         self.code_widget.value = "\n".join(code_lines)
 
-    def display(self):
+    def display(self) -> None:
         """Display the interactive descriptive statistics dashboard."""
         # Create the main dashboard components
         dashboard_components = []

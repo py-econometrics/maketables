@@ -1,3 +1,5 @@
+"""Balance tables: descriptive stats by group with per-variable p-values."""
+
 from typing import Any, Literal, cast
 
 import numpy as np
@@ -18,7 +20,7 @@ except ImportError:
 
 class BTable(DTable):
     """
-    Balancing table: descriptive stats by group + per-variable p-values from group tests.
+    Balancing table: descriptive stats by group + per-variable p-values.
 
     Inherits DTable to build the stats table, then adds a 'p-value' column:
     - For 2 groups: p-value of the single group indicator (t test).
@@ -41,9 +43,11 @@ class BTable(DTable):
     pdigits : int, optional
         Rounding for p-values. Default 3.
     vcov : str | dict, optional
-        VCV for the p-value models ("iid", "hetero", "HC1", "HC2", "HC3" or {"CRV1": "cluster"}). Default "iid".
+        VCV for the p-value models ("iid", "hetero", "HC1", "HC2", "HC3" or
+        {"CRV1": "cluster"}). Default "iid".
     fixed_effects : list[str] | None
-        Optional fixed effects for the p-value models (cosmetic in notes). Default None.
+        Optional fixed effects for the p-value models (cosmetic in notes).
+        Default None.
     stats : list[str] | None
         Stats for DTable (default ["mean", "std"]).
     stats_labels : dict[str, str] | None
@@ -78,8 +82,8 @@ class BTable(DTable):
         counts_row_below: bool = False,
         observed: bool = False,
         notes: str = "",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         if not HAS_PYFIXEST:
             raise ImportError(
                 "BTable requires pyfixest. Install it with:\n"
@@ -89,12 +93,15 @@ class BTable(DTable):
             )
 
         group_cols = [group] if isinstance(group, str) else list(group)
-        assert group_cols, "group must contain at least one column."
-        assert all(col in df.columns for col in group_cols), (
-            "group must be a column or list of columns in the DataFrame."
-        )
+        if not group_cols:
+            raise ValueError("group must contain at least one column.")
+        if not all(col in df.columns for col in group_cols):
+            raise ValueError(
+                "group must be a column or list of columns in the DataFrame."
+            )
         for v in vars:
-            assert v in df.columns, f"Variable '{v}' not in DataFrame."
+            if v not in df.columns:
+                raise ValueError(f"Variable '{v}' not in DataFrame.")
 
         stats = ["mean", "std"] if stats is None else list(stats)
 
@@ -204,11 +211,13 @@ class BTable(DTable):
 
             if fe_str and se_str:
                 chunks.append(
-                    f"p-values based on specifications including {fe_str} fixed effects and {se_str}"
+                    f"p-values based on specifications including {fe_str} "
+                    f"fixed effects and {se_str}"
                 )
             elif fe_str:
                 chunks.append(
-                    f"p-values based on specifications including {fe_str} fixed effects."
+                    f"p-values based on specifications including {fe_str} "
+                    "fixed effects."
                 )
             elif se_str:
                 chunks.append(f"p-values based on {se_str}.")

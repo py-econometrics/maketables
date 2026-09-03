@@ -1,3 +1,5 @@
+"""MakeTables: publication-ready tables from regression results and stats."""
+
 from importlib.metadata import PackageNotFoundError, version
 
 from .btable import BTable

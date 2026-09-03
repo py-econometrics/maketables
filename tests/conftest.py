@@ -227,8 +227,7 @@ def panel_df():
     )
 
     # Set MultiIndex for panel structure
-    df = df.set_index(["entity", "time"])
-    return df
+    return df.set_index(["entity", "time"])
 
 
 @pytest.fixture

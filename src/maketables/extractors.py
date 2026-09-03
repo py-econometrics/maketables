@@ -49,8 +49,9 @@ class ModelExtractor(Protocol):
     Protocol defining the interface for statistical model extractors.
 
     This protocol ensures that all extractor implementations provide a consistent
-    interface for extracting coefficients, statistics, and metadata from statistical models.
-    The @runtime_checkable decorator allows isinstance() checks at runtime.
+    interface for extracting coefficients, statistics, and metadata from
+    statistical models. The @runtime_checkable decorator allows isinstance()
+    checks at runtime.
     """
 
     def can_handle(self, model: Any) -> bool:
@@ -89,7 +90,8 @@ class ModelExtractor(Protocol):
 
         Returns
         -------
-            String describing fixed effects (e.g., "entity+time") or None if no fixed effects.
+            String describing fixed effects (e.g., "entity+time") or None if
+            no fixed effects.
         """
         ...
 
@@ -119,13 +121,16 @@ class ModelExtractor(Protocol):
 
     def var_labels(self, model: Any) -> dict[str, str] | None:
         """
-        Extract variable labels from the model's data. Note: this allows to access maketables'
-        variable labeling system if the model retains a reference to the original DataFrame and
-        checks whether the DataFrame has variable labels (attribute `var_labels`).
+        Extract variable labels from the model's data.
+
+        This allows access to maketables' variable labeling system if the model
+        retains a reference to the original DataFrame and checks whether the
+        DataFrame has variable labels (attribute `var_labels`).
 
         Returns
         -------
-            Dictionary mapping variable names to descriptive labels, or None if unavailable.
+            Dictionary mapping variable names to descriptive labels, or None
+            if unavailable.
         """
         ...
 
@@ -204,21 +209,27 @@ class PluginExtractor:
     """
     Generic extractor for models implementing the maketables plug-in format.
 
-    Packages can make their model classes compatible with maketables by implementing
-    any combination of the following attributes/methods on their model result class:
+    Packages can make their model classes compatible with maketables by
+    implementing any combination of the following attributes/methods on
+    their model result class:
 
-    - __maketables_coef_table__ (property): Returns pd.DataFrame with columns: b, se, t, p, etc.
-    - __maketables_stat__(key) (method): Returns statistic by key (e.g., 'N', 'r2', 'adj_r2')
+    - __maketables_coef_table__ (property): Returns pd.DataFrame with
+        columns: b, se, t, p, etc.
+    - __maketables_stat__(key) (method): Returns statistic by key
+        (e.g., 'N', 'r2', 'adj_r2')
     - __maketables_depvar__ (property): Returns dependent variable name as str
-    - __maketables_fixef_string__ (property): Returns fixed effects string or None
-    - __maketables_var_labels__ (property): Returns dict mapping var names to labels or None
-    - __maketables_vcov_info__ (property): Returns dict with vcov metadata or None
+    - __maketables_fixef_string__ (property): Returns fixed effects string
+        or None
+    - __maketables_var_labels__ (property): Returns dict mapping var names
+        to labels or None
+    - __maketables_vcov_info__ (property): Returns dict with vcov metadata
+        or None
 
     See PLUGIN_EXTRACTOR_FORMAT.md for detailed specifications.
     """
 
     def can_handle(self, model: Any) -> bool:
-        """Check if model implements the plug-in interface (has coef_table attribute)."""
+        """Check if model implements the plug-in interface (has coef_table)."""
         return hasattr(model, "__maketables_coef_table__")
 
     def coef_table(self, model: Any) -> pd.DataFrame:
@@ -289,6 +300,7 @@ class PluginExtractor:
         return None
 
     def sample_split(self, model: Any) -> str | None:
+        """Return a short label for a sample split/subgroup, or None."""
         return None
 
 
@@ -300,8 +312,8 @@ def get_extractor(model: Any) -> ModelExtractor:
     1. Check registered extractors (package-specific implementations)
     2. Check for plug-in format (__maketables_coef_table__ attribute)
 
-    The plug-in format allows external packages to integrate without modifying maketables.
-    See PLUGIN_EXTRACTOR_FORMAT.md for specifications.
+    The plug-in format allows external packages to integrate without
+    modifying maketables. See PLUGIN_EXTRACTOR_FORMAT.md for specifications.
 
     Args:
         model: Statistical model object to find an extractor for.
@@ -312,7 +324,8 @@ def get_extractor(model: Any) -> ModelExtractor:
 
     Raises
     ------
-        TypeError: If no registered extractor or plug-in format can handle the model type.
+        TypeError: If no registered extractor or plug-in format can handle
+            the model type.
     """
     for ex in _EXTRACTOR_REGISTRY:
         try:
@@ -343,9 +356,10 @@ def get_extractor(model: Any) -> ModelExtractor:
         error_msg += f"  {i}. {extractor_name}\n"
 
     error_msg += (
-        "\nAlternatively, implement the plug-in extractor format by adding these attributes "
-        "to your model class:\n"
-        "  - __maketables_coef_table__ (property): Returns DataFrame with columns b, se, t, p\n"
+        "\nAlternatively, implement the plug-in extractor format by adding "
+        "these attributes to your model class:\n"
+        "  - __maketables_coef_table__ (property): Returns DataFrame with "
+        "columns b, se, t, p\n"
         "  - __maketables_stat__(key) (method): Returns statistic by key\n"
         "  - __maketables_depvar__ (property): Returns dependent variable name\n\n"
         "See PLUGIN_EXTRACTOR_FORMAT.md for full specifications.\n\n"
@@ -358,16 +372,19 @@ def get_extractor(model: Any) -> ModelExtractor:
 
 def inspect_model(model: Any, long: bool = False) -> None:
     """
-    Inspect a fitted model by printing its extracted coefficient table columns and available statistics.
+    Print a fitted model's extracted coefficient table columns and statistics.
 
-    By default, shows a concise summary. Use long=True for detailed output with sample values.
+    By default, shows a concise summary. Use long=True for detailed output
+    with sample values.
 
     Parameters
     ----------
     model : Any
-        A fitted statistical model (from statsmodels, pyfixest, linearmodels, lifelines, etc.)
+        A fitted statistical model (from statsmodels, pyfixest, linearmodels,
+        lifelines, etc.)
     long : bool, optional
-        If True, show detailed output with sample values and first few rows. Default is False.
+        If True, show detailed output with sample values and first few rows.
+        Default is False.
 
     Examples
     --------
@@ -406,7 +423,8 @@ def inspect_model(model: Any, long: bool = False) -> None:
                         coef_df[col].dropna().iloc[0] if non_null > 0 else "N/A"
                     )
                     print(
-                        f"  - {col:15s} ({non_null}/{len(coef_df)} non-null) example: {sample_val}"
+                        f"  - {col:15s} ({non_null}/{len(coef_df)} non-null) "
+                        f"example: {sample_val}"
                     )
 
             print("\nFirst few rows:")
@@ -475,12 +493,14 @@ def inspect_model(model: Any, long: bool = False) -> None:
             supported = extractor.supported_stats(model)
             if supported:
                 print(
-                    f"Supported stats ({len(supported)}): {', '.join(sorted(supported))}"
+                    f"Supported stats ({len(supported)}): "
+                    f"{', '.join(sorted(supported))}"
                 )
 
             if default_stats:
                 print(
-                    f"\nDefault stats (auto-shown in ETable): {', '.join(default_stats)}"
+                    "\nDefault stats (auto-shown in ETable): "
+                    f"{', '.join(default_stats)}"
                 )
 
             print("\nExtracted values (non-empty):")
@@ -570,7 +590,8 @@ def _follow(obj: Any, chain: list[str]) -> Any:
 
     Returns
     -------
-        The final nested attribute value, or None if any attribute in the chain doesn't exist.
+        The final nested attribute value, or None if any attribute in the
+        chain doesn't exist.
 
     Example:
         _follow(model, ["model", "endog", "name"]) returns model.model.endog.name
@@ -588,14 +609,16 @@ def _get_attr(model: Any, spec: Any) -> Any:
     """
     Resolve a STAT_MAP specification against a model object.
 
-    This function provides a unified way to extract attributes from statistical models
-    using different specification formats:
+    This function provides a unified way to extract attributes from
+    statistical models using different specification formats:
 
     Args:
         model: Statistical model object to extract from.
         spec: Specification for how to extract the value, can be:
-            - str: Direct attribute name ("attr") -> tries model.attr, then model.model.attr
-            - tuple/list: Nested attribute path ("a","b","c") -> model.a.b.c via _follow()
+            - str: Direct attribute name ("attr") -> tries model.attr, then
+              model.model.attr
+            - tuple/list: Nested attribute path ("a","b","c") -> model.a.b.c
+              via _follow()
             - callable: Function to compute value -> spec(model)
 
     Returns
@@ -762,9 +785,11 @@ class PyFixestExtractor:
         }
 
     def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """Provide human-friendly labels for model statistics, or None."""
         return None
 
     def default_stat_keys(self, model: Any) -> list[str] | None:
+        """Return preferred ordering of statistic keys for display, or None."""
         return None
 
 
@@ -944,9 +969,11 @@ class StatsmodelsExtractor:
         return None
 
     def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """Provide human-friendly labels for model statistics, or None."""
         return None
 
     def sample_split(self, model: Any) -> str | None:
+        """Return a short label for a sample split/subgroup, or None."""
         return None
 
 
@@ -977,7 +1004,7 @@ class LinearmodelsExtractor:
         )
 
     def coef_table(self, model: Any) -> pd.DataFrame:
-        """Extract coefficient table from a linearmodels fitted model with token columns."""
+        """Extract a token-column coefficient table from a linearmodels model."""
         params = pd.Series(model.params)
 
         # Handle both std_errors (panel) and std_error (IV/AbsorbingLS)
@@ -1193,12 +1220,15 @@ class LinearmodelsExtractor:
         }
 
     def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """Provide human-friendly labels for model statistics, or None."""
         return None
 
     def default_stat_keys(self, model: Any) -> list[str] | None:
+        """Return preferred ordering of statistic keys for display, or None."""
         return None
 
     def sample_split(self, model: Any) -> str | None:
+        """Return a short label for a sample split/subgroup, or None."""
         return None
 
 
@@ -1253,7 +1283,7 @@ class LifelinesExtractor:
         if "coef upper 95%" in cols:
             rename_map["coef upper 95%"] = "ci95u"
 
-        # 95% CI
+        # Locate the 95% confidence interval columns
         lower95 = None
         upper95 = None
         for lcol in ["coef lower 95%", "lower 95%"]:
@@ -1382,6 +1412,7 @@ class LifelinesExtractor:
     }
 
     def stat(self, model: Any, key: str) -> Any:
+        """Return the value of a single statistic for the given model."""
         spec = self.STAT_MAP.get(key)
         if spec is None:
             return None
@@ -1415,6 +1446,7 @@ class LifelinesExtractor:
         return {"vcov_type": vcov_type, "clustervar": cluster_col}
 
     def var_labels(self, model: Any) -> dict[str, str] | None:
+        """Extract variable labels from the model's cached fit DataFrame, or None."""
         # Try to find original DataFrame from cached fit args
         df = None
         try:
@@ -1430,6 +1462,7 @@ class LifelinesExtractor:
         return None
 
     def supported_stats(self, model: Any) -> set[str]:
+        """Return the set of statistics available for the given model."""
         return {
             k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
         }
@@ -1439,9 +1472,11 @@ class LifelinesExtractor:
         return ["N", "events", "concordance", "ll"]
 
     def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """Provide human-friendly labels for model statistics, or None."""
         return None
 
     def sample_split(self, model: Any) -> str | None:
+        """Return a short label for a sample split/subgroup, or None."""
         return None
 
 

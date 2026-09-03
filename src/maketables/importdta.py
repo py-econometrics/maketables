@@ -1,10 +1,12 @@
+"""Import and export Stata .dta files with variable label support."""
+
 from __future__ import annotations
 
 import contextlib
-import os
 import warnings
 from datetime import datetime
 from os import PathLike
+from pathlib import Path
 from typing import Any, cast
 
 import pandas as pd
@@ -26,18 +28,21 @@ def import_dta(
     Import a Stata .dta into a pandas DataFrame.
 
     Behavior
-    - Preserves Stata value labels by reading labeled variables as pandas.Categorical
-      when convert_categoricals=True.
+    - Preserves Stata value labels by reading labeled variables as
+      pandas.Categorical when convert_categoricals=True.
     - Extracts variable (column) labels from the file.
-    - Stores variable labels in df.attrs['variable_labels'] by default (store_in_attrs=True).
-    - Optionally merges labels into MTable.DEFAULT_LABELS for package-wide defaults.
+    - Stores variable labels in df.attrs['variable_labels'] by default
+      (store_in_attrs=True).
+    - Optionally merges labels into MTable.DEFAULT_LABELS for package-wide
+      defaults.
 
     Parameters
     ----------
     path : str | os.PathLike
         Local filesystem path to a .dta file.
     convert_categoricals : bool, default True
-        Convert Stata value labels to pandas.Categorical (recommended to preserve value labels).
+        Convert Stata value labels to pandas.Categorical (recommended to
+        preserve value labels).
     store_in_attrs : bool, default True
         If True, save extracted variable labels under df.attrs['variable_labels'].
     update_mtable_defaults : bool, default False
@@ -156,15 +161,15 @@ def export_dta(
     Notes
     -----
     - Stata variable labels are limited to 80 characters; longer labels are truncated.
-    - Some older pandas versions may not support variable_labels=; a warning is emitted and
-      the file is written without variable labels in that case.
+    - Some older pandas versions may not support variable_labels=; a warning
+      is emitted and the file is written without variable labels in that case.
 
     Examples
     --------
     >>> export_dta(df, "data/auto_out.dta", overwrite=True)
-    >>> export_dta(df, "data/auto_out.dta", labels={"price": "Vehicle price"}, overwrite=True)
+    >>> export_dta(df, "data/auto_out.dta", labels={"price": "Vehicle price"})
     """
-    if os.path.exists(path) and not overwrite:
+    if Path(path).exists() and not overwrite:
         raise FileExistsError(f"File exists: {path}. Set overwrite=True to replace.")
 
     var_labels: dict[str, str] = {}
@@ -201,13 +206,14 @@ def export_dta(
             version=version,
             variable_labels=var_labels or None,
             data_label=data_label,
-            convert_strl=cast("Any", True),
+            convert_strl=cast("Any", True),  # noqa: FBT003
             time_stamp=time_stamp,
             compression=cast("Any", compression),
         )
     except TypeError:
         warnings.warn(
-            "This pandas version does not support writing variable_labels. Writing without labels.",
+            "This pandas version does not support writing variable_labels. "
+            "Writing without labels.",
             RuntimeWarning,
             stacklevel=2,
         )
@@ -216,7 +222,7 @@ def export_dta(
             write_index=cast("Any", write_index),
             version=version,
             data_label=data_label,
-            convert_strl=cast("Any", True),
+            convert_strl=cast("Any", True),  # noqa: FBT003
             time_stamp=time_stamp,
             compression=cast("Any", compression),
         )
@@ -267,10 +273,10 @@ def set_var_labels(
     update_mtable_defaults: bool = False,
 ) -> dict[str, str]:
     """
-    Set variable labels on a DataFrame and optionally sync them to MTable.DEFAULT_LABELS.
+    Set variable labels on a DataFrame and optionally sync to MTable.DEFAULT_LABELS.
 
-    Labels are stored in df.attrs['variable_labels'] as a plain dict. Only columns
-    present in df are written.
+    Labels are stored in df.attrs['variable_labels'] as a plain dict. Only
+    columns present in df are written.
 
     Parameters
     ----------

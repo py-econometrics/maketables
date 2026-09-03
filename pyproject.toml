@@ -178,124 +178,148 @@ docstring-code-line-length = 88
 # docs: https://docs.astral.sh/ruff/rules/
 select = [ "ALL" ]
 extend-ignore = [
-  # do not enable if formatting
-  # docs: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
-  "COM812",  # Conflicts with ruff-format
-  "D206",    # Conflicts with ruff-format
-  "D300",    # Conflicts with ruff-format
-  "E111",    # Conflicts with ruff-format
-  "E114",    # Conflicts with ruff-format
-  "E117",    # Conflicts with ruff-format
-  "ISC001",  # Conflicts with ruff-format
-  "W191",    # Conflicts with ruff-format
-  "W505",    # Doc line too long
-  "A002",    # Public APIs currently use names like `type` and `vars`
+  "COM812", # Conflicts with ruff-format
+  "EM101",  # Exception must not use a string literal
+  "EM102",  # Exception must not use an f-string literal
+  "FIX002", # Line contains TODO
+  "ISC001", # Conflicts with ruff-format
+  "W505",   # Doc line too long; keep E501 as primary line-length signal
+  "TC001",  # Move application import into a type-checking block
+  "TC002",  # Move third-party import into a type-checking block
+  "TC003",  # Move standard library import into a type-checking block
+  "TRY003", # Long messages outside exception class
+  "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
+  "FA100",  # Missing from __future__ import annotations
+  "FA102",  # Missing from __future__ import annotations
+]
+[tool.ruff.lint.per-file-ignores]
+"src/**/*.py" = [
+  "SIM",     # Keep explicit conditionals in src during iterative Ruff migration
+  "ARG002",  # Temporary: unused callback/interface arguments across model adapters
+  "BLE001",  # Temporary: optional-dependency bridges intentionally catch broad exceptions
+  "C901",    # Temporary: keep complex extractors stable during migration
+  "FBT001",  # Temporary: public APIs still accept positional booleans
+  "FBT002",  # Temporary: public APIs still expose boolean defaults
+  "PLR0912", # Temporary: table/extractor methods still branch heavily
+  "PLR0913", # Temporary: public APIs currently require many parameters
+  "PLR0915", # Temporary: table/extractor methods still have many statements
+  "PLR2004", # Temporary: numeric formatting/tests rely on local literals
+  "SLF001",  # Temporary: third-party model internals are required by adapter layer
+  "T201",    # Temporary: diagnostic printing helpers are still part of API
+]
+"src/maketables/symbols.py" = [
+  "RUF001", # Statistical symbols intentionally use Unicode characters
+  "RUF002", # Statistical symbols intentionally use Unicode characters
+]
+"src/maketables/pystata_extractor.py" = [
+  "PLC0415", # Temporary: sfi import inside method to avoid global dependency on pystata
+  "TRY301",  # Raises are used deliberately to trigger the surrounding
+  # try/except fallback path when probing optional sfi results
+  "S110",    # Optional sfi scalar/macro probes intentionally continue past
+  "S112",    # values that don't exist for a given Stata command/version
+  "PERF203", # Broad per-item try/except is required when probing many
+  # independently-optional sfi scalars in a loop
+  "PLR0911", # _extract_fixed_effects has many early returns, one per
+  # panel/xtreg detection heuristic; each is independently clear
+  "FBT003",  # Positional bool required by sfi's Data.getFormattedValue API
+]
+"src/maketables/extractors.py" = [
+  "S110",    # get_extractor/inspect_model intentionally probe multiple
+  "S112",    # optional model backends and skip ones that error or don't
+  "PERF203", # apply; catch-and-continue/pass is the point, not an oversight
+]
+"src/maketables/interactive.py" = [
+  "A002", # `vars` is the established public parameter name (matches
+  # DTable/ETable); renaming breaks caller code using vars=
+]
+"src/maketables/mtable.py" = [
+  "N806",   # Variable names mirror OOXML/python-docx element tags (pPr, tcPr, ...)
+  "A002",   # `type` is the established public parameter name across
+  # make/save/__call__; renaming breaks caller code using type=
+  "PTH103", # save/update_docx/update_typst/update_tex use os.path for file
+  "PTH110", # resolution (splitext/isabs/join/dirname/exists); migrating to
+  "PTH112", # pathlib is a real behavior-adjacent refactor of core save/load
+  "PTH117", # logic, not a cosmetic swap - tracked as follow-up work rather
+  "PTH118", # than rushed into this lint-only branch.
+  "PTH120",
+  "PTH122",
+  "PTH123",
+]
+"src/maketables/dtable.py" = [
+  "A002",    # `type`/`vars` are the established public constructor parameter
+  # names; renaming breaks caller code using type=/vars=
+  "PD101",   # nunique()==1 is the clearest way to check a count column is
+  # constant across the (small) result frame; not a hot path
+  "PD013",   # .stack(level=..., future_stack=True) targets a specific
+  # MultiIndex level; .melt has different reshape semantics here
+  "PD010",   # .unstack(level=tuple(bycol)) targets specific named levels;
+  # .pivot_table has different reshape semantics here
+  "PLR0911", # _format_number has several early returns for readability
+  # across numeric-magnitude cases; each branch is a distinct rule
+  "TRY300",  # the final statement in the try can itself raise (invalid
+  # format_spec), so it must stay inside try to be caught -
+  # moving it to else would break the fallback
+]
+"src/maketables/etable.py" = [
+  "PERF203", # get_extractor lookups for default model stats intentionally
+  # probe per-model and fall back on any failure inside the loop
+  "S110",    # optional label/stat collection intentionally continues past
+  # a model whose extractor lookup fails
+  "S105",    # `token` here is a coef_fmt parsing token, not a credential
+  "RUF001",  # "×" is the conventional interaction-term display symbol
+  "PLR0911", # _format_number has several early returns for readability
+  # across numeric-magnitude cases; each branch is a distinct rule
+  "TRY300",  # the final statement in the try can itself raise (invalid
+  # format_spec), so it must stay inside try to be caught -
+  # moving it to else would break the fallback
+]
+"src/maketables/btable.py" = [
+  "A002", # `vars` is the established public constructor parameter name;
+  # renaming breaks caller code using vars=
+  "N806", # `R` is the standard notation for a Wald-test restriction matrix
+]
+"docs/**/*" = [
   "ANN001",  # Missing type annotation for function argument
   "ANN002",  # Missing type annotation for *args
   "ANN003",  # Missing type annotation for **kwargs
   "ANN201",  # Missing return type annotation for public function
   "ANN202",  # Missing return type annotation for private function
-  "ANN204",  # Missing return type annotation for special method
-  "ANN401",  # Dynamically typed expressions are used for third-party model APIs
-  "A001",    # Some local names mirror public API terminology
-  "ARG002",  # Interface-compatible methods often leave arguments unused
-  "ARG001",  # Widget callback signatures receive unused event arguments
-  "B028",    # No explicit `stacklevel` keyword argument found
-  "B904",    # Better exception handling
-  "BLE001",  # Optional dependency bridges intentionally catch broad exceptions
-  "C901",    # Existing table-building methods are complex
+  "ARG001",  # Unused function argument
   "D100",    # Missing docstring in public module
-  "D102",    # Missing docstring in public method
+  "D103",    # Missing docstring in public function
   "D104",    # Missing docstring in public package
-  "D105",    # Missing docstring in magic method
-  "D205",    # 1 blank line required between summary line and description
-  "D301",    # Raw docstring rules conflict with examples containing backslashes
-  "E501",    # Line length regulated by formatter
-  "EM101",   # Exception must not use a string literal
-  "EM102",   # Exception must not use an f-string literal
-  "ERA001",  # Commented examples/debug snippets are cleaned up separately
-  "FBT001",  # Public APIs expose boolean positional arguments
-  "FBT002",  # Public APIs expose boolean default positional arguments
-  "FBT003",  # Third-party APIs accept positional boolean arguments
-  "FA100",   # Missing `from __future__ import annotations`
-  "FA102",   # Missing `from __future__ import annotations`
-  "FIX002",  # Line contains TODO
-  "N806",    # External XML/Stata naming conventions use mixed-case local names
-  "PD010",   # Prefer pivot_table over unstack
-  "PD013",   # Prefer melt over stack
-  "PD002",   # Existing pandas code uses inplace operations
-  "PD101",   # Prefer alternative constant-series checks
-  "PERF203", # Optional dependency probes use try/except inside loops
-  "PERF401", # Keep some expanded loops for readability
-  "PLC0415", # Optional imports are intentionally local in some code paths
-  "PLR0911", # Existing helpers have multiple return paths
-  "PLR0912", # Existing table-building methods have many branches
-  "PLR0913", # Public APIs intentionally accept many keyword options
-  "PLR0915", # Existing table-building methods have many statements
-  "PLR2004", # Numeric formatting and tests use local numeric literals
-  "PT018",   # Existing asserts combine validation predicates
-  "PTH110",  # Pathlib migration is outside this config-focused change
-  "PTH112",  # Pathlib migration is outside this config-focused change
-  "PTH117",  # Pathlib migration is outside this config-focused change
-  "PTH118",  # Pathlib migration is outside this config-focused change
-  "PTH120",  # Pathlib migration is outside this config-focused change
-  "PTH122",  # Pathlib migration is outside this config-focused change
-  "PTH123",  # Pathlib migration is outside this config-focused change
-  "RET503",  # Existing save/update helpers return display objects conditionally
-  "RET504",  # Existing code sometimes names values before returning
-  "RUF001",  # Statistical symbols intentionally use Unicode characters
-  "RUF002",  # Statistical symbols intentionally use Unicode characters
-  "RUF005",  # Existing tuple construction is left unchanged
-  "RUF046",  # Existing numeric formatting uses explicit casts
-  "RUF059",  # Existing unpacking names are left unchanged
-  "S101",    # Tests and runtime validation currently use assert
-  "S105",    # Short format tokens are not passwords
-  "S110",    # Optional dependency probes intentionally suppress failures
-  "S112",    # Optional dependency probes intentionally continue on failures
-  "SIM102",  # Existing nested conditionals are left unchanged
-  "SIM105",  # Existing suppressible try blocks are left unchanged
-  "SIM108",  # Existing conditional assignments are left unchanged
-  "SIM110",  # Use `all` instead of `for` loop
-  "SLF001",  # Third-party model APIs expose required data on private attributes
-  "T201",    # inspect_model and examples intentionally print diagnostics
-  "TC001",   # Move application import into a type-checking block
-  "TC002",   # Move third-party import into a type-checking block
-  "TC003",   # Move standard library import into a type-checking block
-  "TRY300",  # Existing try blocks often return directly
-  "TRY301",  # Existing fallback code raises inside try blocks
-  "TRY003",  # Avoid specifying long messages outside the exception class
+  "T201",    # print found
+  "NPY002",  # Legacy np.random API used for reproducible pedagogical examples
+  "E402",    # Notebook cells import after prose/markdown by convention
+  "PLR2004", # Magic values used for illustrative example parameters
+  "RUF001",  # Prose cells intentionally use Unicode punctuation
+  "RUF003",  # Prose comments intentionally use Unicode punctuation
+  "SIM118",  # Illustrative code favors explicit .keys() for clarity
+  "E501",    # Long lines occur in explanatory prose cells
+  "W291",    # Trailing whitespace occurs in rendered notebook prose
+  "W293",    # Blank lines with whitespace occur in rendered notebook prose
+  "PTH103",  # Example scripts use os.path for readability, not app code
+  "PTH120",  # Example scripts use os.path for readability, not app code
+  "PTH123",  # Example scripts use os.path for readability, not app code
 ]
-[tool.ruff.lint.per-file-ignores]
-"docs/**/*.ipynb" = [
-  "ANN001",
-  "ANN002",
-  "ANN003",
-  "ANN201",
-  "ANN202",
-  "D103",
-  "E402",
-  "INP001",
-  "NPY002",
-  "PTH103",
-  "PTH120",
-  "PTH123",
-  "RUF001",
-  "RUF003",
-  "SIM118",
-  "T201",
-  "W291",
-  "W293",
-]
-"src/maketables/symbols.py" = [ "RUF001", "RUF002" ]
 "tests/**/*.py" = [
-  "ARG001",
-  "ARG002",
-  "D100",
-  "D103",
-  "INP001",
-  "NPY002",
-  "PLC0415",
-  "S101",
+  "ANN001",  # Missing type annotation for function argument
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "D100",    # Missing docstring in public module
+  "D103",    # Missing docstring in public function
+  "D104",    # Missing docstring in public package
+  "D401",    # First line of docstring should be in imperative mood
+  "FBT001",  # Boolean-typed positional argument in function definition
+  "INP001",  # Implicit namespace packages
+  "PLC2401", # Variable name contains a non-ASCII character
+  "PLR2004", # Magic value used in comparison
+  "S101",    # Use of assert
+  "NPY002",  # Legacy np.random seeding required for deterministic snapshot fixtures
+  "PLC0415", # Optional-dependency imports are intentionally local in test setup
+  "ARG001",  # Pytest fixtures are requested for side effects, not read
 ]
 [tool.ruff.lint.pycodestyle]
 max-doc-length = 88

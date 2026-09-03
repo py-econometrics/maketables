@@ -60,14 +60,15 @@ class StataResultWrapper:
         depvar: str,
         cmd: str = "",
         fixed_effects: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize Stata result wrapper.
 
         Parameters
         ----------
         coefficients : pd.DataFrame
-            Coefficient table with canonical columns: b, se, t, p (t and p may be missing for some commands)
+            Coefficient table with canonical columns: b, se, t, p (t and p
+            may be missing for some commands)
         stats : dict
             Dictionary of model statistics (N, r2, adj_r2, etc.)
         depvar : str
@@ -101,8 +102,9 @@ class StataResultWrapper:
             If True: '2.price_cat' -> 'C(price_cat)[T.2]'
             If False: keep original Stata names like '2.price_cat'
         use_var_labels : bool, default True
-            Whether to replace categorical variable numbers with their value labels.
-            If True: '2.price_cat' with label "High" -> 'C(price_cat)[T.High]' or '2.price_cat (High)'
+            Whether to replace categorical variable numbers with their value
+            labels. If True: '2.price_cat' with label "High" ->
+            'C(price_cat)[T.High]' or '2.price_cat (High)'
             If False: keep numeric codes like '2.price_cat'
 
         Returns
@@ -149,10 +151,10 @@ class StataResultWrapper:
                 cls._extract_value_labels() if use_var_labels else {}
             )
 
-            return wrapper
-
         except Exception as e:
-            raise RuntimeError(f"Failed to extract Stata results: {e}")
+            raise RuntimeError(f"Failed to extract Stata results: {e}") from e
+        else:
+            return wrapper
 
     @staticmethod
     def _convert_stata_to_formulaic(
@@ -164,7 +166,8 @@ class StataResultWrapper:
         Converts Stata's factor variable and interaction syntax to Python-style:
         - '2.price_cat' -> 'C(price_cat)[T.2]' or 'C(price_cat)[T.High]' (with labels)
         - '1.foreign' -> 'C(foreign)[T.1]' or 'C(foreign)[T.Domestic]' (with labels)
-        - '1.foreign#c.weight' -> 'C(foreign)[T.1]:weight' or 'C(foreign)[T.Domestic]:weight' (with labels)
+        - '1.foreign#c.weight' -> 'C(foreign)[T.1]:weight' or
+          'C(foreign)[T.Domestic]:weight' (with labels)
         - 'weight' -> 'weight' (unchanged for continuous vars)
         - '_cons' -> 'Intercept' (standard rename)
 
@@ -195,10 +198,11 @@ class StataResultWrapper:
             """Get value label for variable/level or return level if no label exists."""
             try:
                 level_int = int(level)
+            except (ValueError, KeyError):
+                return level
+            else:
                 if var in value_labels and level_int in value_labels[var]:
                     return value_labels[var][level_int]
-                return level
-            except (ValueError, KeyError):
                 return level
 
         # Handle interaction terms: split on '#'
@@ -221,7 +225,8 @@ class StataResultWrapper:
 
             return ":".join(converted_parts)
 
-        # Handle single factor variables: '2.price_cat' -> 'C(price_cat)[T.2]' or 'C(price_cat)[T.High]'
+        # Handle single factor variables: '2.price_cat' ->
+        # 'C(price_cat)[T.2]' or 'C(price_cat)[T.High]'  # noqa: ERA001
         if re.match(r"\d+\.", stata_name):
             level, var = stata_name.split(".", 1)
             label = get_label_or_level(var, level)
@@ -238,7 +243,7 @@ class StataResultWrapper:
     def _extract_coefficients(
         formulaic_names: bool = True, use_var_labels: bool = True
     ) -> pd.DataFrame:
-        """Extract coefficient table from Stata's e(b) and e(V) matrices using sfi API."""
+        """Extract coefficient table from Stata's e(b)/e(V) matrices via sfi."""
         try:
             from sfi import Matrix  # ty: ignore[unresolved-import]
 

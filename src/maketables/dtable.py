@@ -1,3 +1,8 @@
+"""Descriptive statistics table support."""
+
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -16,8 +21,8 @@ class DTable(MTable):
     vars : list
         List of variables to be included in the table.
     stats : list, optional
-        List of statistics to be calculated. The default is None, that sets ['count','mean', 'std'].
-        All pandas aggregation functions are supported.
+        List of statistics to be calculated. The default is None, that sets
+        ['count','mean', 'std']. All pandas aggregation functions are supported.
     bycol : list, optional
         List of variables to be used to group the data by columns. The default is None.
     byrow : str, optional
@@ -27,20 +32,25 @@ class DTable(MTable):
         Type can be 'gt' for great_tables, 'tex' for LaTeX or 'df' for dataframe.
     labels : dict, optional
         Dictionary containing display labels for variables. If None, labels are taken
-        from the DataFrame via get_var_labels(df) (which reads df.attrs['variable_labels']
-        and fills missing entries from MTable.DEFAULT_LABELS). When provided, this mapping
-        is used as-is (no automatic merge).
+        from the DataFrame via get_var_labels(df) (which reads
+        df.attrs['variable_labels'] and fills missing entries from
+        MTable.DEFAULT_LABELS). When provided, this mapping is used as-is (no
+        automatic merge).
     stats_labels : dict, optional
         Dictionary containing the labels for the statistics. The default is None.
     format_spec : dict, optional
         Dictionary specifying format for numbers. Keys can be:
-          - a statistic name (e.g. 'mean', 'std') — applies to that stat for all variables,
+          - a statistic name (e.g. 'mean', 'std') — applies to that stat for all
+            variables,
           - a variable name (e.g. 'wage') — applies to all stats for that variable,
-          - a tuple (var, stat) (e.g. ('age','mean')) — most specific, applies only to that variable/stat pair.
-        Values should be Python format specifiers (e.g. '.3f', '.2e', ',.0f') or the special
-        string 'd' to format integers. Keys are normalized to plain Python strings internally
-        (and tuple elements are normalized), so lookups are robust against non-string index types.
-        Lookup priority (applied in this order): (var, stat) → var → stat → fallback (use `digits` / sensible default).
+          - a tuple (var, stat) (e.g. ('age','mean')) — most specific, applies only
+            to that variable/stat pair.
+        Values should be Python format specifiers (e.g. '.3f', '.2e', ',.0f') or the
+        special string 'd' to format integers. Keys are normalized to plain Python
+        strings internally (and tuple elements are normalized), so lookups are
+        robust against non-string index types.
+        Lookup priority (applied in this order): (var, stat) → var → stat →
+        fallback (use `digits` / sensible default).
         If None, sensible defaults are used. Examples:
             {'mean': '.3f', 'wage': ',.2f', ('age','mean'): '.1f'}
     digits : int, optional
@@ -84,8 +94,8 @@ class DTable(MTable):
         counts_row_below: bool = False,
         hide_stats: bool = False,
         observed: bool = False,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         # --- Begin dtable logic ---
         if stats is None:
             stats = ["count", "mean", "std"]
@@ -93,11 +103,10 @@ class DTable(MTable):
         # Use user-provided format_spec or empty dict
         self.format_specs = format_spec if format_spec is not None else {}
 
-        def get_format_spec(var, stat):
+        def get_format_spec(var: Any, stat: Any) -> str | None:
             # normalize to plain python strings for reliable lookup
             var = str(var) if var is not None else None
             stat = str(stat) if stat is not None else None
-            # print("FORMAT_LOOKUP:", repr(var), repr(stat))
             if isinstance(self.format_specs, dict):
                 # most specific first
                 if (var, stat) in self.format_specs:
@@ -119,17 +128,16 @@ class DTable(MTable):
             df_labels = dict(getattr(MTable, "DEFAULT_LABELS", {}))
         labels = df_labels if labels is None else dict(labels)
 
-        assert isinstance(df, pd.DataFrame), "df must be a pandas DataFrame."
-        assert all(pd.api.types.is_numeric_dtype(df[var]) for var in vars), (
-            "Variables must be numerical."
-        )
-        assert type in ["gt", "tex", "df"], "type must be either 'gt' or 'tex' or 'df'."
-        assert byrow is None or byrow in df.columns, (
-            "byrow must be a column in the DataFrame."
-        )
-        assert bycol is None or all(col in df.columns for col in bycol), (
-            "bycol must be a list of columns in the DataFrame."
-        )
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("df must be a pandas DataFrame.")
+        if not all(pd.api.types.is_numeric_dtype(df[var]) for var in vars):
+            raise ValueError("Variables must be numerical.")
+        if type not in ["gt", "tex", "df"]:
+            raise ValueError("type must be either 'gt' or 'tex' or 'df'.")
+        if byrow is not None and byrow not in df.columns:
+            raise ValueError("byrow must be a column in the DataFrame.")
+        if bycol is not None and not all(col in df.columns for col in bycol):
+            raise ValueError("bycol must be a list of columns in the DataFrame.")
 
         stats_dict = {
             "count": "N",
@@ -154,7 +162,7 @@ class DTable(MTable):
 
         binary_vars = {var for var in vars if _is_dummy_series(df[var])}
 
-        def mean_std(x):
+        def mean_std(x: pd.Series) -> str:
             # Use get_format_spec for mean and std
             var_name = x.name if hasattr(x, "name") else None
             mean_fmt = get_format_spec(var_name, "mean")
@@ -168,7 +176,7 @@ class DTable(MTable):
                 suppress_std=var_name in binary_vars,
             )
 
-        def mean_newline_std(x):
+        def mean_newline_std(x: pd.Series) -> str:
             # Use get_format_spec for mean and std
             var_name = x.name if hasattr(x, "name") else None
             mean_fmt = get_format_spec(var_name, "mean")
@@ -217,10 +225,12 @@ class DTable(MTable):
             for col in res.columns:
                 # stat_name comes from the column (the statistic)
                 stat_name = res[col].name if hasattr(res[col], "name") else col
-                # Skip formatting for combined statistics that are already formatted strings
+                # Skip formatting for combined statistics that are already
+                # formatted strings
                 if stat_name in ["mean_std", "mean_newline_std"]:
                     continue
-                # Only format numeric columns or when a format_spec exists for this stat or any var
+                # Only format numeric columns or when a format_spec exists for
+                # this stat or any var
                 if not (
                     pd.api.types.is_numeric_dtype(res[col])
                     or stat_name in self.format_specs
@@ -236,7 +246,10 @@ class DTable(MTable):
                 res[col] = formatted
 
             if counts_row_below:
-                assert nobs is not None
+                if nobs is None:
+                    raise ValueError(
+                        "nobs is unexpectedly None when counts_row_below is True."
+                    )
                 obs_row = [
                     self._format_number(
                         nobs, get_format_spec(None, "count"), digits=digits
@@ -284,7 +297,8 @@ class DTable(MTable):
                 res = pd.DataFrame(res.unstack(level=tuple(bycol)))
                 if not isinstance(res.columns, pd.MultiIndex):
                     res.columns = pd.MultiIndex.from_tuples(res.columns)
-                assert isinstance(res.columns, pd.MultiIndex)
+                if not isinstance(res.columns, pd.MultiIndex):
+                    raise TypeError("res.columns must be a MultiIndex after unstack.")
                 res.columns = res.columns.reorder_levels([*bycol, "Statistics"])
                 levels_to_sort = list(range(res.columns.nlevels - 1))
                 res = res.sort_index(axis=1, level=levels_to_sort, sort_remaining=False)
@@ -319,8 +333,6 @@ class DTable(MTable):
         self, x: float, format_spec: str | None = None, digits: int = 2
     ) -> str:
         """Format a number with optional format specifier or sensible default."""
-        import pandas as pd
-
         if pd.isna(x) or (isinstance(x, float) and np.isnan(x)):
             return "-"
 
@@ -346,7 +358,11 @@ class DTable(MTable):
             return self._format_number(x, None, digits=digits)
 
 
-def _relabel_index(index, labels=None, stats_labels=None):
+def _relabel_index(
+    index: pd.Index,
+    labels: dict | None = None,
+    stats_labels: dict | None = None,
+) -> pd.Index | list:
     labels = {} if labels is None else labels
     if stats_labels is None:
         if isinstance(index, pd.MultiIndex):
@@ -357,14 +373,10 @@ def _relabel_index(index, labels=None, stats_labels=None):
             index = [labels.get(k, k) for k in index]
     # if stats_labels is provided, we relabel the lowest level of the index with it
     elif isinstance(index, pd.MultiIndex):
-        new_index = []
-        for i in index:
-            new_index.append(
-                tuple(
-                    [labels.get(k, k) for k in i[:-1]]
-                    + [stats_labels.get(i[-1], i[-1])]
-                )
-            )
+        new_index = [
+            tuple([labels.get(k, k) for k in i[:-1]] + [stats_labels.get(i[-1], i[-1])])
+            for i in index
+        ]
         index = pd.MultiIndex.from_tuples(new_index)
     else:
         index = [stats_labels.get(k, k) for k in index]
@@ -383,12 +395,11 @@ def _format_mean_std(
     digits: int = 2,
     newline: bool = True,
     format_specs: dict | None = None,
-    format_number_func=None,
+    format_number_func: Callable[[float, str | None, int], str] | None = None,
     suppress_std: bool = False,
 ) -> str:
     """
-    Calculate the mean and standard deviation of a pandas Series and return
-    as a string.
+    Calculate the mean and standard deviation of a pandas Series as a string.
 
     Parameters
     ----------
