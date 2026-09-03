@@ -37,7 +37,7 @@ classifiers = [
 ]
 dynamic = [ "version" ]
 dependencies = [
-  "great-tables>=0.2",
+  "great-tables==0.18.*",
   "ipython>=7",
   "numpy>=1.20",
   "pandas>=1.3",

@@ -62,8 +62,8 @@ jobs:
           pixi-version: v0.68.1
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
-          environments: py314
+          environments: py313
           frozen: true
       - name: Run ty
-        run: pixi run -e py314 ty
+        run: pixi run -e py313 ty
         shell: bash -el {0}
