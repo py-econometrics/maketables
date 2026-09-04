@@ -8,6 +8,16 @@
   z,3.35,2.85,3.45,2.95,0.714
   '''
 # ---
+# name: TestBTableStats.test_byrow_splits_table_into_row_groups_with_independent_pvalues
+  '''
+  ,,control,treated,
+  ,,Mean,Mean,p-value
+  A,x,2.50,3.00,0.604
+  A,z,3.00,3.10,0.882
+  B,x,2.70,3.20,0.604
+  B,z,3.20,3.30,0.882
+  '''
+# ---
 # name: TestETableModelStats.test_model_stats_aic_bic_html
   '''
   <div id="STABLE_ID" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
