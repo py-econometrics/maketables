@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **DoubleML support**: `ETable` now builds tables from [DoubleML](https://github.com/DoubleML/doubleml-for-py) results
+  - Covers the `DoubleML` estimators (PLR, PLIV, IRM, IIVM, SSM, DID, APO, PQ, LPQ, CVAR), the standalone estimators (QTE, APOS, DIDMulti) and the best linear predictors from `cate()`/`gate()`
+  - Coefficient tokens `b`, `se`, `t`, `z`, `p`, `ci95l`/`ci95u`, `ci90l`/`ci90u`; statistics `N`, `n_clusters`, `score`, `n_folds`, `n_rep`, `learners`, `se_type`
+  - Detected by duck typing, so `maketables` never imports `doubleml`
+
 ## [0.1.8]
 
 ### Added

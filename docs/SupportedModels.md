@@ -6,6 +6,7 @@
 - [statsmodels](https://github.com/statsmodels/statsmodels)
 - [linearmodels](https://github.com/bashtage/linearmodels)
 - [lifelines](https://github.com/CamDavidsonPilon/lifelines)
+- [DoubleML](https://github.com/DoubleML/doubleml-for-py) (see [documentation](DoubleML.ipynb))
 - [Stata](https://www.stata.com/python/pystata19/) (see [documentation](pystataIntegration.ipynb))
 
 # Adding Support for New Model Classes

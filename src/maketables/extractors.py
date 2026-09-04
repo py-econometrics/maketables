@@ -422,7 +422,8 @@ def inspect_model(model: Any, long: bool = False) -> None:
             "r2", "adj_r2", "r2_within", "pseudo_r2",
             "fvalue", "f_pvalue", "rmse",
             "llr", "llr_df", "llr_p", "llr_log2p",
-            "se_type", "df_model", "df_resid"
+            "se_type", "df_model", "df_resid",
+            "n_folds", "n_rep", "score", "learners"
         ]
         
         available_stats = []
@@ -1353,3 +1354,278 @@ class LifelinesExtractor:
 
 # Register lifelines extractor
 register_extractor(LifelinesExtractor())
+
+
+class DoubleMLExtractor:
+    """
+    Extractor for DoubleML causal machine learning models.
+
+    Covers the estimators deriving from ``doubleml.DoubleML`` (PLR, PLIV, IRM,
+    IIVM, SSM, DID, APO, PQ, LPQ, CVAR, ...), the standalone estimators that
+    share the same result interface but not the base class (QTE, APOS, DIDMulti)
+    and the best linear predictors returned by ``cate()`` and ``gate()``. All of
+    them expose a fitted ``summary`` DataFrame with the columns ``coef``,
+    ``std err``, ``t`` and ``P>|t|``.
+
+    Detection is by duck typing, so maketables never imports doubleml.
+
+    Notes
+    -----
+    DoubleML bases inference on a normal approximation, so the ``t`` column of
+    its summary is a z statistic; it is exposed under both the ``t`` and ``z``
+    tokens. One row is produced per treatment variable -- per quantile for QTE,
+    per treatment level for APOS, per group-time combination for DIDMulti and
+    per basis term for ``cate()``/``gate()``.
+    """
+
+    def can_handle(self, model: Any) -> bool:
+        """Check whether the object is a doubleml estimator (fitted or not)."""
+        mod = type(model).__module__ or ""
+        if not mod.startswith("doubleml."):
+            return False
+        return all(hasattr(model, a) for a in ("summary", "coef", "se", "confint"))
+
+    @staticmethod
+    def _summary(model: Any) -> pd.DataFrame | None:
+        """Return the summary DataFrame of a fitted model, else None."""
+        if hasattr(model, "framework") and model.framework is None:
+            return None  # DoubleML estimators only build a framework in fit()
+        try:
+            summary = model.summary
+        except Exception:
+            return None
+        if not isinstance(summary, pd.DataFrame) or summary.empty:
+            return None
+        return summary
+
+    @staticmethod
+    def _ci_bounds(ci: pd.DataFrame) -> tuple[Any, Any] | None:
+        """
+        Pick the lower and upper bound out of a doubleml confint() frame.
+
+        Column layouts differ -- ``[lower, upper]`` for the estimators and
+        ``[lower, effect, upper]`` for best linear predictors -- so the bounds
+        are identified by the percentage in their name rather than by position.
+        """
+        levels = {}
+        for col in ci.columns:
+            name = str(col).strip()
+            if name.endswith("%"):
+                try:
+                    levels[col] = float(name[:-1])
+                except ValueError:
+                    continue
+        if len(levels) < 2:
+            return None
+        lower = min(levels, key=lambda col: levels[col])
+        upper = max(levels, key=lambda col: levels[col])
+        return ci[lower], ci[upper]
+
+    @staticmethod
+    def _data(model: Any) -> Any:
+        """Return the attached DoubleMLData object, if any."""
+        return getattr(model, "_dml_data", None)
+
+    def _coef_index(self, model: Any, summary: pd.DataFrame) -> list[str]:
+        """
+        Build readable coefficient names.
+
+        The summary index already names the treatment variable(s) for most
+        estimators. Where it is a bare number instead -- quantiles for QTE,
+        treatment levels for APOS -- it is qualified so the row still means
+        something in a table.
+        """
+        quantiles = getattr(model, "quantiles", None)
+        if quantiles is not None and len(quantiles) == len(summary):
+            return [f"Q({q:g})" for q in quantiles]
+
+        levels = getattr(model, "treatment_levels", None)
+        if levels is not None and len(levels) == len(summary):
+            data = self._data(model)
+            treat = (getattr(data, "d_cols", None) or ["d"])[0]
+            return [f"{treat}={lvl}" for lvl in levels]
+
+        return [str(i) for i in summary.index]
+
+    def coef_table(self, model: Any) -> pd.DataFrame:
+        """
+        Extract a coefficient table with the canonical maketables tokens.
+
+        Provides ``b``, ``se``, ``t``, ``z``, ``p`` and the ``ci95l``/``ci95u``
+        and ``ci90l``/``ci90u`` confidence bounds reported by ``confint()``.
+        """
+        summary = self._summary(model)
+        if summary is None:
+            raise ValueError(
+                f"DoubleMLExtractor: {type(model).__name__} has not been estimated yet. "
+                "Call fit() on the model before passing it to ETable."
+            )
+
+        df = pd.DataFrame(
+            {
+                "b": pd.to_numeric(summary["coef"], errors="coerce").to_numpy(),
+                "se": pd.to_numeric(summary["std err"], errors="coerce").to_numpy(),
+                "t": pd.to_numeric(summary["t"], errors="coerce").to_numpy(),
+                "p": pd.to_numeric(summary["P>|t|"], errors="coerce").to_numpy(),
+            },
+            index=pd.Index(self._coef_index(model, summary), name="Coefficient"),
+        )
+        # DoubleML's inference is asymptotically normal: `t` is a z statistic.
+        df["z"] = df["t"]
+
+        for level, (lo, up) in {
+            0.95: ("ci95l", "ci95u"),
+            0.90: ("ci90l", "ci90u"),
+        }.items():
+            try:
+                ci = model.confint(level=level)
+                bounds = self._ci_bounds(ci) if len(ci) == len(df) else None
+            except Exception:
+                bounds = None
+            if bounds is not None:
+                df[lo] = pd.to_numeric(bounds[0], errors="coerce").to_numpy()
+                df[up] = pd.to_numeric(bounds[1], errors="coerce").to_numpy()
+
+        ordered = [
+            c
+            for c in ["b", "se", "t", "z", "p", "ci95l", "ci95u", "ci90l", "ci90u"]
+            if c in df.columns
+        ]
+        return df[ordered + [c for c in df.columns if c not in ordered]]
+
+    def depvar(self, model: Any) -> str:
+        """Return the outcome variable name of the attached DoubleMLData."""
+        return getattr(self._data(model), "y_col", None) or "y"
+
+    def fixef_string(self, model: Any) -> str | None:
+        """DoubleML models have no fixed effects specification."""
+        return None
+
+    @staticmethod
+    def _n_obs(model: Any) -> Any:
+        # QTE/APOS/DIDMulti do not expose n_obs themselves; BLPs carry no data
+        # object at all, only the basis they were fitted on.
+        n = getattr(model, "n_obs", None)
+        if n is None:
+            n = getattr(DoubleMLExtractor._data(model), "n_obs", None)
+        if n is None and isinstance(getattr(model, "basis", None), pd.DataFrame):
+            n = len(model.basis)
+        return n
+
+    @staticmethod
+    def _cluster_cols(model: Any) -> list[str] | None:
+        data = DoubleMLExtractor._data(model)
+        if not getattr(data, "is_cluster_data", False):
+            return None
+        cols = getattr(data, "cluster_cols", None)
+        return list(cols) if cols else None
+
+    @staticmethod
+    def _n_clusters(model: Any) -> Any:
+        """Return the number of clusters along the first clustering dimension."""
+        cols = DoubleMLExtractor._cluster_cols(model)
+        if not cols:
+            return None
+        cluster_vars = getattr(DoubleMLExtractor._data(model), "cluster_vars", None)
+        if cluster_vars is None:
+            return None
+        return int(pd.unique(np.asarray(cluster_vars)[:, 0]).size)
+
+    @staticmethod
+    def _learners(model: Any) -> str | None:
+        """Names of the nuisance learner classes, in the order doubleml lists them."""
+        learners = getattr(model, "learner", None)
+        if not isinstance(learners, dict) or not learners:
+            return None
+        names: list[str] = []
+        for learner in learners.values():
+            name = type(learner).__name__
+            if name not in names:
+                names.append(name)
+        return ", ".join(names) or None
+
+    STAT_MAP: ClassVar[dict[str, Any]] = {
+        "N": lambda m: DoubleMLExtractor._n_obs(m),
+        "n_clusters": lambda m: DoubleMLExtractor._n_clusters(m),
+        "n_folds": "n_folds",
+        "n_rep": "n_rep",
+        "score": lambda m: (
+            s if isinstance(s := getattr(m, "score", None), str) else None
+        ),
+        "learners": lambda m: DoubleMLExtractor._learners(m),
+        "se_type": lambda m: (
+            "by: " + "+".join(cols)
+            if (cols := DoubleMLExtractor._cluster_cols(m))
+            else "asymptotic"
+        ),
+    }
+
+    def stat(self, model: Any, key: str) -> Any:
+        """Extract a statistic from a fitted doubleml model."""
+        spec = self.STAT_MAP.get(key)
+        if spec is None:
+            return None
+        val = _get_attr(model, spec)
+        if key == "N" and val is not None:
+            try:
+                return int(val)
+            except Exception:
+                return val
+        return val
+
+    def vcov_info(self, model: Any) -> dict[str, Any]:
+        """Report whether inference accounts for clustering."""
+        cols = self._cluster_cols(model)
+        return {
+            "vcov_type": "cluster" if cols else "asymptotic",
+            "clustervar": cols,
+        }
+
+    def var_labels(self, model: Any) -> dict[str, str] | None:
+        """Read variable labels off the DataFrame held by the DoubleMLData object."""
+        df = getattr(self._data(model), "data", None)
+        if isinstance(df, pd.DataFrame):
+            try:
+                return get_var_labels(df, include_defaults=True)
+            except Exception:
+                return None
+        return None
+
+    def supported_stats(self, model: Any) -> set[str]:
+        """Return the statistics available for the given model."""
+        return {
+            k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
+        }
+
+    def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """Label the doubleml-specific statistics."""
+        return {
+            "n_folds": "Folds",
+            "n_rep": "Repetitions",
+            "score": "Score",
+            "learners": "Learners",
+        }
+
+    def default_stat_keys(self, model: Any) -> list[str] | None:
+        """
+        Show sample size, estimand and cross-fitting setup by default.
+
+        Clustering and repeated cross-fitting only add a row when they are
+        actually used; `learners` and `se_type` are available on request.
+        """
+        keys = ["N"]
+        if self._cluster_cols(model):
+            keys.append("n_clusters")
+        keys += ["score", "n_folds"]
+        if (getattr(model, "n_rep", 1) or 1) > 1:
+            keys.append("n_rep")
+        available = self.supported_stats(model)
+        return [k for k in keys if k in available]
+
+    def sample_split(self, model: Any) -> str | None:
+        """DoubleML models are not estimated on sample splits."""
+        return None
+
+
+# Register doubleml extractor
+register_extractor(DoubleMLExtractor())

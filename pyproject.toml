@@ -82,6 +82,11 @@ lifelines = [
     "lifelines>=0.27.0",
 ]
 
+doubleml = [
+    "doubleml>=0.10.0",
+    "scikit-learn>=1.0",
+]
+
 [tool.pixi.feature.dev.dependencies]
 quarto = ">=1.8.25,<2"
 typst = ">=0.11"

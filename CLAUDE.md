@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MakeTables is a Python package for creating publication-ready tables from regression results (pyfixest, statsmodels, linearmodels, lifelines, Stata), descriptive statistics, and balance tables. Outputs to HTML (Great Tables), LaTeX, Word (DOCX), and Typst.
+MakeTables is a Python package for creating publication-ready tables from regression results (pyfixest, statsmodels, linearmodels, lifelines, DoubleML, Stata), descriptive statistics, and balance tables. Outputs to HTML (Great Tables), LaTeX, Word (DOCX), and Typst.
 
 ## Development Commands
 
@@ -54,7 +54,7 @@ MTable (base - src/maketables/mtable.py)
 
 ### Extractor System (src/maketables/extractors.py)
 
-Plugin architecture using a runtime-checkable `ModelExtractor` Protocol. Each extractor implements `can_handle()`, `coef_table()`, `depvar()`, `stat()`, etc. Built-in extractors for pyfixest, statsmodels, linearmodels. Optional extractors for Stata (`pystata_extractor.py`) and lifelines via conditional imports. New model types are added by implementing the Protocol and calling `register_extractor()`.
+Plugin architecture using a runtime-checkable `ModelExtractor` Protocol. Each extractor implements `can_handle()`, `coef_table()`, `depvar()`, `stat()`, etc. Built-in extractors for pyfixest, statsmodels, linearmodels. Optional extractors for Stata (`pystata_extractor.py`), lifelines and DoubleML via conditional imports or duck typing. New model types are added by implementing the Protocol and calling `register_extractor()`.
 
 ### Output Rendering
 
