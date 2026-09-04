@@ -119,6 +119,28 @@ class TestBTableStats:
 
         assert table.df.to_csv().strip() == snapshot
 
+    def test_byrow_splits_table_into_row_groups_with_independent_pvalues(
+        self,
+        btable_factorial_df,
+        snapshot,
+    ):
+        """byrow row-groups the table and tests balance separately within each group."""
+        pytest.importorskip("pyfixest")
+        df = btable_factorial_df.copy()
+        # Alternate role within each treatment block (not aligned with it),
+        # so both roles see both treatment levels and the p-value regression
+        # has variation to estimate within every row-group.
+        df["role"] = ["A", "B"] * 8
+        table = mt.BTable(
+            df,
+            vars=["x", "z"],
+            group="treatment",
+            byrow="role",
+            stats=["mean"],
+        )
+
+        assert table.df.to_csv().strip() == snapshot
+
 
 def test_dtable_mean_std_suppresses_std_for_binary_variables(
     dtable_binary_df,
