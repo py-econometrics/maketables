@@ -1269,7 +1269,14 @@ class MTable:
             ):
                 if self.rgroup_display:
                     fmt = str(s.get("group_header_format", r"\emph{%s}"))
-                    gtext = _wrap_linebreaks(fmt % str(gname))
+                    # Apply the format to each line separately and only then
+                    # join with \\: nesting \\ *inside* a group_header_format
+                    # like \emph{...} (i.e. formatting the joined text as one
+                    # unit) breaks makecell's line-splitting.
+                    gname_lines = str(gname).split("\n")
+                    gtext = r"\\".join(fmt % line for line in gname_lines)
+                    if len(gname_lines) > 1:
+                        gtext = f"\\makecell{{{gtext}}}"
                     body_lines.append(gtext + r" \\")
                     # Only add space after group header if data_addlinespace is set
                     if s.get("data_addlinespace") is not None:
