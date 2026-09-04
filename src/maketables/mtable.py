@@ -1140,20 +1140,14 @@ class MTable:
         # \makecell{} when needed: a bare \\ does not behave as a line break
         # directly inside a tabular cell position (data cell, header/spanner
         # multicolumn, or row label) without it.
-        def _wrap_linebreaks(
-            text: str, align: str | None = None, protect: bool = False
-        ) -> str:
+        def _wrap_linebreaks(text: str, align: str | None = None) -> str:
             text = text.replace("\n", r"\\")
             if r"\\" in text:
-                # \makecell is a fragile command: inside a moving argument
-                # (e.g. \caption{}, also used for the list of tables) it must
-                # be \protect-ed or LaTeX mis-parses its braces.
-                prefix = r"\protect" if protect else ""
                 # Omit the [align] spec for makecell's own default (center) so
                 # data-cell output (the common case) is byte-identical to
                 # before this function gained an align parameter.
                 spec = f"[{align}]" if align else ""
-                return f"{prefix}\\makecell{spec}{{{text}}}"
+                return f"\\makecell{spec}{{{text}}}"
             return text
 
         def _prep_cell(x):
@@ -1275,7 +1269,8 @@ class MTable:
             ):
                 if self.rgroup_display:
                     fmt = str(s.get("group_header_format", r"\emph{%s}"))
-                    body_lines.append((fmt % str(gname)) + r" \\")
+                    gtext = _wrap_linebreaks(fmt % str(gname))
+                    body_lines.append(gtext + r" \\")
                     # Only add space after group header if data_addlinespace is set
                     if s.get("data_addlinespace") is not None:
                         body_lines.append(rf"\addlinespace[{s['data_addlinespace']}]")
@@ -1494,7 +1489,6 @@ class MTable:
                 escaped_lines = [
                     self._escape_typst(line.strip(), escape_asterisks=escape_asterisks)
                     for line in lines_content
-                    if line.strip()
                 ]
                 return " \\ ".join(escaped_lines)
             return self._escape_typst(content, escape_asterisks=escape_asterisks)
@@ -1705,6 +1699,8 @@ class MTable:
         # then wrap in great_tables.html() so GT trusts it and doesn't
         # re-escape our deliberately-inserted <br> tags.
         def _gt_linebreak(text):
+            if text is None:
+                return None
             escaped = "<br>".join(_stdlib_html.escape(line) for line in str(text).split("\n"))
             return _gt_html(escaped)
 
