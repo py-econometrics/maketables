@@ -35,16 +35,18 @@ class TestLineBreaksTex:
         labels/headers/notes - it must convert \n too, not emit it as a
         literal newline inside \emph{...}, which LaTeX would just treat as
         whitespace. The format must also be applied per line
-        (\makecell{\emph{Group}\\\emph{Break}}), not to the joined text as
-        one unit (\makecell{\emph{Group\\Break}}) - nesting \\ inside
+        (\makecell[l]{\emph{Group}\\\emph{Break}}), not to the joined text
+        as one unit (\makecell{\emph{Group\\Break}}) - nesting \\ inside
         \emph{...} breaks makecell's line-splitting and fails to compile.
+        The [l] matches the stub column's own left alignment, instead of
+        makecell's default of centering the lines on each other.
         """
         idx = pd.MultiIndex.from_tuples(
             [("Group\nBreak", "a"), ("Group\nBreak", "b")]
         )
         table = mt.MTable(pd.DataFrame({"col1": [1, 2]}, index=idx))
         tex = table.make(type="tex")
-        assert r"\makecell{\emph{Group}\\\emph{Break}}" in tex
+        assert r"\makecell[l]{\emph{Group}\\\emph{Break}}" in tex
 
 
 class TestLineBreaksGt:

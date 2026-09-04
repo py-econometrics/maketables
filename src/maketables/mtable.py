@@ -1276,7 +1276,10 @@ class MTable:
                     gname_lines = str(gname).split("\n")
                     gtext = r"\\".join(fmt % line for line in gname_lines)
                     if len(gname_lines) > 1:
-                        gtext = f"\\makecell{{{gtext}}}"
+                        # [l]: left-align lines relative to each other (matching
+                        # the stub column's own left alignment), rather than
+                        # makecell's own default of centering them on each other.
+                        gtext = f"\\makecell[l]{{{gtext}}}"
                     body_lines.append(gtext + r" \\")
                     # Only add space after group header if data_addlinespace is set
                     if s.get("data_addlinespace") is not None:
