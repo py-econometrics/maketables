@@ -1,0 +1,90 @@
+# serializer version: 1
+# name: TestDocxOutput.test_docx_table_content
+  list([
+    list([
+      list([
+        '',
+        'y',
+      ]),
+      list([
+        '',
+        '(1)',
+      ]),
+      list([
+        'x',
+        '''
+          1.986*** 
+           (0.006)
+        ''',
+      ]),
+      list([
+        'Intercept',
+        '''
+          0.131*** 
+           (0.021)
+        ''',
+      ]),
+      list([
+        'Observations',
+        '100',
+      ]),
+      list([
+        'R²',
+        '0.999',
+      ]),
+      list([
+        'Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)',
+        'Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)',
+      ]),
+    ]),
+  ])
+# ---
+# name: TestLatexPdfOutput.test_pdf_content
+  '''
+  y
+  (1)
+  x 1.986***
+  (0.006)
+  Intercept 0.131***
+  (0.021)
+  Observations 100
+  R2 0.999
+  Significancelevels: *p¡0.1,**p¡0.05,***p¡0.01. Formatofcoefficientcell: Coefficient(Std. Error)
+  '''
+# ---
+# name: TestTypstOutput.test_typst_pdf_content
+  '''
+  y
+  (1)
+  x 1.986***
+  (0.006)
+  Intercept 0.131***
+  (0.021)
+  Observations 100
+  𝑅2 0.999
+  Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient (Std. Error)
+  '''
+# ---
+# name: TestTypstOutput.test_typst_snapshot
+  '''
+  #table(
+    columns: (auto, 1fr), align: (left, center),
+    column-gutter: (0em),
+    stroke: none, row-gutter: 0.2em,
+    table.hline(stroke: 0.08em),
+    [], [#table.cell(colspan: 1)[y]],
+    table.hline(stroke: 0.03em, start: 1, end: 2),
+    [], [(1)],
+    table.hline(stroke: 0.05em),
+    table.hline(stroke: 0.03em),
+    [x], [1.986\*\*\* \ (0.006)],
+    [Intercept], [0.131\*\*\* \ (0.021)],
+    table.hline(stroke: 0.03em),
+    table.hline(stroke: 0.03em),
+    [Observations], [100],
+    [$R^2$], [0.999],
+    table.hline(stroke: 0.08em),
+    [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
+  )
+  '''
+# ---

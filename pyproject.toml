@@ -86,6 +86,7 @@ lifelines = [
 quarto = ">=1.8.25,<2"
 typst = ">=0.11"
 pymupdf = ">=1.26.1,<2"
+pdfplumber = ">=0.11"
 
 [tool.pixi.feature.dev.target.win-64.dependencies]
 pywin32 = "*"
