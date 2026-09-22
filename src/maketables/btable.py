@@ -160,6 +160,13 @@ class BTable(DTable):
         row_pos = 0
         for _, block_df in row_blocks:
             n_groups = block_df[pvalue_group].nunique()
+            if n_groups < 2:
+                # Nothing to test: this row-group never sees more than one
+                # `group` value, so there's no balance to check.
+                pvals.iloc[row_pos : row_pos + len(vars)] = ""
+                row_pos += len(vars)
+                continue
+
             for var in vars:
                 formula = f"{var} ~ i({pvalue_group}){fe_suffix}"
                 model = pf.feols(formula, data=block_df, vcov=vcov)
