@@ -37,3 +37,31 @@ jobs:
 
       - name: Check snapshots are up to date
         run: pixi run -e dev pytest tests/ --snapshot-warn-unused
+
+  # HTML snapshots embed great_tables' CSS, so they only match the locked
+  # version above. Line-break/escaping behaviour in the gt output is checked
+  # against other great_tables releases with snapshot-free tests.
+  great-tables-compat:
+    name: "great_tables ${{ matrix.great-tables }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        great-tables: ["0.24.0", "1.0.0"]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Setup python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . pytest syrupy pyfixest "great_tables==${{ matrix.great-tables }}"
+
+      - name: Run great_tables compatibility tests
+        run: python -m pytest tests/api/test_gt_escaping.py -v
