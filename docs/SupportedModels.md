@@ -8,6 +8,10 @@
 - [lifelines](https://github.com/CamDavidsonPilon/lifelines)
 - [Stata](https://www.stata.com/python/pystata19/) (see [documentation](pystataIntegration.ipynb))
 
+In addition, packages can support `maketables` themselves through the plug-in format (see below), for example:
+
+- [ModernDiD](https://github.com/jordandeklerk/moderndid) for difference-in-differences estimators (see its guide on [publication tables](https://moderndid.readthedocs.io/en/latest/user_guide/publication_tables.html))
+
 # Adding Support for New Model Classes
 
 There are two ways to make a statistical packages compatible with `ETables` in `maketables` for automatic table generation:
