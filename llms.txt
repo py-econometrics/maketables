@@ -1,0 +1,48 @@
+# maketables
+
+> maketables is a Python package (`pip install maketables`) for publication-ready tables: regression tables (`ETable`), descriptive statistics (`DTable`), balance tables (`BTable`) and custom tables from pandas DataFrames (`MTable`). Every table renders to HTML (Great Tables, shown inline in Jupyter), LaTeX, Word (docx) and Typst via `.make(type="gt" | "tex" | "docx" | "typst")` and saves to file via `.save(...)`.
+
+`ETable` supports pyfixest, statsmodels, linearmodels, lifelines and Stata models out of the box. Any other package can make its result objects work with `ETable` through the plug-in format: add a `__maketables_coef_table__` property (a DataFrame with columns `b`, `se`, `p`, optionally `t`, `ci95l`, `ci95u`, ...) and optionally `__maketables_stat__(key)`, `__maketables_depvar__` and further `__maketables_*__` attributes to the result class. The package does not need to import maketables. Example: ModernDiD (difference-in-differences) uses this format.
+
+Typical use:
+
+```python
+import maketables as mt
+import pyfixest as pf
+
+est1 = pf.feols("mpg ~ weight", data=df)
+est2 = pf.feols("mpg ~ weight + length", data=df)
+mt.ETable([est1, est2], labels={"mpg": "Miles per gallon"}).make("tex")
+mt.DTable(df, vars=["mpg", "weight"], bycol=["foreign"])
+```
+
+## Plug-in format (supporting maketables from another package)
+
+- [Plug-in specification](https://raw.githubusercontent.com/py-econometrics/maketables/main/PLUGIN_EXTRACTOR_FORMAT.md): all `__maketables_*__` attributes, coefficient-table columns, statistic keys and a runnable example (plain Markdown)
+- [Adding model classes](https://py-econometrics.github.io/maketables/docs/AddingModelClasses.html): plug-in format and the alternative of registering a custom `ModelExtractor`
+- [ModernDiD publication tables](https://moderndid.readthedocs.io/en/latest/user_guide/publication_tables.html): a real-world package implementing the plug-in format
+
+## Docs
+
+- [Getting started](https://py-econometrics.github.io/maketables/docs/getting-started.html): overview of all table types
+- [Regression tables (ETable)](https://py-econometrics.github.io/maketables/docs/ETable.html): coefficient formats, labels, keep/drop/order, model statistics, headers
+- [Descriptive statistics (DTable)](https://py-econometrics.github.io/maketables/docs/DTable.html): statistics by groups, balance tables
+- [Custom tables (MTable)](https://py-econometrics.github.io/maketables/docs/MTable.html): tables from any pandas DataFrame
+- [Variable labels](https://py-econometrics.github.io/maketables/docs/UsingLabels.html): labels from Stata files and DataFrames
+- [Supported models](https://py-econometrics.github.io/maketables/docs/SupportedModels.html)
+- [API reference](https://py-econometrics.github.io/maketables/reference/): ETable, DTable, BTable, MTable and helper functions
+
+## Output formats
+
+- [LaTeX](https://py-econometrics.github.io/maketables/docs/LatexTables.html)
+- [Word](https://py-econometrics.github.io/maketables/docs/DocxTables.html)
+- [Typst](https://py-econometrics.github.io/maketables/docs/TypstTables.html)
+- [Writing papers with Quarto](https://py-econometrics.github.io/maketables/docs/WritingPapers.html): tables render as HTML in notebooks and as LaTeX in the PDF
+
+## Optional
+
+- [Source code](https://github.com/py-econometrics/maketables)
+- [Changelog](https://raw.githubusercontent.com/py-econometrics/maketables/main/CHANGELOG.md)
+- [Stata integration](https://py-econometrics.github.io/maketables/docs/pystataIntegration.html)
+- [lifelines survival models](https://py-econometrics.github.io/maketables/docs/Lifelines.html)
+- [linearmodels](https://py-econometrics.github.io/maketables/docs/Linearmodels.html)

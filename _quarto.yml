@@ -8,6 +8,9 @@ project:
     # The example paper is a download for the Writing Papers page, not a page
     # of its own; rendering it would also make Quarto rewrite links to it.
     - "!docs/examples/"
+  # Plain-text overview for LLMs / coding agents (https://llmstxt.org)
+  resources:
+    - llms.txt
 
 website:
   title: "MakeTables"

@@ -9,12 +9,18 @@ authors = [
     {name = "Alexander Fischer", email = "alexander-fischer1801@t-online.de"},
     {name = "Dirk Sliwka", email = "dirk.sliwka@uni-koeln.de"},
 ]
-description = "A Python package for creating publication-ready tables from regression results (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables with output to LaTeX, Word, and HTML/Great Tables"
+description = "Publication-ready tables from regression results (pyfixest, statsmodels, linearmodels, lifelines, Stata, or any package via a plug-in interface), descriptive statistics, and balance tables, with output to LaTeX, Word, Typst, and HTML (via Great Tables)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 
-keywords = ["tables", "statistics", "regression", "econometrics", "latex", "publication", "pyfixest", "statsmodels"]
+keywords = [
+    "tables", "regression table", "results table", "summary statistics",
+    "descriptive statistics", "balance table", "statistics", "regression",
+    "econometrics", "publication", "latex", "docx", "word", "typst", "html",
+    "great-tables", "etable", "stargazer", "plugin", "pyfixest", "statsmodels",
+    "linearmodels", "lifelines", "stata",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",

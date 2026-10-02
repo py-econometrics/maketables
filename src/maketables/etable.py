@@ -455,11 +455,30 @@ class ETable(MTable):
             df.index.name = "Coefficient"
         return df
 
+    def _extract_se_type(self, model: Any) -> Any:
+        """S.E. type from the "se_type" stat, else built from vcov_info()."""
+        extractor = self._get_extractor(model)
+        raw = extractor.stat(model, "se_type")
+        if raw:
+            return raw
+        # Fallback for extractors/plug-ins that only describe the variance
+        # estimator via vcov_info() ({"vcov_type": ..., "clustervar": ...}).
+        try:
+            vcov = self._extract_vcov_info(model) or {}
+        except Exception:
+            vcov = {}
+        clustervar = vcov.get("clustervar")
+        if clustervar:
+            if not isinstance(clustervar, str):
+                clustervar = "+".join(map(str, clustervar))
+            return f"by: {clustervar}"
+        return vcov.get("vcov_type") or "-"
+
     def _extract_stat(self, model: Any, key: str) -> str:
-        raw = self._get_extractor(model).stat(model, key)
         # format uniformly
         if key == "se_type":
-            return raw or "-"
+            return self._extract_se_type(model)
+        raw = self._get_extractor(model).stat(model, key)
         if raw is None:
             return "-"
         if isinstance(raw, (int, np.integer)):
