@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Models from packages installed after importing maketables**: pyfixest and linearmodels models raised `TypeError: No extractor available for model type: Feols` when the package was installed (or first became importable) after maketables had already been imported, e.g. `pip install pyfixest` midway through a Colab notebook. Their model classes are now looked up when a model is checked instead of once at import time.
 - **great_tables >= 1.0 compatibility**: Line breaks in body cells, row labels, and row-group labels (e.g. the coefficient / standard-error cells of `ETable`) rendered as literal `<br>` text with great_tables 1.0, which now HTML-escapes these values by default. User text is now escaped by maketables itself before the `<br>` tags are added, so HTML output is identical across great_tables versions (tested with 0.18, 0.24, and 1.0) and markup in labels or cells is shown as text rather than rendered.
 
 ## [0.1.8]
