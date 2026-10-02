@@ -223,7 +223,8 @@ class PluginExtractor:
     - __maketables_var_labels__ (property): Returns dict mapping var names to labels or None
     - __maketables_vcov_info__ (property): Returns dict with vcov metadata or None
     
-    See PLUGIN_EXTRACTOR_FORMAT.md for detailed specifications.
+    See https://github.com/py-econometrics/maketables/blob/main/PLUGIN_EXTRACTOR_FORMAT.md
+    for detailed specifications.
     """
     
     def can_handle(self, model: Any) -> bool:
@@ -310,7 +311,8 @@ def get_extractor(model: Any) -> ModelExtractor:
     2. Check for plug-in format (__maketables_coef_table__ attribute)
     
     The plug-in format allows external packages to integrate without modifying maketables.
-    See PLUGIN_EXTRACTOR_FORMAT.md for specifications.
+    See https://github.com/py-econometrics/maketables/blob/main/PLUGIN_EXTRACTOR_FORMAT.md
+    for specifications.
 
     Args:
         model: Statistical model object to find an extractor for.
@@ -357,7 +359,8 @@ def get_extractor(model: Any) -> ModelExtractor:
         "  - __maketables_coef_table__ (property): Returns DataFrame with columns b, se, t, p\n"
         "  - __maketables_stat__(key) (method): Returns statistic by key\n"
         "  - __maketables_depvar__ (property): Returns dependent variable name\n\n"
-        "See PLUGIN_EXTRACTOR_FORMAT.md for full specifications.\n\n"
+        "Full specification and example:\n"
+        "  https://github.com/py-econometrics/maketables/blob/main/PLUGIN_EXTRACTOR_FORMAT.md\n\n"
         "To register a custom extractor, implement the ModelExtractor protocol "
         "and use register_extractor()."
     )
