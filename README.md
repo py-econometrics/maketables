@@ -10,7 +10,7 @@
 
 [Docs](https://py-econometrics.github.io/maketables/docs/getting-started.html) · [Function & API Reference](https://py-econometrics.github.io/maketables/reference/) · [Report Bugs & Request Features](https://github.com/py-econometrics/maketables/issues) · [Adding Support for new Model Classes](https://py-econometrics.github.io/maketables/docs/AddingModelClasses.html)
 
-A Python package for creating publication-ready tables from regression results (`statsmodels`, `pyfixest`, `linearmodels`), descriptive statistics, and balance tables with output to *LaTeX*, *Word*, *HTML* and *Typst* via [Great Tables](https://github.com/posit-dev/great-tables). To get started, check out the [Getting Started Notebook](https://py-econometrics.github.io/maketables/docs/getting-started.html).
+A Python package for creating publication-ready tables from regression results (`statsmodels`, `pyfixest`, `linearmodels`), descriptive statistics, and balance tables with output to *LaTeX*, *Word*, *Typst* and *HTML* (HTML tables are created with [Great Tables](https://github.com/posit-dev/great-tables)). To get started, check out the [Getting Started Notebook](https://py-econometrics.github.io/maketables/docs/getting-started.html).
 
 ## Overview
 

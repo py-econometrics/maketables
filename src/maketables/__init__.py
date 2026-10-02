@@ -1,8 +1,9 @@
 """
 maketables: publication-ready tables from regression results and data.
 
-Main classes (all render to HTML via Great Tables, LaTeX, Word and Typst with
-``.make(type="gt" | "tex" | "docx" | "typst")`` and save with ``.save(...)``):
+Main classes (all render to HTML, LaTeX, Word and Typst with
+``.make(type="gt" | "tex" | "docx" | "typst")`` and save with ``.save(...)``;
+the HTML output is created with Great Tables):
 
 - ``ETable``: regression tables from pyfixest, statsmodels, linearmodels,
   lifelines and Stata models, and from any package implementing the plug-in

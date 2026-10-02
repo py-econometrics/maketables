@@ -9,7 +9,7 @@ authors = [
     {name = "Alexander Fischer", email = "alexander-fischer1801@t-online.de"},
     {name = "Dirk Sliwka", email = "dirk.sliwka@uni-koeln.de"},
 ]
-description = "Publication-ready tables from regression results (pyfixest, statsmodels, linearmodels, lifelines, Stata, or any package via a plug-in interface), descriptive statistics, and balance tables, with output to LaTeX, Word, Typst, and HTML/Great Tables"
+description = "Publication-ready tables from regression results (pyfixest, statsmodels, linearmodels, lifelines, Stata, or any package via a plug-in interface), descriptive statistics, and balance tables, with output to LaTeX, Word, Typst, and HTML (via Great Tables)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

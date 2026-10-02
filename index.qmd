@@ -17,7 +17,7 @@ title: "MakeTables"
 </p>
 ```
 
-A Python package for creating publication-ready tables from regression results, descriptive statistics, and balance tables with output to LaTeX, Word, and HTML via [Great Tables](https://github.com/posit-dev/great-tables).
+A Python package for creating publication-ready tables from regression results, descriptive statistics, and balance tables with output to LaTeX, Word, Typst, and HTML (HTML tables are created with [Great Tables](https://github.com/posit-dev/great-tables)).
 
 ## Overview
 
