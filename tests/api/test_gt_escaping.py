@@ -53,6 +53,37 @@ class TestEtableCells:
         assert "<b>bold</b>" not in html
 
 
+class TestHeaders:
+    """Model headers, depvar labels and spanners, which GT always escapes."""
+
+    @staticmethod
+    def _visible_text(html):
+        # GT derives spanner id="..." attributes from the label text, where an
+        # escaped &lt;br&gt; is harmless; only check what is actually shown.
+        return re.sub(r"<[^>]*>", "|", html)
+
+    @pytest.mark.parametrize(
+        ("kwargs", "expected"),
+        [
+            ({"model_heads": ["Head one\nHead two"]}, "Head one<br>Head two"),
+            ({"model_heads": [["Top one\nTop two"], ["a\nb"]]}, "Top one<br>Top two"),
+            ({"model_heads": [["Top"], ["a\nb"]]}, "a<br>b"),
+            ({"labels": {"y": "Dep one\nDep two"}}, "Dep one<br>Dep two"),
+            ({"model_heads": ["a < b\nc"]}, "a &lt; b<br>c"),
+        ],
+    )
+    def test_etable_header_linebreak(self, fitted_model, kwargs, expected):
+        html = _gt_html(mt.ETable([fitted_model], **kwargs))
+        assert expected in html
+        assert "&lt;br&gt;" not in self._visible_text(html)
+
+    def test_dtable_bycol_header_linebreak(self, simple_df):
+        df = simple_df.assign(group=simple_df["group"].map({"A": "Col\nA", "B": "B"}))
+        html = _gt_html(mt.DTable(df, vars=["x"], bycol=["group"]))
+        assert "Col<br>A" in html
+        assert "&lt;br&gt;" not in self._visible_text(html)
+
+
 class TestMtableLabels:
     """Body cells, row labels and row-group labels in MTable."""
 
