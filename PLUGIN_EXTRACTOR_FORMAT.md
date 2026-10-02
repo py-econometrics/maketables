@@ -81,7 +81,7 @@ back to the default shown.
 | `__maketables_var_labels__` | property | `dict[str, str]` mapping variable names to display labels, or `None` | names shown as-is |
 | `__maketables_stat_labels__` | property | `dict[str, str]` mapping statistic keys to display labels, or `None` | built-in labels (below) |
 | `__maketables_default_stat_keys__` | property | `list[str]` of statistic keys to show when the user passes no `model_stats` | `["N", "r2"]` |
-| `__maketables_vcov_info__` | property | `dict` with variance metadata (e.g. `{"se_type": "cluster", "cluster_var": "firm"}`), or `None` | `{}`; currently informational only, to show the S.E. type in the table return it from `__maketables_stat__("se_type")` |
+| `__maketables_vcov_info__` | property | `dict` describing the variance estimator with the keys `vcov_type` (e.g. `"hetero"`, `"CRV1"`) and `clustervar` (cluster variable name or list of names, or `None`), or `None` | `{}`; see [S.E. type](#se-type) below |
 
 Labels passed by the user to `ETable` (`labels=`, `model_stats_labels=`) always
 take precedence over labels from the model.
@@ -120,6 +120,17 @@ take precedence over labels from the model.
 Other keys are shown with the key as label unless you provide one via
 `__maketables_stat_labels__`. Integers and floats are formatted by maketables;
 strings are shown as-is.
+
+### S.E. type
+
+The "S.E. type" row appears when the user requests it
+(`ETable(model_stats=[..., "se_type"])`) or when your
+`__maketables_default_stat_keys__` includes `"se_type"`. Its value is
+`__maketables_stat__("se_type")` if that returns a value. Otherwise maketables
+builds it from `__maketables_vcov_info__`: `"by: <clustervar>"` if a cluster
+variable is given (several are joined with `+`), else the `vcov_type`. So either
+attribute is enough; `__maketables_stat__("se_type")` lets you choose the exact
+text. `maketables.inspect_model()` also prints the `vcov_info` values.
 
 ## Alternative: a registered extractor
 

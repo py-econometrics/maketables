@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Plug-in specification** [`PLUGIN_EXTRACTOR_FORMAT.md`](https://github.com/py-econometrics/maketables/blob/main/PLUGIN_EXTRACTOR_FORMAT.md): all `__maketables_*__` attributes, coefficient-table columns, statistic keys and a runnable example. The "No extractor available" error now links to it.
+- `llms.txt` on the documentation site and a package docstring (`help(maketables)`) to help coding agents find and use maketables and its plug-in interface
+
+### Changed
+- The "S.E. type" row falls back to the model's `vcov_info()` (`vcov_type`, `clustervar`) when the extractor or plug-in returns no `se_type` statistic. Plug-ins can now provide the S.E. type via `__maketables_vcov_info__`; lifelines and Stata models show their S.E. type instead of "-" when `se_type` is requested.
+
 ## [0.1.9] - 2026-10-02
 
 ### Added
