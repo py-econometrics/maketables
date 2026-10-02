@@ -1,6 +1,13 @@
 project:
   type: website
   output-dir: _site
+  render:
+    - "*.qmd"
+    - "*.ipynb"
+    - "*.md"
+    # The example paper is a download for the Writing Papers page, not a page
+    # of its own; rendering it would also make Quarto rewrite links to it.
+    - "!docs/examples/"
 
 website:
   title: "MakeTables"
