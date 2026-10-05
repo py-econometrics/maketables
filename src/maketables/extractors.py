@@ -13,34 +13,50 @@ import pandas as pd
 
 from .importdta import get_var_labels
 
-# Optional imports for built-ins
-try:
-    from pyfixest.estimation.models.feiv_ import Feiv  # ty: ignore[unresolved-import]
-    from pyfixest.estimation.models.feols_ import Feols  # ty: ignore[unresolved-import]
-    from pyfixest.estimation.models.fepois_ import (  # ty: ignore[unresolved-import]
-        Fepois,
+
+# Optional built-in model packages (pyfixest, linearmodels) are resolved lazily
+# when a model is checked, not at import time: a package installed after
+# maketables was imported (e.g. via pip mid-notebook) must still be recognized.
+def _from_package(model: Any, package: str) -> bool:
+    """Check whether the model's class (or a base class) comes from `package`."""
+    return any(
+        (getattr(cls, "__module__", None) or "").startswith(package + ".")
+        for cls in type(model).__mro__
     )
-except ImportError:
+
+
+def _pyfixest_types() -> tuple[type, ...]:
+    """Return pyfixest's model classes, or () if pyfixest is not importable."""
     try:
-        from pyfixest.estimation.feiv_ import Feiv
-        from pyfixest.estimation.feols_ import Feols
-        from pyfixest.estimation.fepois_ import Fepois
+        from pyfixest.estimation.models.feiv_ import (
+            Feiv,  # ty: ignore[unresolved-import]
+        )
+        from pyfixest.estimation.models.feols_ import (
+            Feols,  # ty: ignore[unresolved-import]
+        )
+        from pyfixest.estimation.models.fepois_ import (  # ty: ignore[unresolved-import]
+            Fepois,
+        )
     except ImportError:
-        Feols = Fepois = Feiv = ()  # ty: ignore[conflicting-declarations]
+        try:
+            from pyfixest.estimation.feiv_ import Feiv
+            from pyfixest.estimation.feols_ import Feols
+            from pyfixest.estimation.fepois_ import Fepois
+        except ImportError:
+            return ()
+    return (Feols, Fepois, Feiv)
 
-try:
-    # Import linearmodels result classes (not model classes!)
-    from linearmodels.iv.results import IVResults
-    from linearmodels.panel.results import PanelResults
 
-    HAS_LINEARMODELS = True
-    # All panel results inherit from PanelResults
-    # All IV results inherit from IVResults (including AbsorbingLS)
-    PanelOLSResults = RandomEffectsResults = PanelResults
-    IV2SLSResults = IVGMMResults = IVResults
-except Exception:
-    HAS_LINEARMODELS = False
-    PanelOLSResults = RandomEffectsResults = IV2SLSResults = IVGMMResults = ()
+def _linearmodels_types() -> tuple[type, ...]:
+    """Return linearmodels' result base classes, or () if not importable."""
+    try:
+        # Result classes (not model classes!). All panel results inherit from
+        # PanelResults, all IV results (including AbsorbingLS) from IVResults.
+        from linearmodels.iv.results import IVResults
+        from linearmodels.panel.results import PanelResults
+    except Exception:
+        return ()
+    return (PanelResults, IVResults)
 
 
 @runtime_checkable
@@ -218,14 +234,13 @@ class PluginExtractor:
     - __maketables_stat__(key) (method): Returns statistic by key
         (e.g., 'N', 'r2', 'adj_r2')
     - __maketables_depvar__ (property): Returns dependent variable name as str
-    - __maketables_fixef_string__ (property): Returns fixed effects string
+    - __maketables_fixef_string__ (property): Returns fixed effects string or None
+    - __maketables_var_labels__ (property): Returns dict mapping var names to labels
         or None
-    - __maketables_var_labels__ (property): Returns dict mapping var names
-        to labels or None
-    - __maketables_vcov_info__ (property): Returns dict with vcov metadata
-        or None
+    - __maketables_vcov_info__ (property): Returns dict with vcov metadata or None
 
-    See PLUGIN_EXTRACTOR_FORMAT.md for detailed specifications.
+    See https://github.com/py-econometrics/maketables/blob/main/PLUGIN_EXTRACTOR_FORMAT.md
+    for detailed specifications.
     """
 
     def can_handle(self, model: Any) -> bool:
@@ -312,8 +327,10 @@ def get_extractor(model: Any) -> ModelExtractor:
     1. Check registered extractors (package-specific implementations)
     2. Check for plug-in format (__maketables_coef_table__ attribute)
 
-    The plug-in format allows external packages to integrate without
-    modifying maketables. See PLUGIN_EXTRACTOR_FORMAT.md for specifications.
+    The plug-in format allows external packages to integrate without modifying
+    maketables.
+    See https://github.com/py-econometrics/maketables/blob/main/PLUGIN_EXTRACTOR_FORMAT.md
+    for specifications.
 
     Args:
         model: Statistical model object to find an extractor for.
@@ -362,7 +379,8 @@ def get_extractor(model: Any) -> ModelExtractor:
         "columns b, se, t, p\n"
         "  - __maketables_stat__(key) (method): Returns statistic by key\n"
         "  - __maketables_depvar__ (property): Returns dependent variable name\n\n"
-        "See PLUGIN_EXTRACTOR_FORMAT.md for full specifications.\n\n"
+        "Full specification and example:\n"
+        "  https://github.com/py-econometrics/maketables/blob/main/PLUGIN_EXTRACTOR_FORMAT.md\n\n"
         "To register a custom extractor, implement the ModelExtractor protocol "
         "and use register_extractor()."
     )
@@ -657,13 +675,10 @@ class PyFixestExtractor:
 
     def can_handle(self, model: Any) -> bool:
         """Check if model is a pyfixest model type."""
-        # If pyfixest types are empty tuples, it means pyfixest is not available
-        if Feols == ():
+        if not _from_package(model, "pyfixest"):
             return False
-        try:
-            return isinstance(model, (Feols, Fepois, Feiv))
-        except Exception:
-            return False
+        types = _pyfixest_types()
+        return bool(types) and isinstance(model, types)
 
     def coef_table(self, model: Any) -> pd.DataFrame:
         """
@@ -982,18 +997,15 @@ class LinearmodelsExtractor:
 
     def can_handle(self, model: Any) -> bool:
         """Check if this extractor can handle the given model."""
-        # If linearmodels types are empty tuples, linearmodels is not available
-        if PanelOLSResults == ():
-            return False
-
         # Check module first (fast check)
         mod = type(model).__module__ or ""
         if not mod.startswith("linearmodels."):
             return False
 
-        # Check if it's a linearmodels result type
-        # Need to handle both PanelResults and IVResults (AbsorbingLS is IVResults)
-        if isinstance(model, (PanelOLSResults, IV2SLSResults)):
+        types = _linearmodels_types()
+        if not types:
+            return False
+        if isinstance(model, types):
             return True
 
         # Fallback: check for required attributes

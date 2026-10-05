@@ -108,11 +108,18 @@ class ETable(MTable):
     notes : str, optional
         Table notes. If "", a default note with significance levels and the
         coef cell format is generated.
-    model_heads : list[str], optional
-        Optional model headers (e.g., country names).
+    model_heads : list[str] | list[list[str]], optional
+        Optional model headers (e.g., country names). Pass a flat list (one
+        entry per model) for a single header row, or a list of levels (each
+        an inner list/tuple with one entry per model) for multiple stacked
+        header rows, e.g. [["USA","USA","UK","UK"], ["OLS","IV","OLS","IV"]].
+        Levels are stacked top-to-bottom in the order given. Each level may
+        be left empty ("") for some models to merge cells via spanners.
     head_order : {"dh","hd","d","h",""}, optional
-        Header level order: d=dep var, h=model header. "" shows only model numbers.
-        Default ETable.DEFAULT_HEAD_ORDER = "dh".
+        Header level order: d=dep var, h=model header(s). "" shows only model
+        numbers. When model_heads defines multiple levels, all of them are
+        inserted together wherever "h" appears. Default
+        ETable.DEFAULT_HEAD_ORDER = "dh".
     caption : str, optional
         Table caption (passed to MTable).
     tab_label : str, optional
@@ -202,7 +209,7 @@ class ETable(MTable):
         show_fe: bool | None = None,
         felabels: dict | None = None,
         notes: str = "",
-        model_heads: list | None = None,
+        model_heads: list[str] | list[list[str]] | None = None,
         head_order: HeadOrder | None = None,
         caption: str | None = None,
         tab_label: str | None = None,
@@ -272,8 +279,7 @@ class ETable(MTable):
             model_heads = [self._extract_sample_split(m) or "" for m in models]
             if not any(model_heads):
                 model_heads = None
-        if model_heads is not None and len(model_heads) != len(models):
-            raise ValueError("model_heads must have one entry per model.")
+        model_heads = self._normalize_model_heads(model_heads, len(models))
 
         if head_order not in ["dh", "hd", "d", "h", ""]:
             raise ValueError("head_order must be one of 'dh', 'hd', 'd', 'h', ''.")
@@ -451,7 +457,13 @@ class ETable(MTable):
         return self._get_extractor(model).fixef_string(model)
 
     def _extract_sample_split(self, model: Any) -> str | None:
-        return self._get_extractor(model).sample_split(model)
+        extractor = self._get_extractor(model)
+        # sample_split() was added after the extractor Protocol was first published;
+        # third-party extractors registered against the older interface may not
+        # implement it, so this must degrade gracefully rather than crash on every call.
+        if not hasattr(extractor, "sample_split"):
+            return None
+        return extractor.sample_split(model)
 
     def _extract_vcov_info(self, model: Any) -> dict[str, Any]:
         return self._get_extractor(model).vcov_info(model)
@@ -463,11 +475,30 @@ class ETable(MTable):
             df.index.name = "Coefficient"
         return df
 
+    def _extract_se_type(self, model: Any) -> Any:
+        """S.E. type from the "se_type" stat, else built from vcov_info()."""
+        extractor = self._get_extractor(model)
+        raw = extractor.stat(model, "se_type")
+        if raw:
+            return raw
+        # Fallback for extractors/plug-ins that only describe the variance
+        # estimator via vcov_info() ({"vcov_type": ..., "clustervar": ...}).
+        try:
+            vcov = self._extract_vcov_info(model) or {}
+        except Exception:
+            vcov = {}
+        clustervar = vcov.get("clustervar")
+        if clustervar:
+            if not isinstance(clustervar, str):
+                clustervar = "+".join(map(str, clustervar))
+            return f"by: {clustervar}"
+        return vcov.get("vcov_type") or "-"
+
     def _extract_stat(self, model: Any, key: str) -> str:
-        raw = self._get_extractor(model).stat(model, key)
         # format uniformly
         if key == "se_type":
-            return raw or "-"
+            return self._extract_se_type(model)
+        raw = self._get_extractor(model).stat(model, key)
         if raw is None:
             return "-"
         if isinstance(raw, (int, np.integer)):
@@ -728,29 +759,72 @@ class ETable(MTable):
             out.columns = like_columns
         return out
 
+    @staticmethod
+    def _normalize_model_heads(
+        model_heads: list[Any] | None,
+        n_models: int,
+    ) -> list[list[str]] | None:
+        """
+        Normalize model_heads into a list of header levels (each aligned to models).
+
+        Accepts either the flat single-row form (one entry per model) or the
+        nested multi-level form (a list of levels, each itself a list/tuple
+        with one entry per model), and always returns the nested form so that
+        validation and header assembly share a single notion of shape.
+
+        Raises
+        ------
+        AssertionError
+            If a level's length doesn't match n_models, or if the nested form
+            is used but an element isn't itself a list/tuple (which would
+            otherwise be silently iterated into per-character entries).
+        """
+        if model_heads is None:
+            return None
+
+        is_nested = len(model_heads) > 0 and isinstance(model_heads[0], (list, tuple))
+        if is_nested:
+            levels = []
+            for level in model_heads:
+                if not isinstance(level, (list, tuple)):
+                    raise TypeError(
+                        "When model_heads is a list of levels, every level must "
+                        "itself be a list or tuple (one entry per model), not a "
+                        f"plain string: got {level!r}."
+                    )
+                if len(level) != n_models:
+                    raise ValueError("model_heads must have one entry per model.")
+                levels.append([str(h) for h in level])
+        else:
+            if len(model_heads) != n_models:
+                raise ValueError("model_heads must have one entry per model.")
+            levels = [[str(h) for h in model_heads]]
+
+        levels = [lvl for lvl in levels if any(str(h).strip() for h in lvl)]
+        return levels or None
+
     def _build_header_columns(
         self,
         dep_var_list: list[str],
-        model_heads: list[str] | None,
+        model_heads: list[list[str]] | None,
         head_order: HeadOrder,
         n_models: int,
     ) -> list[str] | pd.MultiIndex:
         id_dep = dep_var_list
         id_num = [f"({s})" for s in range(1, n_models + 1)]
 
-        id_head = None
-        if model_heads is not None:
-            id_head = list(model_heads)
-            if not any(str(h).strip() for h in id_head):
-                id_head = None
+        # model_heads is already normalized (via _normalize_model_heads) to a
+        # list of header levels, each aligned to models, with fully-blank
+        # levels dropped.
+        head_levels = model_heads
 
         if head_order == "":
             return id_num
 
         header_levels: list[list[str]] = []
         for c in head_order:
-            if c == "h" and id_head is not None:
-                header_levels.append(id_head)
+            if c == "h" and head_levels is not None:
+                header_levels.extend(head_levels)
             if c == "d":
                 header_levels.append(id_dep)
         header_levels.append(id_num)

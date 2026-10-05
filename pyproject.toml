@@ -5,20 +5,37 @@ requires = [ "hatch-vcs", "hatchling" ]
 [project]
 name = "maketables"
 description = """\
-  A Python package for creating publication-ready tables from regression results \
-  (statsmodels, pyfixest, linearmodels), descriptive statistics, and balance tables \
-  with output to LaTeX, Word, and HTML/Great Tables\
+  Publication-ready tables from regression results (pyfixest, statsmodels, \
+  linearmodels, lifelines, Stata, or any package via a plug-in interface), descriptive \
+  statistics, and balance tables, with output to LaTeX, Word, Typst, and HTML (via \
+  Great Tables)\
   """
 readme = "README.md"
 keywords = [
+  "balance table",
+  "descriptive statistics",
+  "docx",
   "econometrics",
+  "etable",
+  "great-tables",
+  "html",
   "latex",
+  "lifelines",
+  "linearmodels",
+  "plugin",
   "publication",
   "pyfixest",
   "regression",
+  "regression table",
+  "results table",
+  "stargazer",
+  "stata",
   "statistics",
   "statsmodels",
+  "summary statistics",
   "tables",
+  "typst",
+  "word",
 ]
 license = { text = "MIT" }
 requires-python = ">=3.10"
@@ -37,7 +54,7 @@ classifiers = [
 ]
 dynamic = [ "version" ]
 dependencies = [
-  "great-tables==0.18.*",
+  "great-tables>=0.2",
   "ipython>=7",
   "numpy>=1.20",
   "pandas>=1.3",
@@ -118,15 +135,24 @@ py312 = { features = [ "dev", "py312" ], solve-group = "py312" }
 py313 = { features = [ "dev", "py313" ], solve-group = "py313" }
 py314 = { features = [ "dev", "py314" ], solve-group = "py314" }
 [tool.pixi.feature.dev.dependencies]
+pymupdf = ">=1.26.1,<2"
 quarto = ">=1.8.25,<2"
+typst = ">=0.11"
 [tool.pixi.feature.dev.pypi-dependencies]
+# HTML snapshots embed great_tables' CSS, so all dev environments must resolve
+# the version the snapshots were generated with (newer versions are covered by
+# the great-tables-compat CI job).
+great-tables = "==0.18.*"
 maketables = { path = ".", editable = true, extras = [ "dev" ] }
+[tool.pixi.feature.dev.target.win-64.dependencies]
+pywin32 = "*"
 [tool.pixi.feature.dev.tasks]
 check = "pre-commit run --all-files"
 tests = "pytest tests/ -v"
 tests-with-cov = "pytest tests/ -v --cov=src/maketables --cov-report=xml"
 tests-update-snapshots = "pytest tests/ --snapshot-update -v"
 ty = "ty check"
+preview-pdf = "python scripts/preview_pdf.py"
 [tool.pixi.feature.docs.tasks]
 run-all-notebooks = """\
   jupyter nbconvert --execute --to notebook --inplace DTable.ipynb ETable.ipynb \
@@ -227,6 +253,8 @@ extend-ignore = [
   "S110",    # get_extractor/inspect_model intentionally probe multiple
   "S112",    # optional model backends and skip ones that error or don't
   "PERF203", # apply; catch-and-continue/pass is the point, not an oversight
+  "PLC0415", # Optional backends (pyfixest, linearmodels) are imported lazily at
+  # call time so packages installed after maketables is imported are recognized
 ]
 "src/maketables/interactive.py" = [
   "A002", # `vars` is the established public parameter name (matches
@@ -302,8 +330,27 @@ extend-ignore = [
   "PTH120",  # Example scripts use os.path for readability, not app code
   "PTH123",  # Example scripts use os.path for readability, not app code
 ]
+"scripts/*.py" = [
+  "ANN001",  # Developer CLI helper, not shipped with the package
+  "BLE001",  # Rendering failures of one format must not abort the others
+  "E501",    # Long f-strings/help text, wrapped by the formatter where possible
+  "INP001",  # Standalone script, not a package module
+  "PLC0415", # Heavy/optional imports are deferred until a format is rendered
+  "PLW1510", # subprocess exit codes are checked explicitly where they matter
+  "S110",    # Missing optional tool or file is skipped silently by design
+  "S603",    # Runs fixed local converters (typst, quarto, pdflatex) on temp files
+  "SLF001",  # Uses MTable internals to render each output format
+  "T201",    # Prints progress to the terminal; this is a CLI tool
+]
 "tests/**/*.py" = [
   "ANN001",  # Missing type annotation for function argument
+  "ANN204",  # Missing return type annotation for special method
+  "ANN205",  # Missing return type annotation for static method
+  "ARG002",  # Unused method argument in test doubles mirroring a protocol
+  "D102",    # Missing docstring in public method (test methods)
+  "D205",    # 1 blank line required between summary line and description
+  "D301",    # Use r""" if any backslashes in a docstring
+  "S603",    # Tests launch the current interpreter in a subprocess
   "ANN002",  # Missing type annotation for *args
   "ANN003",  # Missing type annotation for **kwargs
   "ANN201",  # Missing return type annotation for public function

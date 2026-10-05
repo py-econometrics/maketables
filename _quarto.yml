@@ -2,6 +2,16 @@
 project:
   type: website
   output-dir: _site
+  render:
+    - '*.qmd'
+    - '*.ipynb'
+    - '*.md'
+    # The example paper is a download for the Writing Papers page, not a page
+    # of its own; rendering it would also make Quarto rewrite links to it.
+    - '!docs/examples/'
+  # Plain-text overview for LLMs / coding agents (https://llmstxt.org)
+  resources:
+    - llms.txt
 website:
   title: MakeTables
   description: A Python package for creating publication-ready tables
