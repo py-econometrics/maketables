@@ -6,6 +6,7 @@ from helpers import OUTPUT_TYPES, render_table
 import maketables as mt
 from maketables.dtable import _is_dummy_series
 
+
 class TestETableModelStats:
     """Snapshot tests for model_stats variations."""
 

@@ -1,8 +1,8 @@
 import html as _stdlib_html
-import os
 import json
-from typing import ClassVar
+import os
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 import pandas as pd
@@ -462,6 +462,7 @@ class MTable:
         elif type == "docx":
             return self._output_docx(**kwargs)
         elif type == "quarto":
+
             class QuartoRaw(str):
                 """String content with rich notebook renderers for Quarto backends."""
 
@@ -471,7 +472,7 @@ class MTable:
                     return obj
 
                 def _repr_mimebundle_(self, include=None, exclude=None):
-                    raw_block = f"```{{={self._fmt}}}\n{str(self)}\n```"
+                    raw_block = f"```{{={self._fmt}}}\n{self!s}\n```"
                     bundle = {"text/markdown": raw_block}
                     if self._fmt == "latex":
                         bundle["text/latex"] = str(self)

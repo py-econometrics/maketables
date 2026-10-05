@@ -140,11 +140,11 @@
     [], [(1)],
     table.hline(stroke: 0.05em),
     table.hline(stroke: 0.03em),
-    [x], [2.000\*\*\* \ (0.000)],
+    [x], [1.986\*\*\* \ (0.006)],
     table.hline(stroke: 0.03em),
     table.hline(stroke: 0.03em),
     [Observations], [100],
-    [$R^2$], [1],
+    [$R^2$], [0.999],
     table.hline(stroke: 0.08em),
     [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
   )
