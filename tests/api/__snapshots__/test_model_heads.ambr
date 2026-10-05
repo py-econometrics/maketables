@@ -80,18 +80,18 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.994*** <br> (0.011)</td>
+      <td class="gt_row gt_center">1.994*** <br> (0.011)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">group=B</th>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">-0.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">-0.005 <br> (0.020)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.000** <br> (0.000)</td>
-      <td class="gt_row gt_center">0.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.008 <br> (0.010)</td>
+      <td class="gt_row gt_center">0.010 <br> (0.015)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="3">stats</th>
@@ -103,8 +103,8 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.997</td>
+      <td class="gt_row gt_center">0.997</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -137,20 +137,20 @@
    & (1) & (2) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ (0.000)} & \makecell{2.100*** \\ (0.000)} \\
+  x & \makecell{1.994*** \\ (0.011)} & \makecell{1.994*** \\ (0.011)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  group=B &  & \makecell{-0.000*** \\ (0.000)} \\
+  group=B &  & \makecell{-0.005 \\ (0.020)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.000** \\ (0.000)} & \makecell{0.000*** \\ (0.000)} \\
+  Intercept & \makecell{0.008 \\ (0.010)} & \makecell{0.010 \\ (0.015)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Observations & 100 & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  $R^2$ & 1 & 1 \\
+  $R^2$ & 0.997 & 0.997 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -250,18 +250,18 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.994*** <br> (0.011)</td>
+      <td class="gt_row gt_center">1.994*** <br> (0.011)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">group=B</th>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">-0.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">-0.005 <br> (0.020)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.000** <br> (0.000)</td>
-      <td class="gt_row gt_center">0.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.008 <br> (0.010)</td>
+      <td class="gt_row gt_center">0.010 <br> (0.015)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="3">stats</th>
@@ -273,8 +273,8 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.997</td>
+      <td class="gt_row gt_center">0.997</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -309,20 +309,20 @@
    & (1) & (2) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ (0.000)} & \makecell{2.100*** \\ (0.000)} \\
+  x & \makecell{1.994*** \\ (0.011)} & \makecell{1.994*** \\ (0.011)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  group=B &  & \makecell{-0.000*** \\ (0.000)} \\
+  group=B &  & \makecell{-0.005 \\ (0.020)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.000** \\ (0.000)} & \makecell{0.000*** \\ (0.000)} \\
+  Intercept & \makecell{0.008 \\ (0.010)} & \makecell{0.010 \\ (0.015)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Observations & 100 & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  $R^2$ & 1 & 1 \\
+  $R^2$ & 0.997 & 0.997 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}

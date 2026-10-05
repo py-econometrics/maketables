@@ -126,9 +126,12 @@ def fitted_models(simple_df):
     """Create multiple fitted pyfixest models for multi-column tables."""
     import pyfixest as pf
 
-    np.random.seed(42)
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
     df = simple_df.copy()
-    df["y"] = 2 * df["x"] + np.random.randn(len(df)) * 0.1
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
 
     return [
         pf.feols("y ~ x", data=df),
@@ -141,9 +144,12 @@ def fitted_model_fe(simple_df):
     """Create a pyfixest model with fixed effects."""
     import pyfixest as pf
 
-    np.random.seed(42)
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
     df = simple_df.copy()
-    df["y"] = 2 * df["x"] + np.random.randn(len(df)) * 0.1
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
 
     # Model with group fixed effects
     return pf.feols("y ~ x | group", data=df)
@@ -157,9 +163,12 @@ def statsmodels_ols(simple_df):
     """Create a statsmodels OLS model."""
     import statsmodels.formula.api as smf
 
-    np.random.seed(42)
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
     df = simple_df.copy()
-    df["y"] = 2 * df["x"] + np.random.randn(len(df)) * 0.1
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
     return smf.ols("y ~ x", data=df).fit()
 
 
