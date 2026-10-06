@@ -72,7 +72,7 @@ dev = [
   "linearmodels>=4",
   "pre-commit>=4.3,<5",
   "pyfixest>=0.13,<0.31",
-  "pytest>=7",
+  "pytest>=9.0.3,<10",
   "pytest-cov>=4",
   "quartodoc>=0.7",
   "statsmodels>=0.13",
@@ -261,14 +261,15 @@ extend-ignore = [
   # DTable/ETable); renaming breaks caller code using vars=
 ]
 "src/maketables/mtable.py" = [
-  "N806",   # Variable names mirror OOXML/python-docx element tags (pPr, tcPr, ...)
-  "A002",   # `type` is the established public parameter name across
+  "N806",    # Variable names mirror OOXML/python-docx element tags (pPr, tcPr, ...)
+  "PLR0911", # make() dispatches to one return per output type
+  "A002",    # `type` is the established public parameter name across
   # make/save/__call__; renaming breaks caller code using type=
-  "PTH103", # save/update_docx/update_typst/update_tex use os.path for file
-  "PTH110", # resolution (splitext/isabs/join/dirname/exists); migrating to
-  "PTH112", # pathlib is a real behavior-adjacent refactor of core save/load
-  "PTH117", # logic, not a cosmetic swap - tracked as follow-up work rather
-  "PTH118", # than rushed into this lint-only branch.
+  "PTH103",  # save/update_docx/update_typst/update_tex use os.path for file
+  "PTH110",  # resolution (splitext/isabs/join/dirname/exists); migrating to
+  "PTH112",  # pathlib is a real behavior-adjacent refactor of core save/load
+  "PTH117",  # logic, not a cosmetic swap - tracked as follow-up work rather
+  "PTH118",  # than rushed into this lint-only branch.
   "PTH120",
   "PTH122",
   "PTH123",
