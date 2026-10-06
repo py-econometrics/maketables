@@ -28,15 +28,9 @@ def _from_package(model: Any, package: str) -> bool:
 def _pyfixest_types() -> tuple[type, ...]:
     """Return pyfixest's model classes, or () if pyfixest is not importable."""
     try:
-        from pyfixest.estimation.models.feiv_ import (  # ty: ignore[unresolved-import]
-            Feiv,
-        )
-        from pyfixest.estimation.models.feols_ import (  # ty: ignore[unresolved-import]
-            Feols,
-        )
-        from pyfixest.estimation.models.fepois_ import (  # ty: ignore[unresolved-import]
-            Fepois,
-        )
+        from pyfixest.estimation.models.feiv_ import Feiv
+        from pyfixest.estimation.models.feols_ import Feols
+        from pyfixest.estimation.models.fepois_ import Fepois
     except ImportError:
         try:
             from pyfixest.estimation.feiv_ import Feiv

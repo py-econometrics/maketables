@@ -571,8 +571,8 @@
     <tr>
       <th class="gt_row gt_left gt_stub">X1</th>
       <td class="gt_row gt_center">0.862*** <br> (0.225)</td>
-      <td class="gt_row gt_center">0.736** <br> (0.206)</td>
-      <td class="gt_row gt_center">0.947*** <br> (0.217)</td>
+      <td class="gt_row gt_center">0.736*** <br> (0.162)</td>
+      <td class="gt_row gt_center">0.947*** <br> (0.235)</td>
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center"></td>
@@ -583,8 +583,8 @@
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center">-0.209*** <br> (0.052)</td>
-      <td class="gt_row gt_center">-0.147*** <br> (0.039)</td>
-      <td class="gt_row gt_center">-0.210*** <br> (0.043)</td>
+      <td class="gt_row gt_center">-0.147*** <br> (0.040)</td>
+      <td class="gt_row gt_center">-0.210*** <br> (0.053)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
@@ -666,10 +666,10 @@
    & (1) & (2) & (3) & (4) & (5) & (6) \\
   \midrule
   \addlinespace[1ex]
-  X1 & \makecell{0.862*** \\ (0.225)} & \makecell{0.736** \\ (0.206)} & \makecell{0.947*** \\ (0.217)} &  &  &  \\
+  X1 & \makecell{0.862*** \\ (0.225)} & \makecell{0.736*** \\ (0.162)} & \makecell{0.947*** \\ (0.235)} &  &  &  \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  X2 &  &  &  & \makecell{-0.209*** \\ (0.052)} & \makecell{-0.147*** \\ (0.039)} & \makecell{-0.210*** \\ (0.043)} \\
+  X2 &  &  &  & \makecell{-0.209*** \\ (0.052)} & \makecell{-0.147*** \\ (0.040)} & \makecell{-0.210*** \\ (0.053)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Intercept & \makecell{0.929*** \\ (0.272)} &  &  & \makecell{1.560*** \\ (0.180)} &  &  \\
@@ -709,8 +709,8 @@
     [], [(1)], [(2)], [(3)], [(4)], [(5)], [(6)],
     table.hline(stroke: 0.05em),
     table.hline(stroke: 0.03em),
-    [X1], [0.862\*\*\* \ (0.225)], [0.736\*\* \ (0.206)], [0.947\*\*\* \ (0.217)], [], [], [],
-    [X2], [], [], [], [-0.209\*\*\* \ (0.052)], [-0.147\*\*\* \ (0.039)], [-0.210\*\*\* \ (0.043)],
+    [X1], [0.862\*\*\* \ (0.225)], [0.736\*\*\* \ (0.162)], [0.947\*\*\* \ (0.235)], [], [], [],
+    [X2], [], [], [], [-0.209\*\*\* \ (0.052)], [-0.147\*\*\* \ (0.040)], [-0.210\*\*\* \ (0.053)],
     [Intercept], [0.929\*\*\* \ (0.272)], [], [], [1.560\*\*\* \ (0.180)], [], [],
     table.hline(stroke: 0.03em),
     table.hline(stroke: 0.03em),

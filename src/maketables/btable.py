@@ -138,7 +138,7 @@ class BTable(DTable):
         pvalue_group = group_cols[0]
         if len(group_cols) > 1:
             pvalue_df = df.copy()
-            pvalue_group = "__maketables_btable_group"
+            pvalue_group = "maketables_btable_group"
             while pvalue_group in pvalue_df.columns:
                 pvalue_group = f"{pvalue_group}_"
 
