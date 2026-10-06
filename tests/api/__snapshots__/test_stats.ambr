@@ -432,7 +432,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Adj. R<sup>2</sup></th>
-      <td class="gt_row gt_center">-</td>
+      <td class="gt_row gt_center">0.999</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">RMSE</th>
@@ -480,7 +480,7 @@
   $R^2$ & 0.999 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Adj. $R^2$ & - \\
+  Adj. $R^2$ & 0.999 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   RMSE & 0.088 \\
@@ -512,7 +512,7 @@
     table.hline(stroke: 0.03em),
     [Observations], [100],
     [$R^2$], [0.999],
-    [Adj. $R^2$], [-],
+    [Adj. $R^2$], [0.999],
     [RMSE], [0.088],
     table.hline(stroke: 0.08em),
     [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
