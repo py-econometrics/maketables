@@ -54,7 +54,7 @@ jobs:
         shell: bash -el {0}
       - name: Upload coverage report
         if: runner.os == 'Linux' && matrix.environment == 'py314'
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Check snapshots are up to date

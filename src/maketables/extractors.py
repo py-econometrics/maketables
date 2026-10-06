@@ -728,7 +728,8 @@ class PyFixestExtractor:
             else getattr(m, "_vcov_type", None)
         ),
         "r2": "_r2",
-        "adj_r2": "_r2_adj",
+        # pyfixest >=0.60 names it _adj_r2; keep the old name as a fallback
+        "adj_r2": lambda m: getattr(m, "_adj_r2", getattr(m, "_r2_adj", None)),
         "r2_within": "_r2_within",
         "adj_r2_within": "_adj_r2_within",
         "rmse": "_rmse",
@@ -986,6 +987,18 @@ class StatsmodelsExtractor:
         return None
 
 
+def _linearmodels_cov_type(model: Any) -> Any:
+    """Return the covariance type of a linearmodels result.
+
+    IV results expose ``cov_type``; panel results (PanelOLS, PooledOLS, ...) only
+    expose the private ``_cov_type``.
+    """
+    val = getattr(model, "cov_type", None)
+    if val is None:
+        val = getattr(model, "_cov_type", None)
+    return val
+
+
 class LinearmodelsExtractor:
     """Extractor for linearmodels regression results."""
 
@@ -1163,7 +1176,7 @@ class LinearmodelsExtractor:
         "df_model": "df_model",
         "df_resid": "df_resid",
         # VCOV type
-        "se_type": "cov_type",
+        "se_type": _linearmodels_cov_type,
         # R-squared family
         "r2": "rsquared",
         "adj_r2": "rsquared_adj",
@@ -1201,7 +1214,7 @@ class LinearmodelsExtractor:
 
     def vcov_info(self, model: Any) -> dict[str, Any]:
         """Extract variance-covariance information from a linearmodels fitted model."""
-        return {"vcov_type": getattr(model, "cov_type", None), "clustervar": None}
+        return {"vcov_type": _linearmodels_cov_type(model), "clustervar": None}
 
     def var_labels(self, model: Any) -> dict[str, str] | None:
         """Extract variable labels from a linearmodels fitted model."""
