@@ -320,3 +320,56 @@ def linearmodels_iv2sls():
     # IV2SLS: y ~ x_exog + [x_endog ~ z]
     mod = IV2SLS.from_formula("y ~ 1 + x_exog + [x_endog ~ z]", data=df)
     return mod.fit(cov_type="robust")
+
+
+# Sample-table family shared by the output-format tests
+
+SAMPLE_TABLE_IDS = [
+    "etable_plain",
+    "etable_multi_model",
+    "etable_formatted",
+    "etable_merged_heads",
+    "etable_wide",
+    "dtable_plain",
+    "dtable_grouped",
+    "btable",
+]
+
+
+@pytest.fixture(params=SAMPLE_TABLE_IDS)
+def sample_table(request):
+    """Build one table of each kind: plain, multi-model, formatted, merged heads.
+
+    Parametrized so every output-format test runs against the whole family.
+    Fixtures are requested lazily, so each table only needs what it uses.
+    """
+    import maketables as mt
+
+    def get(name):
+        return request.getfixturevalue(name)
+
+    builders = {
+        "etable_plain": lambda: mt.ETable([get("fitted_model")]),
+        "etable_multi_model": lambda: mt.ETable(get("fitted_models")),
+        "etable_formatted": lambda: mt.ETable(
+            get("fitted_models"),
+            coef_fmt="b:.1f \n (se:.1f)",
+            labels={"x": "Regressor", "y": "Outcome"},
+            caption="Regression results",
+            notes="Custom note.",
+        ),
+        "etable_merged_heads": lambda: mt.ETable(
+            get("fitted_models"),
+            model_heads=[["Panel A", "Panel A"], ["Spec 1", "Spec 2"]],
+            head_order="h",
+        ),
+        "etable_wide": lambda: mt.ETable(get("fitted_models") * 3),
+        "dtable_plain": lambda: mt.DTable(get("simple_df"), vars=["x", "y"]),
+        "dtable_grouped": lambda: mt.DTable(
+            get("simple_df"), vars=["x", "y"], bycol=["group"]
+        ),
+        "btable": lambda: mt.BTable(
+            get("simple_df"), vars=["x", "y"], group="group", stats=["mean"]
+        ),
+    }
+    return builders[request.param]()
