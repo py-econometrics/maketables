@@ -194,3 +194,6 @@ _site/
 
 **/*.quarto_ipynb
 _freeze/
+
+# Claude Code local settings
+.claude/settings.local.json

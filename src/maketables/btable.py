@@ -1,5 +1,13 @@
+"""Balance tables: descriptive stats by group with per-variable p-values."""
+
+from typing import Any, Literal, cast
+
 import numpy as np
 import pandas as pd
+
+from .dtable import DTable
+
+PyfixestVcov = Literal["iid", "hetero", "HC1", "HC2", "HC3", "nid"]
 
 # Optional imports
 try:
@@ -9,12 +17,10 @@ try:
 except ImportError:
     HAS_PYFIXEST = False
 
-from .dtable import DTable
-
 
 class BTable(DTable):
     """
-    Balancing table: descriptive stats by group + per-variable p-values from group tests.
+    Balancing table: descriptive stats by group + per-variable p-values.
 
     Inherits DTable to build the stats table, then adds a 'p-value' column:
     - For 2 groups: p-value of the single group indicator (t test).
@@ -30,6 +36,13 @@ class BTable(DTable):
         Variables to include.
     group : str | list[str]
         Grouping column(s) in df.
+    byrow : str, optional
+        Optional row-grouping column (e.g. splits the table into a block of
+        rows per byrow level, such as "Principal" vs "Agent"). When set, the
+        group-effects regression used for the p-value column is run
+        separately within each byrow level, so the p-value tests balance
+        across `group` *within* that row-group rather than pooling across
+        byrow levels. Default None (no row grouping, matching prior behavior).
     labels : dict, optional
         Variable labels (used for display and in notes).
     digits : int, optional
@@ -37,9 +50,11 @@ class BTable(DTable):
     pdigits : int, optional
         Rounding for p-values. Default 3.
     vcov : str | dict, optional
-        VCV for the p-value models ("iid", "hetero", "HC1", "HC2", "HC3" or {"CRV1": "cluster"}). Default "iid".
+        VCV for the p-value models ("iid", "hetero", "HC1", "HC2", "HC3" or
+        {"CRV1": "cluster"}). Default "iid".
     fixed_effects : list[str] | None
-        Optional fixed effects for the p-value models (cosmetic in notes). Default None.
+        Optional fixed effects for the p-value models (cosmetic in notes).
+        Default None.
     stats : list[str] | None
         Stats for DTable (default ["mean", "std"]).
     stats_labels : dict[str, str] | None
@@ -62,6 +77,7 @@ class BTable(DTable):
         vars: list[str],
         group: str | list[str],
         *,
+        byrow: str | None = None,
         labels: dict[str, str] | None = None,
         digits: int = 2,
         pdigits: int = 3,
@@ -74,8 +90,8 @@ class BTable(DTable):
         counts_row_below: bool = False,
         observed: bool = False,
         notes: str = "",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         if not HAS_PYFIXEST:
             raise ImportError(
                 "BTable requires pyfixest. Install it with:\n"
@@ -85,12 +101,17 @@ class BTable(DTable):
             )
 
         group_cols = [group] if isinstance(group, str) else list(group)
-        assert group_cols, "group must contain at least one column."
-        assert all(col in df.columns for col in group_cols), (
-            "group must be a column or list of columns in the DataFrame."
-        )
+        if not group_cols:
+            raise ValueError("group must contain at least one column.")
+        if not all(col in df.columns for col in group_cols):
+            raise ValueError(
+                "group must be a column or list of columns in the DataFrame."
+            )
+        if byrow is not None and byrow not in df.columns:
+            raise ValueError("byrow must be a column in the DataFrame.")
         for v in vars:
-            assert v in df.columns, f"Variable '{v}' not in DataFrame."
+            if v not in df.columns:
+                raise ValueError(f"Variable '{v}' not in DataFrame.")
 
         stats = ["mean", "std"] if stats is None else list(stats)
 
@@ -100,7 +121,7 @@ class BTable(DTable):
             vars=vars,
             stats=stats,
             bycol=group_cols,
-            byrow=None,
+            byrow=byrow,
             labels=labels,
             stats_labels=stats_labels,
             format_spec=format_spec,
@@ -117,7 +138,7 @@ class BTable(DTable):
         pvalue_group = group_cols[0]
         if len(group_cols) > 1:
             pvalue_df = df.copy()
-            pvalue_group = "__maketables_btable_group"
+            pvalue_group = "maketables_btable_group"
             while pvalue_group in pvalue_df.columns:
                 pvalue_group = f"{pvalue_group}_"
 
@@ -126,30 +147,55 @@ class BTable(DTable):
             interaction[group_values.isna().any(axis=1)] = pd.NA
             pvalue_df[pvalue_group] = interaction
 
-        n_groups = pvalue_df[pvalue_group].nunique()
         pvals = pd.Series(index=self.df.index, dtype=str)
 
         fe_suffix = ""
         if fixed_effects:
             fe_suffix = f" | {'.'.join(fixed_effects)}"
 
-        for i, var in enumerate(vars):
-            formula = f"{var} ~ i({pvalue_group}){fe_suffix}"
-            model = pf.feols(formula, data=pvalue_df, vcov=vcov)
+        # With byrow set, self.df has one block of `vars` rows per byrow
+        # level (in the order DTable actually laid them out), and the
+        # group-effects test must run separately within each block so the
+        # p-value reflects balance across `group` *within* that row-group.
+        # Without byrow, this is a single implicit block over the full data,
+        # identical to the pre-byrow behavior.
+        if byrow is None:
+            row_blocks = [(None, pvalue_df)]
+        else:
+            byrow_levels = pd.unique(self.df.index.get_level_values(0))
+            row_blocks = [
+                (level, pvalue_df[pvalue_df[byrow] == level]) for level in byrow_levels
+            ]
 
-            if n_groups == 2:
-                # p-value of the single group indicator
-                pval = float(model._pvalue[1])
-            else:
-                # Joint test of all group indicators
-                k = model._k
-                R = np.zeros((k - 1, k))
-                for j in range(1, k):
-                    R[j - 1, j] = 1
-                q = np.zeros(k - 1)
-                pval = float(model.wald_test(R, q, distribution="chi2").pvalue)
+        row_pos = 0
+        for _, block_df in row_blocks:
+            n_groups = block_df[pvalue_group].nunique()
+            if n_groups < 2:
+                # Nothing to test: this row-group never sees more than one
+                # `group` value, so there's no balance to check.
+                pvals.iloc[row_pos : row_pos + len(vars)] = ""
+                row_pos += len(vars)
+                continue
 
-            pvals.iloc[i] = f"{pval:.{pdigits}f}"
+            for var in vars:
+                formula = f"{var} ~ i({pvalue_group}){fe_suffix}"
+                feols_vcov = cast("PyfixestVcov | dict[str, str]", vcov)
+                model: Any = pf.feols(formula, data=block_df, vcov=feols_vcov)
+
+                if n_groups == 2:
+                    # p-value of the single group indicator
+                    pval = float(model._pvalue[1])
+                else:
+                    # Joint test of all group indicators
+                    k = model._k
+                    R = np.zeros((k - 1, k))
+                    for j in range(1, k):
+                        R[j - 1, j] = 1
+                    q = np.zeros(k - 1)
+                    pval = float(model.wald_test(R, q, distribution="chi2").pvalue)
+
+                pvals.iloc[row_pos] = f"{pval:.{pdigits}f}"
+                row_pos += 1
 
         # Append the p-value column; handle MultiIndex columns
         if isinstance(self.df.columns, pd.MultiIndex):
@@ -199,11 +245,13 @@ class BTable(DTable):
 
             if fe_str and se_str:
                 chunks.append(
-                    f"p-values based on specifications including {fe_str} fixed effects and {se_str}"
+                    f"p-values based on specifications including {fe_str} "
+                    f"fixed effects and {se_str}"
                 )
             elif fe_str:
                 chunks.append(
-                    f"p-values based on specifications including {fe_str} fixed effects."
+                    f"p-values based on specifications including {fe_str} "
+                    "fixed effects."
                 )
             elif se_str:
                 chunks.append(f"p-values based on {se_str}.")

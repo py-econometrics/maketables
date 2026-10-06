@@ -1,44 +1,121 @@
-ci:
-  autofix_prs: false
-
-exclude: ^.*/__snapshots__/.*\.ambr$
-
+---
+exclude: (^|/)__snapshots__/
 repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: check-vcs-permalinks
       - id: debug-statements
       - id: trailing-whitespace
       - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+        types:
+          - text
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+        description: Forces to replace line ending by the UNIX 'lf' character.
       - id: check-yaml
-        args: [--allow-multiple-documents]
+        args:
+          - --allow-multiple-documents
       - id: check-toml
       - id: check-added-large-files
+        args:
+          - --maxkb=10000
         exclude: pixi.lock
+      - id: no-commit-to-branch
+        args:
+          - --branch
+          - main
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.21.2
+    hooks:
+      - id: pyproject-fmt
+  - repo: https://github.com/lyz-code/yamlfix
+    rev: 1.19.1
+    hooks:
+      - id: yamlfix
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.34.0
+    rev: 0.37.2
     hooks:
       - id: check-github-workflows
-        args: ["--verbose"]
-
+        args:
+          - --verbose
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.1
+    rev: v0.15.12
     hooks:
-      - id: ruff
-        args: ["--fix", "--output-format=full"]
+      - id: ruff-check
+        args:
+          - --fix
+          - --output-format=full
+        types_or:
+          - jupyter
+          - pyi
+          - python
       - id: ruff-format
-
+        types_or:
+          - jupyter
+          - pyi
+          - python
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.9.1
     hooks:
       - id: nbqa-ruff
-        args: ["--fix", "--output-format=full", "--ignore=B018", "--ignore=E402"]
+        args:
+          - --fix
+          - --output-format=full
+          - --ignore=B018
+          - --ignore=D103
+          - --ignore=E402
+          - --ignore=INP001
+          - --ignore=NPY002
+          - --ignore=PTH103
+          - --ignore=PTH120
+          - --ignore=PTH123
+          - --ignore=RET505
+          - --ignore=RUF003
+          - --ignore=SIM118
+          - --ignore=W291
+          - --ignore=W293
         files: ^docs/.*\.ipynb$
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.2
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
     hooks:
-      - id: mypy
-        args: [--ignore-missing-imports]
-        files: ^src/maketables/
-        additional_dependencies: [numpy>=1.20, pandas-stubs]
+      - id: nbstripout
+        args:
+          - --extra-keys
+          - metadata.language_info.version metadata.vscode
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-gfm-alerts
+          - mdformat-ruff
+        args:
+          - --wrap
+          - '88'
+        files: (AGENTS\.md|CLAUDE\.md|README\.md)
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-myst
+          - mdformat-ruff
+        args:
+          - --wrap
+          - '88'
+        files: docs/.*\.md$
+ci:
+  autoupdate_schedule: monthly

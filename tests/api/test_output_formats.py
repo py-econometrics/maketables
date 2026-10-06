@@ -69,6 +69,7 @@ class TestTypstOutput:
             cwd=tmp_path,
             capture_output=True,
             text=True,
+            check=False,
         )
         assert result.returncode == 0, result.stderr
         pdf_path = tmp_path / "out.pdf"
@@ -107,6 +108,7 @@ class TestLatexPdfOutput:
             cwd=tmp_path,
             capture_output=True,
             text=True,
+            check=False,
         )
         assert result.returncode == 0, result.stdout[-2000:]
         pdf_path = tmp_path / "out.pdf"

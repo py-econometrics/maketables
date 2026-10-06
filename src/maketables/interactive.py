@@ -13,20 +13,26 @@ from IPython.display import clear_output, display
 
 try:
     import ipywidgets as widgets
-except ImportError:
-    raise ImportError("ipywidgets is required for interactive functionality. Install with: pip install ipywidgets")
+except ImportError as e:
+    raise ImportError(
+        "ipywidgets is required for interactive functionality. "
+        "Install with: pip install ipywidgets"
+    ) from e
 
 try:
     import pyfixest as pf
-except ImportError:
-    raise ImportError("pyfixest is required. Install with: pip install pyfixest")
+except ImportError as e:
+    raise ImportError("pyfixest is required. Install with: pip install pyfixest") from e
 
 from . import DTable, ETable
 
 
 def _parse_formula(formula: str) -> tuple[str, list[str], list[str]]:
     """
-    Parse a PyFixest formula to extract dependent variable, independent variables, and fixed effects.
+    Parse a PyFixest formula into its dependent variable, regressors, and FEs.
+
+    Extracts the dependent variable, independent variables, and fixed
+    effects.
 
     Parameters
     ----------
@@ -39,7 +45,7 @@ def _parse_formula(formula: str) -> tuple[str, list[str], list[str]]:
         (dependent_var, independent_vars, fixed_effects)
     """
     # Split on ~ to separate LHS and RHS
-    parts = formula.split('~')
+    parts = formula.split("~")
     if len(parts) != 2:
         raise ValueError("Formula must contain exactly one '~' separator")
 
@@ -47,27 +53,29 @@ def _parse_formula(formula: str) -> tuple[str, list[str], list[str]]:
     rhs = parts[1].strip()
 
     # Split RHS on | to separate covariates and fixed effects
-    if '|' in rhs:
-        covar_part, fe_part = rhs.split('|', 1)
-        fixed_effects = [var.strip() for var in fe_part.split('+')]
+    if "|" in rhs:
+        covar_part, fe_part = rhs.split("|", 1)
+        fixed_effects = [var.strip() for var in fe_part.split("+")]
     else:
         covar_part = rhs
         fixed_effects = []
 
     # Parse independent variables
-    indep_vars = [var.strip() for var in covar_part.split('+')]
+    indep_vars = [var.strip() for var in covar_part.split("+")]
 
     return depvar, indep_vars, fixed_effects
 
 
-def _construct_formula(depvar: str, indepvars: list[str], fixed_effects: list[str]) -> str:
+def _construct_formula(
+    depvar: str, indepvars: list[str], fixed_effects: list[str]
+) -> str:
     """Construct PyFixest formula from components."""
     if not indepvars:
         raise ValueError("At least one independent variable must be specified")
 
     rhs = " + ".join(indepvars)
 
-    if fixed_effects and 'None' not in fixed_effects:
+    if fixed_effects and "None" not in fixed_effects:
         rhs += " | " + " + ".join(fixed_effects)
 
     return f"{depvar} ~ {rhs}"
@@ -81,7 +89,14 @@ class InteractiveFeols:
     variables, fixed effects, and clustering options for regression analysis.
     """
 
-    def __init__(self, data: pd.DataFrame, initial_formula: str, vcov: str = 'iid', show_code: bool = False, title: str | None = None):
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        initial_formula: str,
+        vcov: str = "iid",
+        show_code: bool = False,
+        title: str | None = None,
+    ) -> None:
         """
         Initialize the interactive regression dashboard.
 
@@ -106,9 +121,11 @@ class InteractiveFeols:
 
         # Parse initial formula
         try:
-            self.initial_depvar, self.initial_indepvars, self.initial_fixef = _parse_formula(initial_formula)
+            self.initial_depvar, self.initial_indepvars, self.initial_fixef = (
+                _parse_formula(initial_formula)
+            )
         except Exception as e:
-            raise ValueError(f"Error parsing initial formula: {e}")
+            raise ValueError(f"Error parsing initial formula: {e}") from e
 
         # Identify variable types
         self.numeric_vars = data.select_dtypes(include=[np.number]).columns.tolist()
@@ -120,74 +137,86 @@ class InteractiveFeols:
         self._setup_output_area()
 
         # Suppress warnings for cleaner output
-        warnings.filterwarnings('ignore')
+        warnings.filterwarnings("ignore")
 
-    def _create_widgets(self):
+    def _create_widgets(self) -> None:
         """Create all the interactive widgets."""
         # Dependent variable widget
         self.depvar_widget = widgets.Dropdown(
             options=self.numeric_vars,
-            value=self.initial_depvar if self.initial_depvar in self.numeric_vars else self.numeric_vars[0],
-            description='',
-            style={'description_width': 'initial'},
-            layout={'width': '225px', 'height': '35px', 'background_color': '#f5f5f5'}
+            value=self.initial_depvar
+            if self.initial_depvar in self.numeric_vars
+            else self.numeric_vars[0],
+            description="",
+            style={"description_width": "initial"},
+            layout={"width": "225px", "height": "35px", "background_color": "#f5f5f5"},
         )
 
         # Independent variables widget
         self.indepvars_widget = widgets.SelectMultiple(
             options=self.all_vars,
             value=self.initial_indepvars,
-            description='',
-            style={'description_width': 'initial'},
-            layout={'width': '150px', 'height': '150px', 'background_color': '#f5f5f5'}
+            description="",
+            style={"description_width": "initial"},
+            layout={"width": "150px", "height": "150px", "background_color": "#f5f5f5"},
         )
 
         # Fixed effects widget
-        fe_options = ['None'] + self.categorical_vars + [var for var in self.numeric_vars if self.data[var].nunique() < 20]
-        initial_fe = self.initial_fixef if self.initial_fixef else ['None']
+        fe_options = (
+            ["None"]
+            + self.categorical_vars
+            + [var for var in self.numeric_vars if self.data[var].nunique() < 20]
+        )
+        initial_fe = self.initial_fixef or ["None"]
 
         self.fixef_widget = widgets.SelectMultiple(
             options=fe_options,
             value=initial_fe,
-            description='Fixed Effects:',
-            style={'description_width': '70px'},
-            layout={'width': '225px', 'height': '70px', 'background_color': '#f5f5f5'}
+            description="Fixed Effects:",
+            style={"description_width": "70px"},
+            layout={"width": "225px", "height": "70px", "background_color": "#f5f5f5"},
         )
 
         # Clustering widget
-        cluster_options = ['None'] + self.categorical_vars + [var for var in self.numeric_vars if self.data[var].nunique() < 50]
+        cluster_options = (
+            ["None"]
+            + self.categorical_vars
+            + [var for var in self.numeric_vars if self.data[var].nunique() < 50]
+        )
 
         self.cluster_widget = widgets.Dropdown(
             options=cluster_options,
-            value='None',
-            description='Cluster:',
-            style={'description_width': '70px'},
-            layout={'width': '225px', 'height': '35px', 'background_color': '#f5f5f5'}
+            value="None",
+            description="Cluster:",
+            style={"description_width": "70px"},
+            layout={"width": "225px", "height": "35px", "background_color": "#f5f5f5"},
         )
 
         # VCOV type widget
         self.vcov_widget = widgets.Dropdown(
-            options=['iid', 'hetero', 'HC1', 'HC2', 'HC3'],
-            value=self.initial_vcov if self.initial_vcov in ['iid', 'hetero', 'HC1', 'HC2', 'HC3'] else 'iid',
-            description='SE Type:',
-            style={'description_width': '70px'},
-            layout={'width': '225px', 'height': '35px', 'background_color': '#f5f5f5'}
+            options=["iid", "hetero", "HC1", "HC2", "HC3"],
+            value=self.initial_vcov
+            if self.initial_vcov in ["iid", "hetero", "HC1", "HC2", "HC3"]
+            else "iid",
+            description="SE Type:",
+            style={"description_width": "70px"},
+            layout={"width": "225px", "height": "35px", "background_color": "#f5f5f5"},
         )
 
         # Code display widget (similar to InteractiveDTable)
         self.code_widget = widgets.Textarea(
             value="",
-            description='Python Code:',
-            style={'description_width': 'initial'},
-            layout={'width': '600px', 'height': '120px'},
-            disabled=False  # Allow users to select/copy the code
+            description="Python Code:",
+            style={"description_width": "initial"},
+            layout={"width": "600px", "height": "120px"},
+            disabled=False,  # Allow users to select/copy the code
         )
 
-    def _setup_output_area(self):
+    def _setup_output_area(self) -> None:
         """Set up the output area and result update function."""
         self.output_area = widgets.Output()
 
-        def update_results(change=None):
+        def update_results(_change: dict | None = None) -> None:
             """Update regression results when widget values change."""
             with self.output_area:
                 clear_output(wait=True)
@@ -212,15 +241,16 @@ class InteractiveFeols:
                         formula = _construct_formula(depvar, indepvars, fixed_effects)
 
                         # Determine vcov specification
-                        if cluster_var and cluster_var != 'None':
-                            vcov = {'CRV1': cluster_var}
+                        if cluster_var and cluster_var != "None":
+                            vcov = {"CRV1": cluster_var}
                         else:
                             vcov = vcov_type
 
                         # Estimate model
                         model = pf.feols(formula, data=self.data, vcov=vcov)
 
-                        # Generate Python code for the current model configuration (only if show_code is enabled)
+                        # Generate Python code for the current model
+                        # configuration (only if show_code is enabled)
                         if self.show_code:
                             self._generate_code(formula, vcov, cluster_var)
 
@@ -235,16 +265,23 @@ class InteractiveFeols:
         self._update_results = update_results
 
         # Connect widgets to update function
-        self.depvar_widget.observe(update_results, names='value')
-        self.indepvars_widget.observe(update_results, names='value')
-        self.fixef_widget.observe(update_results, names='value')
-        self.cluster_widget.observe(update_results, names='value')
-        self.vcov_widget.observe(update_results, names='value')
+        self.depvar_widget.observe(update_results, names="value")
+        self.indepvars_widget.observe(update_results, names="value")
+        self.fixef_widget.observe(update_results, names="value")
+        self.cluster_widget.observe(update_results, names="value")
+        self.vcov_widget.observe(update_results, names="value")
 
-    def _generate_code(self, formula, vcov, cluster_var):
+    def _generate_code(
+        self, formula: str, vcov: str | dict[str, str], cluster_var: str | None
+    ) -> None:
         """Generate Python code for the current regression configuration."""
         # Build the code string
-        code_lines = ["import pyfixest as pf", "import maketables as mt", "", "# Estimate regression model"]
+        code_lines = [
+            "import pyfixest as pf",
+            "import maketables as mt",
+            "",
+            "# Estimate regression model",
+        ]
 
         # Start the pf.feols call
         code_lines.append("model = pf.feols(")
@@ -252,7 +289,7 @@ class InteractiveFeols:
         code_lines.append("    data=df,  # Your DataFrame")
 
         # VCOV specification
-        if cluster_var and cluster_var != 'None':
+        if cluster_var and cluster_var != "None":
             code_lines.append(f"    vcov={{'CRV1': '{cluster_var}'}}")
         else:
             code_lines.append(f"    vcov='{vcov}'")
@@ -266,7 +303,7 @@ class InteractiveFeols:
         # Update the code widget
         self.code_widget.value = "\n".join(code_lines)
 
-    def display(self):
+    def display(self) -> None:
         """Display the interactive regression dashboard."""
         # Create the main dashboard components
         dashboard_components = []
@@ -275,41 +312,53 @@ class InteractiveFeols:
         if self.title:
             dashboard_components.append(widgets.HTML(f"<h3>{self.title}</h3>"))
 
-        dashboard_components.extend([
-            # Variable and model specification selection with headers
-            widgets.HBox([
-                # Variables section
-                widgets.VBox([
-                    widgets.HTML("<h4>Variables</h4>"),
-                    self.indepvars_widget
-                ], layout={'margin': '0 15px 0 0'}),
-
-                # Dependent Variable section
-                widgets.VBox([
-                    widgets.HTML("<h4>Dependent Variable</h4>"),
-                    self.depvar_widget
-                ], layout={'margin': '0 15px 0 0'}),
-
-                # Model Specification section (stacked vertically)
-                widgets.VBox([
-                    widgets.HTML("<h4>Model Specification</h4>"),
-                    self.fixef_widget,
-                    widgets.HTML("<br>", layout={'margin': '2px 0'}),
-                    self.cluster_widget,
-                    self.vcov_widget
-                ], layout={'margin': '0 15px 0 0'})
-            ]),
-
-            # Results area
-            self.output_area
-        ])
+        dashboard_components.extend(
+            [
+                # Variable and model specification selection with headers
+                widgets.HBox(
+                    [
+                        # Variables section
+                        widgets.VBox(
+                            [widgets.HTML("<h4>Variables</h4>"), self.indepvars_widget],
+                            layout={"margin": "0 15px 0 0"},
+                        ),
+                        # Dependent Variable section
+                        widgets.VBox(
+                            [
+                                widgets.HTML("<h4>Dependent Variable</h4>"),
+                                self.depvar_widget,
+                            ],
+                            layout={"margin": "0 15px 0 0"},
+                        ),
+                        # Model Specification section (stacked vertically)
+                        widgets.VBox(
+                            [
+                                widgets.HTML("<h4>Model Specification</h4>"),
+                                self.fixef_widget,
+                                widgets.HTML("<br>", layout={"margin": "2px 0"}),
+                                self.cluster_widget,
+                                self.vcov_widget,
+                            ],
+                            layout={"margin": "0 15px 0 0"},
+                        ),
+                    ]
+                ),
+                # Results area
+                self.output_area,
+            ]
+        )
 
         # Conditionally add Python Code section
         if self.show_code:
-            dashboard_components.extend([
-                widgets.HTML("<p>Copy this code to reproduce the regression in your analysis:</p>"),
-                self.code_widget
-            ])
+            dashboard_components.extend(
+                [
+                    widgets.HTML(
+                        "<p>Copy this code to reproduce the regression in "
+                        "your analysis:</p>"
+                    ),
+                    self.code_widget,
+                ]
+            )
 
         # Create the dashboard layout
         dashboard = widgets.VBox(dashboard_components)
@@ -321,7 +370,13 @@ class InteractiveFeols:
         self._update_results()
 
 
-def interactive_regression(data: pd.DataFrame, formula: str, vcov: str = 'iid', show_code: bool = False, title: str | None = None) -> InteractiveFeols:
+def interactive_regression(
+    data: pd.DataFrame,
+    formula: str,
+    vcov: str = "iid",
+    show_code: bool = False,
+    title: str | None = None,
+) -> InteractiveFeols:
     """
     Create and display an interactive regression dashboard.
 
@@ -381,7 +436,13 @@ class InteractiveDTable:
     variables, statistics, and grouping options for descriptive statistics analysis.
     """
 
-    def __init__(self, data: pd.DataFrame, initial_vars: list[str] | None = None, show_code: bool = False, title: str | None = None):
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        initial_vars: list[str] | None = None,
+        show_code: bool = False,
+        title: str | None = None,
+    ) -> None:
         """
         Initialize the interactive descriptive statistics dashboard.
 
@@ -390,7 +451,8 @@ class InteractiveDTable:
         data : pd.DataFrame
             The dataset to use for descriptive statistics analysis
         initial_vars : list[str], optional
-            Initial variables to include in the table. If None, selects first few numeric variables.
+            Initial variables to include in the table. If None, selects
+            first few numeric variables.
         show_code : bool, optional
             Whether to display the Python code section. Default is False.
         title : str, optional
@@ -407,7 +469,7 @@ class InteractiveDTable:
 
         # Set initial variables
         if initial_vars is None:
-            self.initial_vars = self.numeric_vars[:min(5, len(self.numeric_vars))]
+            self.initial_vars = self.numeric_vars[: min(5, len(self.numeric_vars))]
         else:
             self.initial_vars = initial_vars
 
@@ -416,47 +478,67 @@ class InteractiveDTable:
         self._setup_output_area()
 
         # Suppress warnings for cleaner output
-        warnings.filterwarnings('ignore')
+        warnings.filterwarnings("ignore")
 
-    def _create_widgets(self):
+    def _create_widgets(self) -> None:
         """Create all the interactive widgets."""
-        # Variables selection widget - only show numerical variables for descriptive statistics
+        # Variables selection widget - only show numerical variables for
+        # descriptive statistics
         self.vars_widget = widgets.SelectMultiple(
             options=self.numeric_vars,
             value=self.initial_vars,
-            description='',
-            style={'description_width': 'initial'},
-            layout={'width': '150px', 'height': '150px', 'background_color': '#f5f5f5'}
+            description="",
+            style={"description_width": "initial"},
+            layout={"width": "150px", "height": "150px", "background_color": "#f5f5f5"},
         )
 
         # Statistics selection widget
-        available_stats = ['count', 'mean', 'std', 'min', 'max', 'median', 'var', 'sum', 'mean_std', 'mean_newline_std']
+        available_stats = [
+            "count",
+            "mean",
+            "std",
+            "min",
+            "max",
+            "median",
+            "var",
+            "sum",
+            "mean_std",
+            "mean_newline_std",
+        ]
         self.stats_widget = widgets.SelectMultiple(
             options=available_stats,
-            value=['count', 'mean', 'std'],
-            description='',
-            style={'description_width': 'initial'},
-            layout={'width': '150px', 'height': '150px', 'background_color': '#f5f5f5'}
+            value=["count", "mean", "std"],
+            description="",
+            style={"description_width": "initial"},
+            layout={"width": "150px", "height": "150px", "background_color": "#f5f5f5"},
         )
 
         # Group by columns widget
-        bycol_options = ['None'] + self.categorical_vars + [var for var in self.numeric_vars if self.data[var].nunique() < 10]
+        bycol_options = (
+            ["None"]
+            + self.categorical_vars
+            + [var for var in self.numeric_vars if self.data[var].nunique() < 10]
+        )
         self.bycol_widget = widgets.SelectMultiple(
             options=bycol_options,
-            value=['None'],
-            description='Columns:',
-            style={'description_width': '70px'},
-            layout={'width': '225px', 'height': '70px', 'background_color': '#f5f5f5'}
+            value=["None"],
+            description="Columns:",
+            style={"description_width": "70px"},
+            layout={"width": "225px", "height": "70px", "background_color": "#f5f5f5"},
         )
 
         # Group by rows widget
-        byrow_options = ['None'] + self.categorical_vars + [var for var in self.numeric_vars if self.data[var].nunique() < 20]
+        byrow_options = (
+            ["None"]
+            + self.categorical_vars
+            + [var for var in self.numeric_vars if self.data[var].nunique() < 20]
+        )
         self.byrow_widget = widgets.Dropdown(
             options=byrow_options,
-            value='None',
-            description='Rows:',
-            style={'description_width': '70px'},
-            layout={'width': '225px', 'height': '35px', 'background_color': '#f5f5f5'}
+            value="None",
+            description="Rows:",
+            style={"description_width": "70px"},
+            layout={"width": "225px", "height": "35px", "background_color": "#f5f5f5"},
         )
 
         # Digits precision widget
@@ -465,41 +547,53 @@ class InteractiveDTable:
             min=1,
             max=6,
             step=1,
-            description='Decimal places:',
-            style={'description_width': '100px'},
-            layout={'width': '180px', 'margin': '2px 0px 2px 0px', 'background_color': '#f5f5f5'}
+            description="Decimal places:",
+            style={"description_width": "100px"},
+            layout={
+                "width": "180px",
+                "margin": "2px 0px 2px 0px",
+                "background_color": "#f5f5f5",
+            },
         )
 
         # Hide stats widget
         self.hide_stats_widget = widgets.Checkbox(
             value=False,
-            description='Hide statistic names',
-            style={'description_width': 'initial'},
-            layout={'width': '180px', 'margin': '2px 0px 2px 0px', 'background_color': '#f5f5f5'}
+            description="Hide statistic names",
+            style={"description_width": "initial"},
+            layout={
+                "width": "180px",
+                "margin": "2px 0px 2px 0px",
+                "background_color": "#f5f5f5",
+            },
         )
 
         # Counts row below widget
         self.counts_row_below_widget = widgets.Checkbox(
             value=False,
-            description='Show counts in separate row',
-            style={'description_width': 'initial'},
-            layout={'width': '180px', 'margin': '2px 0px 2px 0px', 'background_color': '#f5f5f5'}
+            description="Show counts in separate row",
+            style={"description_width": "initial"},
+            layout={
+                "width": "180px",
+                "margin": "2px 0px 2px 0px",
+                "background_color": "#f5f5f5",
+            },
         )
 
         # Code display widget
         self.code_widget = widgets.Textarea(
             value="",
-            description='Python Code:',
-            style={'description_width': 'initial'},
-            layout={'width': '600px', 'height': '120px'},
-            disabled=False  # Allow users to select/copy the code
+            description="Python Code:",
+            style={"description_width": "initial"},
+            layout={"width": "600px", "height": "120px"},
+            disabled=False,  # Allow users to select/copy the code
         )
 
-    def _setup_output_area(self):
+    def _setup_output_area(self) -> None:
         """Set up the output area and result update function."""
         self.output_area = widgets.Output()
 
-        def update_results(change=None):
+        def update_results(_change: dict | None = None) -> None:
             """Update descriptive statistics when widget values change."""
             with self.output_area:
                 clear_output(wait=True)
@@ -523,8 +617,12 @@ class InteractiveDTable:
 
                 try:
                     # Process grouping variables
-                    bycol = None if 'None' in bycol_selected else [var for var in bycol_selected if var != 'None']
-                    byrow = None if byrow_selected == 'None' else byrow_selected
+                    bycol = (
+                        None
+                        if "None" in bycol_selected
+                        else [var for var in bycol_selected if var != "None"]
+                    )
+                    byrow = None if byrow_selected == "None" else byrow_selected
 
                     # Create DTable with better formatting for small numbers
                     # Use format_spec to control display precision more intelligently
@@ -534,8 +632,9 @@ class InteractiveDTable:
                         "median": f".{digits}f",
                         "min": f".{digits}f",
                         "max": f".{digits}f",
-                        "var": f".{max(digits + 1, 3)}f",  # Variance needs more precision
-                        "sum": f",.{digits}f"
+                        # Variance needs more precision
+                        "var": f".{max(digits + 1, 3)}f",
+                        "sum": f",.{digits}f",
                     }
 
                     table = DTable(
@@ -546,12 +645,21 @@ class InteractiveDTable:
                         byrow=byrow,
                         format_spec=format_spec,
                         hide_stats=hide_stats,
-                        counts_row_below=counts_row_below
+                        counts_row_below=counts_row_below,
                     )
 
-                    # Generate Python code for the DTable call (only if show_code is enabled)
+                    # Generate Python code for the DTable call (only if
+                    # show_code is enabled)
                     if self.show_code:
-                        self._generate_code(vars_selected, stats_selected, bycol, byrow, digits, hide_stats, counts_row_below)
+                        self._generate_code(
+                            vars_selected,
+                            stats_selected,
+                            bycol,
+                            byrow,
+                            digits,
+                            hide_stats,
+                            counts_row_below,
+                        )
 
                     # Display results
                     print()  # Add empty line before table
@@ -565,18 +673,31 @@ class InteractiveDTable:
         self._update_results = update_results
 
         # Connect widgets to update function
-        self.vars_widget.observe(update_results, names='value')
-        self.stats_widget.observe(update_results, names='value')
-        self.bycol_widget.observe(update_results, names='value')
-        self.byrow_widget.observe(update_results, names='value')
-        self.digits_widget.observe(update_results, names='value')
-        self.hide_stats_widget.observe(update_results, names='value')
-        self.counts_row_below_widget.observe(update_results, names='value')
+        self.vars_widget.observe(update_results, names="value")
+        self.stats_widget.observe(update_results, names="value")
+        self.bycol_widget.observe(update_results, names="value")
+        self.byrow_widget.observe(update_results, names="value")
+        self.digits_widget.observe(update_results, names="value")
+        self.hide_stats_widget.observe(update_results, names="value")
+        self.counts_row_below_widget.observe(update_results, names="value")
 
-    def _generate_code(self, vars_selected, stats_selected, bycol, byrow, digits, hide_stats, counts_row_below):
+    def _generate_code(
+        self,
+        vars_selected: list[str],
+        stats_selected: list[str],
+        bycol: list[str] | None,
+        byrow: str | None,
+        digits: int,
+        hide_stats: bool,
+        counts_row_below: bool,
+    ) -> None:
         """Generate Python code for the current DTable configuration."""
         # Build the code string
-        code_lines = ["import maketables as mt", "", "# Create descriptive statistics table"]
+        code_lines = [
+            "import maketables as mt",
+            "",
+            "# Create descriptive statistics table",
+        ]
 
         # Start the DTable call
         code_lines.append("table = mt.DTable(")
@@ -609,7 +730,7 @@ class InteractiveDTable:
                 f"        'max': '.{digits}f',",
                 f"        'var': '.{max(digits + 1, 3)}f',",
                 f"        'sum': ',.{digits}f'",
-                "    },"
+                "    },",
             ]
             code_lines.extend(format_spec_lines)
 
@@ -629,7 +750,7 @@ class InteractiveDTable:
         # Update the code widget
         self.code_widget.value = "\n".join(code_lines)
 
-    def display(self):
+    def display(self) -> None:
         """Display the interactive descriptive statistics dashboard."""
         # Create the main dashboard components
         dashboard_components = []
@@ -638,48 +759,58 @@ class InteractiveDTable:
         if self.title:
             dashboard_components.append(widgets.HTML(f"<h3>{self.title}</h3>"))
 
-        dashboard_components.extend([
-            # Variable and statistics selection with headers
-            widgets.HBox([
-                # Variables section
-                widgets.VBox([
-                    widgets.HTML("<h4>Variables</h4>"),
-                    self.vars_widget
-                ], layout={'margin': '0 15px 0 0'}),
-
-                # Statistics section
-                widgets.VBox([
-                    widgets.HTML("<h4>Statistics</h4>"),
-                    self.stats_widget
-                ], layout={'margin': '0 15px 0 0'}),
-
-                # Group by section (stacked vertically)
-                widgets.VBox([
-                    widgets.HTML("<h4>Group by</h4>"),
-                    self.bycol_widget,
-                    widgets.HTML("<br>", layout={'margin': '2px 0'}),
-                    self.byrow_widget
-                ], layout={'margin': '0 15px 0 0'}),
-
-                # Formatting section
-                widgets.VBox([
-                    widgets.HTML("<h4>Formatting</h4>"),
-                    self.digits_widget,
-                    self.hide_stats_widget,
-                    self.counts_row_below_widget
-                ], layout={'margin': '0 0 0 0', 'align_items': 'flex-start'})
-            ]),
-
-            # Results area
-            self.output_area
-        ])
+        dashboard_components.extend(
+            [
+                # Variable and statistics selection with headers
+                widgets.HBox(
+                    [
+                        # Variables section
+                        widgets.VBox(
+                            [widgets.HTML("<h4>Variables</h4>"), self.vars_widget],
+                            layout={"margin": "0 15px 0 0"},
+                        ),
+                        # Statistics section
+                        widgets.VBox(
+                            [widgets.HTML("<h4>Statistics</h4>"), self.stats_widget],
+                            layout={"margin": "0 15px 0 0"},
+                        ),
+                        # Group by section (stacked vertically)
+                        widgets.VBox(
+                            [
+                                widgets.HTML("<h4>Group by</h4>"),
+                                self.bycol_widget,
+                                widgets.HTML("<br>", layout={"margin": "2px 0"}),
+                                self.byrow_widget,
+                            ],
+                            layout={"margin": "0 15px 0 0"},
+                        ),
+                        # Formatting section
+                        widgets.VBox(
+                            [
+                                widgets.HTML("<h4>Formatting</h4>"),
+                                self.digits_widget,
+                                self.hide_stats_widget,
+                                self.counts_row_below_widget,
+                            ],
+                            layout={"margin": "0 0 0 0", "align_items": "flex-start"},
+                        ),
+                    ]
+                ),
+                # Results area
+                self.output_area,
+            ]
+        )
 
         # Conditionally add Python Code section
         if self.show_code:
-            dashboard_components.extend([
-                widgets.HTML("<p>Copy this code to reproduce the table in your analysis:</p>"),
-                self.code_widget
-            ])
+            dashboard_components.extend(
+                [
+                    widgets.HTML(
+                        "<p>Copy this code to reproduce the table in your analysis:</p>"
+                    ),
+                    self.code_widget,
+                ]
+            )
 
         # Create the dashboard layout
         dashboard = widgets.VBox(dashboard_components)
@@ -691,7 +822,12 @@ class InteractiveDTable:
         self._update_results()
 
 
-def interactive_dtable(data: pd.DataFrame, vars: list[str] | None = None, show_code: bool = False, title: str | None = None) -> InteractiveDTable:
+def interactive_dtable(
+    data: pd.DataFrame,
+    vars: list[str] | None = None,
+    show_code: bool = False,
+    title: str | None = None,
+) -> InteractiveDTable:
     """
     Create and display an interactive descriptive statistics dashboard.
 
@@ -727,7 +863,7 @@ def interactive_dtable(data: pd.DataFrame, vars: list[str] | None = None, show_c
     >>> dashboard = mt.interactive_dtable(df)
     >>>
     >>> # Or specify initial variables
-    >>> dashboard = mt.interactive_dtable(df, vars=['price', 'mpg', 'weight'])
+    >>> dashboard = mt.interactive_dtable(df, vars=["price", "mpg", "weight"])
 
     Notes
     -----
