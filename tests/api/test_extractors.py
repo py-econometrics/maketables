@@ -619,6 +619,16 @@ class TestPyFixestExtractor:
         monkeypatch.setattr(ex, "_pyfixest_types", lambda: ())
         assert not PyFixestExtractor().can_handle(fitted_model)
 
+    def test_adj_r2(self, fitted_model):
+        e = PyFixestExtractor()
+        assert e.stat(fitted_model, "adj_r2") == pytest.approx(fitted_model._adj_r2)
+        assert e.stat(fitted_model, "adj_r2") is not None
+
+    def test_adj_r2_falls_back_to_old_attribute_name(self):
+        m = types.SimpleNamespace(_r2_adj=0.25)
+        assert PyFixestExtractor().stat(m, "adj_r2") == 0.25
+        assert PyFixestExtractor().stat(types.SimpleNamespace(), "adj_r2") is None
+
     def test_coef_table(self, fitted_model):
         df = PyFixestExtractor().coef_table(fitted_model)
         assert list(df.columns[:4]) == ["b", "se", "t", "p"]

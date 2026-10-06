@@ -728,7 +728,8 @@ class PyFixestExtractor:
             else getattr(m, "_vcov_type", None)
         ),
         "r2": "_r2",
-        "adj_r2": "_r2_adj",
+        # pyfixest >=0.60 names it _adj_r2; keep the old name as a fallback
+        "adj_r2": lambda m: getattr(m, "_adj_r2", getattr(m, "_r2_adj", None)),
         "r2_within": "_r2_within",
         "adj_r2_within": "_adj_r2_within",
         "rmse": "_rmse",
