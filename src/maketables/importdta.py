@@ -199,6 +199,15 @@ def export_dta(
         trimmed[k] = s
     var_labels = trimmed
 
+    # pandas expects a list of column names for convert_strl (not a bool); only
+    # columns with strings too long for a fixed-width Stata str need strL.
+    strl_cols = [
+        c
+        for c in df.columns
+        if df[c].dtype == object
+        and df[c].map(lambda v: isinstance(v, str) and len(v) > 2045).any()
+    ] or None
+
     try:
         df.to_stata(
             path,
@@ -206,7 +215,7 @@ def export_dta(
             version=version,
             variable_labels=var_labels or None,
             data_label=data_label,
-            convert_strl=cast("Any", True),  # noqa: FBT003
+            convert_strl=strl_cols,
             time_stamp=time_stamp,
             compression=cast("Any", compression),
         )
@@ -222,7 +231,7 @@ def export_dta(
             write_index=cast("Any", write_index),
             version=version,
             data_label=data_label,
-            convert_strl=cast("Any", True),  # noqa: FBT003
+            convert_strl=strl_cols,
             time_stamp=time_stamp,
             compression=cast("Any", compression),
         )
