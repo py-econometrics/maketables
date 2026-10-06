@@ -136,6 +136,7 @@ py313 = { features = [ "dev", "py313" ], solve-group = "py313" }
 py314 = { features = [ "dev", "py314" ], solve-group = "py314" }
 [tool.pixi.feature.dev.dependencies]
 pymupdf = ">=1.26.1,<2"
+pdfplumber = ">=0.11"
 quarto = ">=1.8.25,<2"
 typst = ">=0.11"
 [tool.pixi.feature.dev.pypi-dependencies]
@@ -352,6 +353,7 @@ extend-ignore = [
   "D205",    # 1 blank line required between summary line and description
   "D301",    # Use r""" if any backslashes in a docstring
   "S603",    # Tests launch the current interpreter in a subprocess
+  "S607",    # Compile smoke tests invoke typst/pdflatex from PATH (skipped if absent)
   "ANN002",  # Missing type annotation for *args
   "ANN003",  # Missing type annotation for **kwargs
   "ANN201",  # Missing return type annotation for public function

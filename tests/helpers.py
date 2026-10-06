@@ -24,3 +24,13 @@ def render_table(table, output_type: str) -> str:
     if output_type == "gt":
         return normalize_html(rendered.as_raw_html())
     return rendered
+
+
+def normalize_typst(typst: str) -> str:
+    """Normalize Typst output for stable cross-platform snapshotting."""
+    return typst.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def normalize_latex(tex: str) -> str:
+    """Normalize LaTeX output for stable cross-platform snapshotting."""
+    return tex.replace("\r\n", "\n").replace("\r", "\n")

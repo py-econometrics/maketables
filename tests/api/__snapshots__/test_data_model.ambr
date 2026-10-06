@@ -1,0 +1,111 @@
+# serializer version: 1
+# name: TestSampleTableDataModel.test_df_snapshot[btable]
+  '''
+  ,A,B,
+  ,Mean,Mean,p-value
+  x,-0.08,-0.13,0.789
+  y,0.13,-0.06,0.350
+  '''
+# ---
+# name: TestSampleTableDataModel.test_df_snapshot[dtable_grouped]
+  '''
+  ,A,A,A,B,B,B
+  ,N,Mean,Std. Dev.,N,Mean,Std. Dev.
+  x,43.00,-0.08,0.76,57.00,-0.13,1.01
+  y,43.00,0.13,0.84,57.00,-0.06,1.03
+  '''
+# ---
+# name: TestSampleTableDataModel.test_df_snapshot[dtable_plain]
+  '''
+  ,N,Mean,Std. Dev.
+  x,100.00,-0.10,0.91
+  y,100.00,0.02,0.95
+  '''
+# ---
+# name: TestSampleTableDataModel.test_df_snapshot[etable_formatted]
+  '''
+  ,,Outcome,Outcome
+  ,,(1),(2)
+  coef,Regressor,"2.0 
+   (0.0)","2.0 
+   (0.0)"
+  coef,group=B,,"-0.0 
+   (0.0)"
+  coef,Intercept,"0.0 
+   (0.0)","0.0 
+   (0.0)"
+  stats,Observations,100,100
+  stats,R²,0.997,0.997
+  '''
+# ---
+# name: TestSampleTableDataModel.test_df_snapshot[etable_merged_heads]
+  '''
+  ,,Panel A,Panel A
+  ,,Spec 1,Spec 2
+  ,,(1),(2)
+  coef,x,"1.994*** 
+   (0.011)","1.994*** 
+   (0.011)"
+  coef,group=B,,"-0.005 
+   (0.020)"
+  coef,Intercept,"0.008 
+   (0.010)","0.010 
+   (0.015)"
+  stats,Observations,100,100
+  stats,R²,0.997,0.997
+  '''
+# ---
+# name: TestSampleTableDataModel.test_df_snapshot[etable_multi_model]
+  '''
+  ,,y,y
+  ,,(1),(2)
+  coef,x,"1.994*** 
+   (0.011)","1.994*** 
+   (0.011)"
+  coef,group=B,,"-0.005 
+   (0.020)"
+  coef,Intercept,"0.008 
+   (0.010)","0.010 
+   (0.015)"
+  stats,Observations,100,100
+  stats,R²,0.997,0.997
+  '''
+# ---
+# name: TestSampleTableDataModel.test_df_snapshot[etable_plain]
+  '''
+  ,,y
+  ,,(1)
+  coef,x,"1.986*** 
+   (0.006)"
+  coef,Intercept,"0.131*** 
+   (0.021)"
+  stats,Observations,100
+  stats,R²,0.999
+  '''
+# ---
+# name: TestSampleTableDataModel.test_df_snapshot[etable_wide]
+  '''
+  ,,y,y,y,y,y,y
+  ,,(1),(2),(3),(4),(5),(6)
+  coef,x,"1.994*** 
+   (0.011)","1.994*** 
+   (0.011)","1.994*** 
+   (0.011)","1.994*** 
+   (0.011)","1.994*** 
+   (0.011)","1.994*** 
+   (0.011)"
+  coef,group=B,,"-0.005 
+   (0.020)",,"-0.005 
+   (0.020)",,"-0.005 
+   (0.020)"
+  coef,Intercept,"0.008 
+   (0.010)","0.010 
+   (0.015)","0.008 
+   (0.010)","0.010 
+   (0.015)","0.008 
+   (0.010)","0.010 
+   (0.015)"
+  stats,Observations,100,100,100,100,100,100
+  stats,R²,0.997,0.997,0.997,0.997,0.997,0.997
+  '''
+# ---
