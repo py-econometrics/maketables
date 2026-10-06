@@ -1,67 +1,95 @@
+---
 name: Tests
-
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
+    branches:
+      - main
+  pull_request: null
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 jobs:
   test:
-    name: "Tests"
+    name: Tests on ${{ matrix.os }} / ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        os: ["windows-latest"]
-        python-version: ["3.13"]
-
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        environment:
+          - py310
+          - py311
+          - py312
+          - py313
+          - py314
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
-
-      - name: Setup python
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-
       - uses: prefix-dev/setup-pixi@v0.10.2
         with:
           pixi-version: v0.78.0
           cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          environments: ${{ matrix.environment }}
           frozen: true
-
       - name: Run tests
-        run: pixi run -e dev tests
-
+        if: runner.os != 'Linux' || matrix.environment != 'py314'
+        run: pixi run -e ${{ matrix.environment }} tests
+        shell: bash -el {0}
+      - name: Run tests with coverage
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        run: pixi run -e ${{ matrix.environment }} tests-with-cov
+        shell: bash -el {0}
+      - name: Upload coverage report
+        if: runner.os == 'Linux' && matrix.environment == 'py314'
+        uses: codecov/codecov-action@v6
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Check snapshots are up to date
-        run: pixi run -e dev pytest tests/ --snapshot-warn-unused
-
+        run: pixi run -e ${{ matrix.environment }} pytest tests/ --snapshot-warn-unused
+        shell: bash -el {0}
+  run-ty:
+    name: Run ty
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          pixi-version: v0.78.0
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+          environments: py313
+          frozen: true
+      - name: Run ty
+        run: pixi run -e py313 ty
+        shell: bash -el {0}
   # HTML snapshots embed great_tables' CSS, so they only match the locked
   # version above. Line-break/escaping behaviour in the gt output is checked
   # against other great_tables releases with snapshot-free tests.
   great-tables-compat:
-    name: "great_tables ${{ matrix.great-tables }}"
+    name: great_tables ${{ matrix.great-tables }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        great-tables: ["0.24.0", "1.0.0"]
-
+        great-tables:
+          - 0.24.0
+          - 1.0.0
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
-
       - name: Setup python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
-
+          python-version: '3.13'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e . pytest syrupy pyfixest "great_tables==${{ matrix.great-tables }}"
-
+          python -m pip install -e . pytest syrupy pyfixest \
+            "great_tables==${{ matrix.great-tables }}"
       - name: Run great_tables compatibility tests
         run: python -m pytest tests/api/test_gt_escaping.py -v

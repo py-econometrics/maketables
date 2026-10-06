@@ -11,7 +11,7 @@ class TestETableCoefSelection:
 
     @pytest.mark.parametrize("output_type", OUTPUT_TYPES)
     @pytest.mark.parametrize(
-        "model_fixture, table_kwargs",
+        ("model_fixture", "table_kwargs"),
         [
             pytest.param("fitted_models", {"keep": ["x"]}, id="keep_single_coef"),
             pytest.param("fitted_model", {"drop": ["Intercept"]}, id="drop_intercept"),

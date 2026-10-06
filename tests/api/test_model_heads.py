@@ -25,7 +25,7 @@ class TestFlatModelHeads:
 
     def test_flat_model_heads_wrong_length_raises(self, fitted_models):
         """A flat model_heads must have one entry per model."""
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError, match="one entry per model"):
             mt.ETable(fitted_models, model_heads=["USA"])
 
     def test_flat_model_heads_html(self, fitted_models, snapshot):
@@ -115,12 +115,12 @@ class TestMultiLevelModelHeads:
 
     def test_nested_level_wrong_length_raises(self, fitted_models):
         """Every level in the nested form must align with the models."""
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError, match="one entry per model"):
             mt.ETable(fitted_models, model_heads=[["USA", "USA"], ["OLS"]])
 
     def test_nested_level_plain_string_raises_instead_of_exploding(self, fitted_models):
         """A plain string level is rejected instead of exploding into chars."""
-        with pytest.raises(AssertionError, match="list or tuple"):
+        with pytest.raises(TypeError, match="list or tuple"):
             mt.ETable(fitted_models, model_heads=[["USA", "USA"], "OLS"])
 
     def test_multi_level_html(self, fitted_models, snapshot):

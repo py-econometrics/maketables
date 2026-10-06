@@ -20,7 +20,7 @@ def _gt_html(table):
 
 
 def _cells(html):
-    return re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", html, re.S)
+    return re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", html, re.DOTALL)
 
 
 @pytest.fixture

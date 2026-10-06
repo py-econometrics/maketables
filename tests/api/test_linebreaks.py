@@ -41,9 +41,7 @@ class TestLineBreaksTex:
         The [l] matches the stub column's own left alignment, instead of
         makecell's default of centering the lines on each other.
         """
-        idx = pd.MultiIndex.from_tuples(
-            [("Group\nBreak", "a"), ("Group\nBreak", "b")]
-        )
+        idx = pd.MultiIndex.from_tuples([("Group\nBreak", "a"), ("Group\nBreak", "b")])
         table = mt.MTable(pd.DataFrame({"col1": [1, 2]}, index=idx))
         tex = table.make(type="tex")
         assert r"\makecell[l]{\emph{Group}\\\emph{Break}}" in tex

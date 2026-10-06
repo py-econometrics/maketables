@@ -68,7 +68,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.994*** <br> (0.011)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="2">fe</th>
@@ -86,7 +86,7 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.997</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -117,7 +117,7 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ (0.000)} \\
+  x & \makecell{1.994*** \\ (0.011)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -128,7 +128,7 @@
   Observations & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  $R^2$ & 1 \\
+  $R^2$ & 0.997 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -151,14 +151,14 @@
     [], [(1)],
     table.hline(stroke: 0.05em),
     table.hline(stroke: 0.03em),
-    [x], [2.100\*\*\* \ (0.000)],
+    [x], [1.994\*\*\* \ (0.011)],
     table.hline(stroke: 0.03em),
     table.hline(stroke: 0.03em),
     [group], [x],
     table.hline(stroke: 0.03em),
     table.hline(stroke: 0.03em),
     [Observations], [100],
-    [$R^2$], [1],
+    [$R^2$], [0.997],
     table.hline(stroke: 0.08em),
     [#table.cell(colspan: 2)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
   )
@@ -234,18 +234,18 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">x</th>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
-      <td class="gt_row gt_center">2.100*** <br> (0.000)</td>
+      <td class="gt_row gt_center">1.994*** <br> (0.011)</td>
+      <td class="gt_row gt_center">1.994*** <br> (0.011)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">group=B</th>
       <td class="gt_row gt_center"></td>
-      <td class="gt_row gt_center">-0.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">-0.005 <br> (0.020)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
-      <td class="gt_row gt_center">0.000** <br> (0.000)</td>
-      <td class="gt_row gt_center">0.000*** <br> (0.000)</td>
+      <td class="gt_row gt_center">0.008 <br> (0.010)</td>
+      <td class="gt_row gt_center">0.010 <br> (0.015)</td>
     </tr>
     <tr class="gt_group_heading_row">
       <th class="gt_group_heading" colspan="3">stats</th>
@@ -257,8 +257,8 @@
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">R<sup>2</sup></th>
-      <td class="gt_row gt_center">1</td>
-      <td class="gt_row gt_center">1</td>
+      <td class="gt_row gt_center">0.997</td>
+      <td class="gt_row gt_center">0.997</td>
     </tr>
   </tbody>
     <tfoot class="gt_sourcenotes">
@@ -289,20 +289,20 @@
    & (1) & (2) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{2.100*** \\ (0.000)} & \makecell{2.100*** \\ (0.000)} \\
+  x & \makecell{1.994*** \\ (0.011)} & \makecell{1.994*** \\ (0.011)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  group=B &  & \makecell{-0.000*** \\ (0.000)} \\
+  group=B &  & \makecell{-0.005 \\ (0.020)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.000** \\ (0.000)} & \makecell{0.000*** \\ (0.000)} \\
+  Intercept & \makecell{0.008 \\ (0.010)} & \makecell{0.010 \\ (0.015)} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
   Observations & 100 & 100 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  $R^2$ & 1 & 1 \\
+  $R^2$ & 0.997 & 0.997 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -325,13 +325,13 @@
     [], [(1)], [(2)],
     table.hline(stroke: 0.05em),
     table.hline(stroke: 0.03em),
-    [x], [2.100\*\*\* \ (0.000)], [2.100\*\*\* \ (0.000)],
-    [group=B], [], [-0.000\*\*\* \ (0.000)],
-    [Intercept], [0.000\*\* \ (0.000)], [0.000\*\*\* \ (0.000)],
+    [x], [1.994\*\*\* \ (0.011)], [1.994\*\*\* \ (0.011)],
+    [group=B], [], [-0.005 \ (0.020)],
+    [Intercept], [0.008 \ (0.010)], [0.010 \ (0.015)],
     table.hline(stroke: 0.03em),
     table.hline(stroke: 0.03em),
     [Observations], [100], [100],
-    [$R^2$], [1], [1],
+    [$R^2$], [0.997], [0.997],
     table.hline(stroke: 0.08em),
     [#table.cell(colspan: 3)[#text(size: 10pt)[Significance levels: \* p \< 0.1, \*\* p \< 0.05, \*\*\* p \< 0.01. Format of coefficient cell: Coefficient   (Std. Error)]]],
   )
@@ -571,8 +571,8 @@
     <tr>
       <th class="gt_row gt_left gt_stub">X1</th>
       <td class="gt_row gt_center">0.862*** <br> (0.225)</td>
-      <td class="gt_row gt_center">0.736** <br> (0.206)</td>
-      <td class="gt_row gt_center">0.947*** <br> (0.217)</td>
+      <td class="gt_row gt_center">0.736*** <br> (0.162)</td>
+      <td class="gt_row gt_center">0.947*** <br> (0.235)</td>
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center"></td>
@@ -583,8 +583,8 @@
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center"></td>
       <td class="gt_row gt_center">-0.209*** <br> (0.052)</td>
-      <td class="gt_row gt_center">-0.147*** <br> (0.039)</td>
-      <td class="gt_row gt_center">-0.210*** <br> (0.043)</td>
+      <td class="gt_row gt_center">-0.147*** <br> (0.040)</td>
+      <td class="gt_row gt_center">-0.210*** <br> (0.053)</td>
     </tr>
     <tr>
       <th class="gt_row gt_left gt_stub">Intercept</th>
@@ -666,10 +666,10 @@
    & (1) & (2) & (3) & (4) & (5) & (6) \\
   \midrule
   \addlinespace[1ex]
-  X1 & \makecell{0.862*** \\ (0.225)} & \makecell{0.736** \\ (0.206)} & \makecell{0.947*** \\ (0.217)} &  &  &  \\
+  X1 & \makecell{0.862*** \\ (0.225)} & \makecell{0.736*** \\ (0.162)} & \makecell{0.947*** \\ (0.235)} &  &  &  \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  X2 &  &  &  & \makecell{-0.209*** \\ (0.052)} & \makecell{-0.147*** \\ (0.039)} & \makecell{-0.210*** \\ (0.043)} \\
+  X2 &  &  &  & \makecell{-0.209*** \\ (0.052)} & \makecell{-0.147*** \\ (0.040)} & \makecell{-0.210*** \\ (0.053)} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
   Intercept & \makecell{0.929*** \\ (0.272)} &  &  & \makecell{1.560*** \\ (0.180)} &  &  \\
@@ -709,8 +709,8 @@
     [], [(1)], [(2)], [(3)], [(4)], [(5)], [(6)],
     table.hline(stroke: 0.05em),
     table.hline(stroke: 0.03em),
-    [X1], [0.862\*\*\* \ (0.225)], [0.736\*\* \ (0.206)], [0.947\*\*\* \ (0.217)], [], [], [],
-    [X2], [], [], [], [-0.209\*\*\* \ (0.052)], [-0.147\*\*\* \ (0.039)], [-0.210\*\*\* \ (0.043)],
+    [X1], [0.862\*\*\* \ (0.225)], [0.736\*\*\* \ (0.162)], [0.947\*\*\* \ (0.235)], [], [], [],
+    [X2], [], [], [], [-0.209\*\*\* \ (0.052)], [-0.147\*\*\* \ (0.040)], [-0.210\*\*\* \ (0.053)],
     [Intercept], [0.929\*\*\* \ (0.272)], [], [], [1.560\*\*\* \ (0.180)], [], [],
     table.hline(stroke: 0.03em),
     table.hline(stroke: 0.03em),

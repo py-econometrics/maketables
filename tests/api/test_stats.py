@@ -12,7 +12,7 @@ class TestETableModelStats:
 
     @pytest.mark.parametrize("output_type", OUTPUT_TYPES)
     @pytest.mark.parametrize(
-        "model_stats, model_stats_labels",
+        ("model_stats", "model_stats_labels"),
         [
             pytest.param(["N", "r2", "adj_r2", "rmse"], None, id="extended"),
             pytest.param(["N"], None, id="minimal"),
@@ -69,7 +69,7 @@ class TestETableModelStats:
 
     def test_stats_order_rejects_invalid_value(self, fitted_model):
         """Reject unsupported model-statistic block orders."""
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError, match="stats_order"):
             mt.ETable([fitted_model], stats_order="invalid")
 
 
@@ -97,7 +97,7 @@ class TestBTableStats:
         btable_factorial_df,
         snapshot,
     ):
-        """byrow row-groups the table and tests balance separately within each group."""
+        """Byrow row-groups the table and tests balance separately within each group."""
         pytest.importorskip("pyfixest")
         df = btable_factorial_df.copy()
         # Alternate role within each treatment block (not aligned with it),

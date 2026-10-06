@@ -195,7 +195,5 @@ _site/
 **/*.quarto_ipynb
 _freeze/
 
-# continue dev LLM instructions
-.continue/
-.gitmodules
-AGENTS.md
+# Claude Code local settings
+.claude/settings.local.json

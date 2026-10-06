@@ -1,8 +1,11 @@
+"""Base table class supporting HTML, LaTeX, Typst, and DOCX output."""
+
 import html as _stdlib_html
 import json
 import os
+import re
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar, cast
 
 import numpy as np
 import pandas as pd
@@ -18,16 +21,23 @@ from IPython.display import display
 from .symbols import translate_symbols
 
 # Methods
-# -	make: Just return output object (gt, docx, tex, html) or display directly in notebook or as tex when rendered to pdf in Quarto
-# -	save: Save output object in new file to path (docx, tex, html) add parameter replace to replace existing file otherwise error message when file exists
-# -	update: Update existing file with output object (so far only docx) at specified position
+# -	make: Just return output object (gt, docx, tex, html) or display directly
+# in notebook or as tex when rendered to pdf in Quarto
+# -	save: Save output object in new file to path (docx, tex, html) add
+# parameter replace to replace existing file otherwise error message
+# when file exists
+# -	update: Update existing file with output object (so far only docx) at
+# specified position
 #
 # Note:
-# - both save and update have a parameter "show" to display the output object in the notebook as gt
+# - both save and update have a parameter "show" to display the output
+#   object in the notebook as gt
 ##
 # - Handling of paths:
-#     - in save: if file_name is None, use combination of default_path and label as file_name to store the file
-#     - in update: if file_name is relative path and default path is specified, use default_path to update the file_path
+#     - in save: if file_name is None, use combination of default_path and
+#       label as file_name to store the file
+#     - in update: if file_name is relative path and default path is
+#       specified, use default_path to update the file_path
 
 
 class MTable:
@@ -122,7 +132,8 @@ class MTable:
     # or per-call via tex_style in make/save/_output_tex)
     DEFAULT_TEX_STYLE: ClassVar[dict[str, object]] = {
         # Table dimensions
-        "tab_width": r"\linewidth",  # Target width for tabularx (None for normal tabular)
+        # Target width for tabularx (None for normal tabular)
+        "tab_width": r"\linewidth",
         "first_col_width": None,  # LaTeX length for first column (None for flexible)
         # Table placement
         "texlocation": "htbp",  # LaTeX float placement specifier
@@ -134,16 +145,20 @@ class MTable:
         "x_col_align": "center",  # left|center|right for tabularx X columns
         # Rules/spacing
         "cmidrule_trim": "lr",  # "", "l", "r", "lr"
-        "first_row_addlinespace": "1ex",  # spacing before first row of each row group; None disables
-        "data_addlinespace": "0.5ex",  # spacing before and after data rows; None disables
-        "rgroup_addlinespace": None,  # spacing between row groups (independent of rgroup_sep); None disables
+        # spacing before first row of each row group; None disables
+        "first_row_addlinespace": "1ex",
+        # spacing before and after data rows; None disables
+        "data_addlinespace": "0.5ex",
+        # spacing between row groups (independent of rgroup_sep); None disables
+        "rgroup_addlinespace": None,
         # Row-group header formatting
         "group_header_format": r"\emph{%s}",
         # Optional LaTeX injected right after \begingroup to scope table-level commands
-        # Example: r"\\small" or r"\\fontsize{9pt}{11pt}\\selectfont"
+        # Example: r"\\small" or r"\\fontsize{9pt}{11pt}\\selectfont"  # noqa: ERA001
         "group_intro": None,
-        # Notes intro placed at start of notes minipage (e.g., font size or prefix text)
-        # Examples: r"\\footnotesize" (default), r"\\small", r"\\textbf{Note: }\\footnotesize"
+        # Notes intro placed at start of notes minipage (e.g., font size or
+        # prefix text). Examples: r"\\footnotesize" (default), r"\\small",
+        # r"\\textbf{Note: }\\footnotesize"  # noqa: ERA001
         "notes_intro": r"\footnotesize",
     }
 
@@ -193,17 +208,22 @@ class MTable:
         # prevent page breaks within tables
         "prevent_page_breaks": True,
         # first column width (in inches, cm, pt, or None for auto)
-        "first_col_width": None,  # e.g., "2.5in", "6cm", "180pt"
+        # e.g., "2.5in", "6cm", "180pt"
+        "first_col_width": None,
     }
     # Default GT styling - dictionary passed directly to GT.tab_options(**dict)
-    # This allows users to specify ANY GT styling parameter, not just predefined ones
-    # (override globally via MTable.DEFAULT_GT_STYLE.update({...}) or per instance via gt_style={...})
+    # This allows users to specify ANY GT styling parameter, not just predefined
+    # ones (override globally via MTable.DEFAULT_GT_STYLE.update({...}) or per
+    # instance via gt_style={...})
     DEFAULT_GT_STYLE: ClassVar[dict[str, object]] = {
         # Special parameters handled separately (not passed to tab_options)
         "align": "center",  # left | center | right (used for cols_align)
         "table_width": None,  # e.g., "100%" or None for auto-width
-        "first_col_width": None,  # e.g., "150px", "3cm", "20%" or None for auto-width
-        "table_font_size_all": "16px",  # Sets font size for all table elements except notes; individual font sizes override this
+        # e.g., "150px", "3cm", "20%" or None for auto-width
+        "first_col_width": None,
+        # Sets font size for all table elements except notes; individual font
+        # sizes override this
+        "table_font_size_all": "16px",
         "source_notes_font_size": "10px",
         # Standard tab_options parameters
         "data_row_padding": "2px",
@@ -249,18 +269,19 @@ class MTable:
         rgroup_sep: str = DEFAULT_RGROUP_SEP,
         rgroup_display: bool = DEFAULT_RGROUP_DISPLAY,
         default_paths: None | str | dict = DEFAULT_SAVE_PATH,
-        # Style parameters for auto-display in notebooks (applied when no type is specified)
+        # Style parameters for auto-display in notebooks (applied when no
+        # type is specified)
         tex_style: dict[str, object] | None = None,
         typst_style: dict[str, object] | None = None,
         docx_style: dict[str, object] | None = None,
         gt_style: dict[str, object] | None = None,
         # No other style/render defaults here; handled in output methods
-        **kwargs,
-    ):
-        assert isinstance(df, pd.DataFrame), "df must be a pandas DataFrame."
-        assert not isinstance(df.index, pd.MultiIndex) or df.index.nlevels <= 2, (
-            "Row index can have at most two levels."
-        )
+        **kwargs: Any,
+    ) -> None:
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("df must be a pandas DataFrame.")
+        if isinstance(df.index, pd.MultiIndex) and df.index.nlevels > 2:
+            raise ValueError("Row index can have at most two levels.")
         self.df = df
         self.notes = notes
         self.caption = caption
@@ -278,7 +299,8 @@ class MTable:
 
         # Store style parameters for auto-display
         # When displayed automatically (__repr__), styles are used directly
-        # since the default display shows both LaTeX (for Quarto) and HTML (for notebooks)
+        # since the default display shows both LaTeX (for Quarto) and HTML
+        # (for notebooks)
         self._display_styles = {
             "tex_style": tex_style or {},
             "typst_style": typst_style or {},
@@ -347,53 +369,61 @@ class MTable:
 
         return "gt"
 
-    def make(self, type: str | None = None, **kwargs):
+    def make(self, type: str | None = None, **kwargs: Any) -> "GT | str | Any | None":
         r"""
-        Create the output object of the table (either gt, tex, typst, docx, html,
-        or quarto).
-        If type is None, displays the table as HTML, LaTeX and Typst at once, so
-        it shows in notebooks and works in Quarto documents rendered to any of
-        these formats.
+        Create the output object of the table.
+
+        The type is one of gt, tex, typst, docx, html, or quarto. If type is None,
+        displays the table as HTML, LaTeX and Typst at once, so it shows in
+        notebooks and works in Quarto documents rendered to any of these formats.
 
         Parameters
         ----------
         type : str, optional
             The type of the output object
             ("gt", "tex", "typst", "docx", "html", "quarto").
-        **kwargs : Further arguments forwarded to the respective output method when type is specified.
+        **kwargs : Further arguments forwarded to the respective output method
+            when type is specified.
             - For type="tex" (LaTeX):
 
               - tex_style: Dict[str, object] (default MTable.DEFAULT_TEX_STYLE)
                 Per-table overrides for TeX rendering, e.g.:
-                {first_col_width: "3cm", tab_width: r"0.8\\textwidth", texlocation: "htbp",
-                 arraystretch: 1.15, tabcolsep: "4pt", data_align: "c", x_col_align: "left",
-                 cmidrule_trim: "lr", first_row_addlinespace: "0.75ex", data_addlinespace: "0.25ex",
-                group_header_format: r"\\bfseries %s", notes_intro: r"\\footnotesize"}
+                {first_col_width: "3cm", tab_width: r"0.8\\textwidth",
+                 texlocation: "htbp", arraystretch: 1.15, tabcolsep: "4pt",
+                 data_align: "c", x_col_align: "left", cmidrule_trim: "lr",
+                 first_row_addlinespace: "0.75ex", data_addlinespace: "0.25ex",
+                 group_header_format: r"\\bfseries %s",
+                 notes_intro: r"\\footnotesize"}
               Note: When tab_width is set, ensure your document loads
               the tabularx and array packages.
             - For type="typst" (Typst):
 
               - typst_style: Dict[str, object] (default MTable.DEFAULT_TYPST_STYLE)
                 Per-table overrides for Typst rendering, e.g.:
-                {first_col_width: "2.5cm", tab_width: "100%", data_align: "center",
-                 group_header_format: "%s", notes_font_size: "9pt"}
+                {first_col_width: "2.5cm", tab_width: "100%",
+                 data_align: "center", group_header_format: "%s",
+                 notes_font_size: "9pt"}
             - For type="gt" (HTML via great-tables):
 
               - gt_style: Dict[str, object]
-                Dictionary passed directly to GT.tab_options() plus special parameters:
-                'align' (for cols_align), 'table_width' (controls table width),
-                'first_col_width' (width for first column, e.g., "150px", "3cm", "20%"),
-                and 'table_font_size_all' (default font size for all elements except notes; individual settings override).
-                Supports ALL GT styling options - see GT documentation for complete list.
-                Common examples: table_font_size, column_labels_font_size, source_notes_font_size,
-                data_row_padding, column_labels_padding, border styles/colors/widths, etc.
+                Dictionary passed directly to GT.tab_options() plus special
+                parameters: 'align' (for cols_align), 'table_width' (controls
+                table width), 'first_col_width' (width for first column, e.g.,
+                "150px", "3cm", "20%"), and 'table_font_size_all' (default font
+                size for all elements except notes; individual settings
+                override). Supports ALL GT styling options - see GT
+                documentation for complete list. Common examples:
+                table_font_size, column_labels_font_size,
+                source_notes_font_size, data_row_padding,
+                column_labels_padding, border styles/colors/widths, etc.
             - For type="docx" (Word):
 
               - docx_style: Dict[str, object]
                 Overrides keys from MTable.DEFAULT_DOCX_STYLE such as:
-                first_col_width, font_name, font_color_rgb, font_size_pt, notes_font_size_pt,
-                caption_font_name, caption_font_size_pt, caption_align, notes_align,
-                align_center_cells, border_*_rule_sz, cell_margins_dxa, table_style_name.
+                first_col_width, font_name, font_color_rgb, font_size_pt,
+                notes_font_size_pt, caption_font_name, caption_font_size_pt,
+                caption_align, notes_align, align_center_cells,
+                border_*_rule_sz, cell_margins_dxa, table_style_name.
             - For type="quarto":
 
               - Reads QUARTO_EXECUTE_INFO and resolves the target output format.
@@ -412,28 +442,35 @@ class MTable:
             return None
 
         # For explicitly specified types
-        assert type in self.ADMISSIBLE_TYPES, "types must be either " + ", ".join(
-            self.ADMISSIBLE_TYPES
-        )
+        if type not in self.ADMISSIBLE_TYPES:
+            raise ValueError("types must be either " + ", ".join(self.ADMISSIBLE_TYPES))
         if type == "gt":
             return self._output_gt(**kwargs)
-        elif type == "tex":
+        if type == "tex":
             return self._output_tex(**kwargs)
-        elif type == "typst":
+        if type == "typst":
             return self._output_typst(**kwargs)
-        elif type == "docx":
+        if type == "docx":
             return self._output_docx(**kwargs)
-        elif type == "quarto":
+        if type == "quarto":
 
             class QuartoRaw(str):
                 """String content with rich notebook renderers for Quarto backends."""
 
-                def __new__(cls, value: str, fmt: str):
+                __slots__ = ("_fmt",)
+                _fmt: str
+
+                # typing.Self needs Python 3.11; the package supports 3.10
+                def __new__(cls, value: str, fmt: str) -> "QuartoRaw":  # noqa: PYI034
                     obj = super().__new__(cls, value)
                     obj._fmt = fmt
                     return obj
 
-                def _repr_mimebundle_(self, include=None, exclude=None):
+                def _repr_mimebundle_(
+                    self,
+                    include: list[str] | None = None,
+                    exclude: list[str] | None = None,
+                ) -> dict[str, str]:
                     raw_block = f"```{{={self._fmt}}}\n{self!s}\n```"
                     bundle = {"text/markdown": raw_block}
                     if self._fmt == "latex":
@@ -445,15 +482,14 @@ class MTable:
             resolved_type = self._resolve_quarto_output_type()
             if resolved_type == "html":
                 return self._output_gt(**kwargs).as_raw_html()
-            elif resolved_type == "tex":
+            if resolved_type == "tex":
                 return QuartoRaw(self._output_tex(**kwargs), "latex")
-            elif resolved_type == "typst":
+            if resolved_type == "typst":
                 return QuartoRaw(self._output_typst(**kwargs), "typst")
-            elif resolved_type == "docx":
+            if resolved_type == "docx":
                 return self._output_docx(**kwargs)
             return self._output_gt(**kwargs)
-        else:
-            return self._output_gt(**kwargs).as_raw_html()
+        return self._output_gt(**kwargs).as_raw_html()
 
     def save(
         self,
@@ -461,8 +497,8 @@ class MTable:
         file_name: str | None = None,
         show: bool = True,
         replace: bool = DEFAULT_REPLACE,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> "GT | None":
         """
         Save the output object of the table to a file.
 
@@ -488,9 +524,10 @@ class MTable:
         """
         # No instance default injection; defaults resolved in output methods
 
-        assert type in self.ADMISSIBLE_SAVE_TYPES, "types must be either " + ", ".join(
-            self.ADMISSIBLE_SAVE_TYPES
-        )
+        if type not in self.ADMISSIBLE_SAVE_TYPES:
+            raise ValueError(
+                "types must be either " + ", ".join(self.ADMISSIBLE_SAVE_TYPES)
+            )
         if file_name is None:
             if self.tab_label is None:
                 raise ValueError("tab_label must be provided if file_name is None")
@@ -499,21 +536,24 @@ class MTable:
                     f"Default path for type {type} has to be set if file_name is None"
                 )
             # file name will be default path and tab_label:
-            file_name = self.default_paths.get(type) + self.tab_label
+            file_name = cast("str", self.default_paths.get(type)) + self.tab_label
         elif not os.path.splitext(file_name)[1]:
             # if file_name does not have an extension, add the extension
             file_name += f".{type}"
         if self.default_paths.get(type) is not None and not os.path.isabs(file_name):
-            # if file_name is not an absolute path, and default path is set, then add default path to file_name
+            # if file_name is not an absolute path, and default path is set,
+            # then add default path to file_name
             file_name = os.path.join(self.default_paths.get(type, ""), file_name)
         if not replace and file_name is not None and os.path.exists(file_name):
             # when replace is False, check if file exists & abort if it does
             raise ValueError(
-                f"File {file_name} already exists. Set replace=True or use class parameter DEFAULT_REPLACE=True to replace the file."
+                f"File {file_name} already exists. Set replace=True or use "
+                "class parameter DEFAULT_REPLACE=True to replace the file."
             )
-        assert isinstance(file_name, str) and os.path.isdir(
-            os.path.dirname(file_name)
-        ), f"{file_name} is not a valid path."
+        if not (
+            isinstance(file_name, str) and os.path.isdir(os.path.dirname(file_name))
+        ):
+            raise ValueError(f"{file_name} is not a valid path.")
         if type == "tex":
             with open(file_name, "w") as f:
                 f.write(self._output_tex(**kwargs))  # Write the latex code to a file
@@ -528,6 +568,7 @@ class MTable:
                 f.write(self._output_gt(**kwargs).as_raw_html())
         if show:
             return self._output_gt(**kwargs)
+        return None
 
     def update_docx(
         self,
@@ -535,18 +576,20 @@ class MTable:
         tab_num: int | None = None,
         show: bool = False,
         docx_style: dict[str, object] | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> "GT | None":
         """
         Update an existing DOCX file with the output object of the table.
 
         Parameters
         ----------
         file_name : str
-            Path to the DOCX file. If relative and DEFAULT_SAVE_PATH['docx'] is set,
-            that path is prepended. Must end with .docx (or no extension to auto-append).
+            Path to the DOCX file. If relative and DEFAULT_SAVE_PATH['docx']
+            is set, that path is prepended. Must end with .docx (or no
+            extension to auto-append).
         tab_num : int, optional
-            1-based index of the table to replace. If None or out of range, appends a new table.
+            1-based index of the table to replace. If None or out of range,
+            appends a new table.
         show : bool, optional
             If True, also returns a GT object for display (HTML). Default False.
         docx_style : Dict[str, object], optional
@@ -559,7 +602,8 @@ class MTable:
         output : GT
             When show=True, returns a GT object for display (HTML).
         """
-        assert file_name is not None, "file_name must be provided"
+        if file_name is None:
+            raise ValueError("file_name must be provided")
         # Resolve DOCX style (per-call -> class default)
         s = dict(self.DEFAULT_DOCX_STYLE)
         if docx_style:
@@ -573,9 +617,10 @@ class MTable:
             file_name += ".docx"
         elif os.path.splitext(file_name)[1] != ".docx":
             raise ValueError("file_name must have .docx extension")
-        assert isinstance(file_name, str) and os.path.isdir(
-            os.path.dirname(file_name)
-        ), f"{file_name} is not a valid path."
+        if not (
+            isinstance(file_name, str) and os.path.isdir(os.path.dirname(file_name))
+        ):
+            raise ValueError(f"{file_name} is not a valid path.")
         # Check if the document exists
         if file_name and os.path.exists(file_name):
             document = Document(file_name)
@@ -600,7 +645,8 @@ class MTable:
                         prev_par_element.tag.endswith("p")
                         and "Table" in prev_par_element.text
                     ):
-                        # replace text in last subelement of prev_par_element (this should be the old caption)
+                        # replace text in last subelement of prev_par_element
+                        # (this should be the old caption)
                         prev_par_element[-1].text = f": {self.caption}"
             # Delete all rows in the old table
             for row in table.rows:
@@ -625,6 +671,7 @@ class MTable:
         # return gt table if show is True
         if show:
             return self._output_gt(**kwargs)
+        return None
 
     def update_typst(
         self,
@@ -632,17 +679,19 @@ class MTable:
         tab_label: str | None = None,
         show: bool = False,
         typst_style: dict[str, object] | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> "GT | None":
         """
-        Update an existing Typst document by replacing a figure containing a table
-        with the same tab_label. If no matching figure is found, append a new one.
+        Update an existing Typst document by replacing a figure containing a table.
+
+        If no matching figure is found with the same tab_label, append a new one.
 
         Parameters
         ----------
         file_name : str, optional
-            Path to the Typst file. If relative and DEFAULT_SAVE_PATH['typst'] is set,
-            that path is prepended. If omitted, defaults to <default_path>/<tab_label>.typ.
+            Path to the Typst file. If relative and DEFAULT_SAVE_PATH['typst']
+            is set, that path is prepended. If omitted, defaults to
+            <default_path>/<tab_label>.typ.
         tab_label : str, optional
             Label to search for. Defaults to self.tab_label.
         show : bool, optional
@@ -653,7 +702,8 @@ class MTable:
             Forwarded to _output_typst (e.g., symbol translation overrides).
         """
         label = tab_label or self.tab_label
-        assert label is not None, "tab_label must be provided"
+        if label is None:
+            raise ValueError("tab_label must be provided")
 
         # Resolve file path
         if file_name is None:
@@ -667,15 +717,16 @@ class MTable:
         ):
             file_name = os.path.join(self.default_paths.get("typst", ""), file_name)
 
-        root, ext = os.path.splitext(file_name)
+        _, ext = os.path.splitext(file_name)
         if not ext:
             file_name += ".typ"
         elif ext not in (".typ", ".typst"):
             raise ValueError("file_name must have .typ or .typst extension")
 
-        assert isinstance(file_name, str) and os.path.isdir(
-            os.path.dirname(file_name)
-        ), f"{file_name} is not a valid path."
+        if not (
+            isinstance(file_name, str) and os.path.isdir(os.path.dirname(file_name))
+        ):
+            raise ValueError(f"{file_name} is not a valid path.")
 
         # Render the new Typst figure (preserving original tab_label)
         original_label = self.tab_label
@@ -741,6 +792,7 @@ class MTable:
 
         if show:
             return self._output_gt(**kwargs)
+        return None
 
     def update_tex(
         self,
@@ -748,17 +800,19 @@ class MTable:
         tab_label: str | None = None,
         show: bool = False,
         tex_style: dict[str, object] | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> "GT | None":
         """
         Update an existing LaTeX document by replacing a table with the same tab_label.
+
         If no matching table is found, append a new one.
 
         Parameters
         ----------
         file_name : str, optional
-            Path to the LaTeX file. If relative and DEFAULT_SAVE_PATH['tex'] is set,
-            that path is prepended. If omitted, defaults to <default_path>/<tab_label>.tex.
+            Path to the LaTeX file. If relative and DEFAULT_SAVE_PATH['tex']
+            is set, that path is prepended. If omitted, defaults to
+            <default_path>/<tab_label>.tex.
         tab_label : str, optional
             Label to search for. Defaults to self.tab_label.
         show : bool, optional
@@ -769,7 +823,8 @@ class MTable:
             Forwarded to _output_tex (e.g., symbol translation overrides).
         """
         label = tab_label or self.tab_label
-        assert label is not None, "tab_label must be provided"
+        if label is None:
+            raise ValueError("tab_label must be provided")
 
         # Resolve file path
         if file_name is None:
@@ -781,15 +836,16 @@ class MTable:
         elif self.default_paths.get("tex") is not None and not os.path.isabs(file_name):
             file_name = os.path.join(self.default_paths.get("tex", ""), file_name)
 
-        root, ext = os.path.splitext(file_name)
+        _, ext = os.path.splitext(file_name)
         if not ext:
             file_name += ".tex"
         elif ext != ".tex":
             raise ValueError("file_name must have .tex extension")
 
-        assert isinstance(file_name, str) and os.path.isdir(
-            os.path.dirname(file_name)
-        ), f"{file_name} is not a valid path."
+        if not (
+            isinstance(file_name, str) and os.path.isdir(os.path.dirname(file_name))
+        ):
+            raise ValueError(f"{file_name} is not a valid path.")
 
         # Render the new LaTeX table (preserving original tab_label)
         original_label = self.tab_label
@@ -812,7 +868,8 @@ class MTable:
 
         if content and label_marker in content:
             label_pos = content.find(label_marker)
-            # Find the start of the table environment (search backwards for \begin{table})
+            # Find the start of the table environment (search backwards for
+            # \begin{table})
             table_start = content.rfind("\\begin{table", 0, label_pos)
             if table_start != -1:
                 # Find the end of the table environment
@@ -848,8 +905,11 @@ class MTable:
 
         if show:
             return self._output_gt(**kwargs)
+        return None
 
-    def _output_docx(self, docx_style: dict[str, object] | None = None, **kwargs):
+    def _output_docx(
+        self, docx_style: dict[str, object] | None = None, **kwargs: Any
+    ) -> Any:
         # Create a new Document
         document = Document()
 
@@ -872,7 +932,9 @@ class MTable:
 
         return document
 
-    def _build_docx_caption(self, caption: str, paragraph, s: dict[str, object]):
+    def _build_docx_caption(
+        self, caption: str, paragraph: Any, s: dict[str, object]
+    ) -> None:
         run = paragraph.add_run()
         r = run._r
         fldChar = OxmlElement("w:fldChar")
@@ -896,23 +958,24 @@ class MTable:
             str(s.get("caption_align", "center")).lower(), WD_ALIGN_PARAGRAPH.CENTER
         )
         # Font settings
-        rgb = tuple(s.get("font_color_rgb", (0, 0, 0)))
+        rgb = tuple(cast("tuple[int, int, int]", s.get("font_color_rgb", (0, 0, 0))))
         cap_font_name = str(
             s.get("caption_font_name", s.get("font_name", "Times New Roman"))
         )
-        cap_font_size = Pt(int(s.get("caption_font_size_pt", 11)))
+        cap_font_size = Pt(int(cast("Any", s.get("caption_font_size_pt", 11))))
         for r_ in paragraph.runs:
             r_.font.name = cap_font_name
             r_.font.color.rgb = RGBColor(*rgb)
             r_.font.size = cap_font_size
 
-        # Apply "Keep with next" to caption paragraph if page break prevention is enabled
+        # Apply "Keep with next" to caption paragraph if page break prevention is
+        # enabled
         if s.get("prevent_page_breaks", True):
             pPr = paragraph._element.get_or_add_pPr()
             keepNext = OxmlElement("w:keepNext")
             pPr.append(keepNext)
 
-    def _build_docx_table(self, table, s: dict[str, object]):
+    def _build_docx_table(self, table: Any, s: dict[str, object]) -> None:
         # Make a copy of the DataFrame to avoid modifying the original
         dfs = self.df.copy()
 
@@ -938,10 +1001,9 @@ class MTable:
                         )
                         prev_col = col
                         prev_cell_index = cell_index
-                    else:
-                        # Only merge if prev_cell_index is not None and cell_index is valid
-                        if prev_cell_index is not None and cell_index < len(hdr_cells):
-                            hdr_cells[prev_cell_index].merge(hdr_cells[cell_index])
+                    # Only merge if prev_cell_index is not None and cell_index is valid
+                    elif prev_cell_index is not None and cell_index < len(hdr_cells):
+                        hdr_cells[prev_cell_index].merge(hdr_cells[cell_index])
         else:
             hdr_cells = table.add_row().cells
             for i, col in enumerate(dfs.columns):
@@ -952,9 +1014,10 @@ class MTable:
         if row_groups:
             current_group = None
             for idx, row in dfs.iterrows():
-                if idx[0] != current_group:
+                row_index = cast("tuple[Any, ...]", idx)
+                if row_index[0] != current_group:
                     # New row group
-                    current_group = idx[0]
+                    current_group = row_index[0]
                     # append row number to row_group_rows
                     row_group_rows.append(len(table.rows))
                     if self.rgroup_display:
@@ -971,7 +1034,7 @@ class MTable:
                         for cell in group_row_cells[1:]:
                             cell.text = ""
                 row_cells = table.add_row().cells
-                row_cells[0].text = self._translate_symbols(str(idx[1]), "docx")
+                row_cells[0].text = self._translate_symbols(str(row_index[1]), "docx")
                 for i, val in enumerate(row):
                     row_cells[i + 1].text = self._translate_symbols(str(val), "docx")
         else:
@@ -1034,14 +1097,18 @@ class MTable:
             )
             for run in paragraph.runs:
                 run.font.name = str(s.get("font_name", "Times New Roman"))
-                run.font.size = Pt(int(s.get("notes_font_size_pt", 9)))
-                rgb = tuple(s.get("font_color_rgb", (0, 0, 0)))
+                run.font.size = Pt(int(cast("Any", s.get("notes_font_size_pt", 9))))
+                rgb = tuple(
+                    cast("tuple[int, int, int]", s.get("font_color_rgb", (0, 0, 0)))
+                )
                 run.font.color.rgb = RGBColor(*rgb)
 
         # Apply font to all table cells
-        rgb_all = tuple(s.get("font_color_rgb", (0, 0, 0)))
-        base_size = Pt(int(s.get("font_size_pt", 11)))
-        notes_size = Pt(int(s.get("notes_font_size_pt", 9)))
+        rgb_all = tuple(
+            cast("tuple[int, int, int]", s.get("font_color_rgb", (0, 0, 0)))
+        )
+        base_size = Pt(int(cast("Any", s.get("font_size_pt", 11))))
+        notes_size = Pt(int(cast("Any", s.get("notes_font_size_pt", 9))))
         for ridx, row in enumerate(table.rows):
             is_notes_row = ridx == len(table.rows) - 1
             size = notes_size if is_notes_row else base_size
@@ -1077,7 +1144,9 @@ class MTable:
             borders = OxmlElement("w:tcBorders")
             top_border = OxmlElement("w:top")
             top_border.set(qn("w:val"), "single")
-            top_border.set(qn("w:sz"), str(int(s.get("border_top_rule_sz", 8))))
+            top_border.set(
+                qn("w:sz"), str(int(cast("Any", s.get("border_top_rule_sz", 8))))
+            )
             borders.append(top_border)
             tcPr.append(borders)
 
@@ -1087,11 +1156,14 @@ class MTable:
             borders = OxmlElement("w:tcBorders")
             bottom_border = OxmlElement("w:bottom")
             bottom_border.set(qn("w:val"), "single")
-            bottom_border.set(qn("w:sz"), str(int(s.get("border_header_rule_sz", 4))))
+            bottom_border.set(
+                qn("w:sz"), str(int(cast("Any", s.get("border_header_rule_sz", 4))))
+            )
             borders.append(bottom_border)
             tcPr.append(borders)
 
-        # If the column index has more than one level, add a line above the last headline
+        # If the column index has more than one level, add a line above the last
+        # headline
         # row that spans all but the first cell
         if headline_levels > 1:
             for cell in table.rows[headline_levels - 1].cells[1:]:
@@ -1099,7 +1171,10 @@ class MTable:
                 borders = OxmlElement("w:tcBorders")
                 top_border = OxmlElement("w:top")
                 top_border.set(qn("w:val"), "single")
-                top_border.set(qn("w:sz"), str(int(s.get("border_header_rule_sz", 4))))
+                top_border.set(
+                    qn("w:sz"),
+                    str(int(cast("Any", s.get("border_header_rule_sz", 4)))),
+                )
                 borders.append(top_border)
                 tcPr.append(borders)
 
@@ -1112,7 +1187,8 @@ class MTable:
                     top_border = OxmlElement("w:top")
                     top_border.set(qn("w:val"), "single")
                     top_border.set(
-                        qn("w:sz"), str(int(s.get("border_group_rule_sz", 4)))
+                        qn("w:sz"),
+                        str(int(cast("Any", s.get("border_group_rule_sz", 4)))),
                     )
                     borders.append(top_border)
                     tcPr.append(borders)
@@ -1123,7 +1199,8 @@ class MTable:
                     bottom_border = OxmlElement("w:bottom")
                     bottom_border.set(qn("w:val"), "single")
                     bottom_border.set(
-                        qn("w:sz"), str(int(s.get("border_group_rule_sz", 4)))
+                        qn("w:sz"),
+                        str(int(cast("Any", s.get("border_group_rule_sz", 4)))),
                     )
                     borders.append(bottom_border)
                     tcPr.append(borders)
@@ -1134,7 +1211,9 @@ class MTable:
             borders = OxmlElement("w:tcBorders")
             bottom_border = OxmlElement("w:bottom")
             bottom_border.set(qn("w:val"), "single")
-            bottom_border.set(qn("w:sz"), str(int(s.get("border_bottom_rule_sz", 8))))
+            bottom_border.set(
+                qn("w:sz"), str(int(cast("Any", s.get("border_bottom_rule_sz", 8))))
+            )
             borders.append(bottom_border)
             tcPr.append(borders)
 
@@ -1142,8 +1221,9 @@ class MTable:
         tc = table._element
         tblPr = tc.tblPr
         tblCellMar = OxmlElement("w:tblCellMar")
-        _margins = s.get(
-            "cell_margins_dxa", {"left": 0, "right": 0, "top": 60, "bottom": 60}
+        _margins = cast(
+            "dict[str, int]",
+            s.get("cell_margins_dxa", {"left": 0, "right": 0, "top": 60, "bottom": 60}),
         )
         for m in ("left", "right", "top", "bottom"):
             node = OxmlElement(f"w:{m}")
@@ -1154,7 +1234,8 @@ class MTable:
 
         # Prevent page breaks within table (keep table together)
         if s.get("prevent_page_breaks", True):
-            # Apply "Keep lines together" and "Keep with next" to all paragraphs in the table
+            # Apply "Keep lines together" and "Keep with next" to all paragraphs in the
+            # table
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
@@ -1172,8 +1253,8 @@ class MTable:
     def _output_tex(
         self,
         tex_style: dict[str, object] | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         # Make a copy of the DataFrame to avoid modifying the original
         dfs = self.df.copy()
 
@@ -1214,19 +1295,22 @@ class MTable:
                 return f"\\makecell{spec}{{{text}}}"
             return text
 
-        def _prep_cell(x):
+        def _prep_cell(x: Any) -> str:
             if isinstance(x, float) and np.isnan(x):
                 return ""
             if isinstance(x, str):
                 return _wrap_linebreaks(x)
             return str(x)
 
-        # Element-wise conversion; prefer DataFrame.map (pandas >= 2.1), fallback to applymap
+        # Element-wise conversion; prefer DataFrame.map (pandas >= 2.1), fallback to
+        # applymap
         dfs = dfs.map(_prep_cell) if hasattr(dfs, "map") else dfs.applymap(_prep_cell)  # type: ignore[attr-defined]
 
         # Determine row groups (if MultiIndex on rows)
         row_levels = dfs.index.nlevels
         row_groups_present = row_levels > 1
+        row_groups: list[Any] = []
+        row_groups_len: list[int] = []
         if row_groups_present:
             top_row_id = dfs.index.get_level_values(0).to_list()
             row_groups = list(dict.fromkeys(top_row_id))
@@ -1247,7 +1331,8 @@ class MTable:
             x_align = align_map.get(
                 str(s.get("x_col_align", "center")).lower(), align_map["center"]
             )
-            # Default: first column auto-sizes to content (uses left-aligned), data columns share space (X)
+            # Default: first column auto-sizes to content (uses left-aligned), data
+            # columns share space (X)
             if _fcw:
                 first_spec = f"p{{{_fcw}}}"
             else:
@@ -1258,7 +1343,8 @@ class MTable:
             # Start flush left by removing left padding with @{}
             colspec = "@{}" + first_spec + rest_spec
         else:
-            # Default: first column auto-sizes to content (l), other stubs left-aligned (l), data aligned per setting
+            # Default: first column auto-sizes to content (l), other stubs left-aligned
+            # (l), data aligned per setting
             first_stub = f"p{{{_fcw}}}" if _fcw else "l"
             other_stubs = "l" * max(0, stub_cols - 1)
             data_align = str(s.get("data_align", "c")).lower()
@@ -1271,7 +1357,7 @@ class MTable:
         # Build header rows (MultiIndex columns -> spanners + cmidrules)
         header_lines = []
 
-        def _make_spanner_row(level_labels):
+        def _make_spanner_row(level_labels: list[Any]) -> tuple[list[str], list[int]]:
             # level_labels is a list (len = n data columns) of labels at a given level
             cells = []
             spans = []
@@ -1360,7 +1446,8 @@ class MTable:
                 # Rows for this group
                 end = start + glen
                 for ridx in range(start, end):
-                    # Add space before data row (except for the very first row of the group)
+                    # Add space before data row (except for the very first row of the
+                    # group)
                     if s.get("data_addlinespace") is not None and ridx > start:
                         body_lines.append(rf"\addlinespace[{s['data_addlinespace']}]")
 
@@ -1470,9 +1557,7 @@ class MTable:
             )
 
         # Apply symbol translation to the final LaTeX output
-        latex_res = self._translate_symbols(latex_res, "tex")
-
-        return latex_res
+        return self._translate_symbols(latex_res, "tex")
 
     def _escape_typst(self, text: str, escape_asterisks: bool = True) -> str:
         """
@@ -1507,23 +1592,19 @@ class MTable:
         if escape_asterisks:
             # Only escape asterisks that are NOT already preceded by backslash
             # (to preserve intentional escapes like \* from user input)
-            import re
-
             text = re.sub(r"(?<!\\)\*", r"\\*", text)
         text = text.replace("<", "\\<")
         text = text.replace(">", "\\>")
         text = text.replace("_", "\\_")
 
         # Restore actual newlines
-        text = text.replace(newline_placeholder, "\n")
-
-        return text
+        return text.replace(newline_placeholder, "\n")
 
     def _output_typst(
         self,
         typst_style: dict[str, object] | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> str:
         """
         Generate Typst table code.
 
@@ -1539,7 +1620,7 @@ class MTable:
         notes_fontsize = s.get("notes_font_size", "10pt")
 
         # Prepare cell content (escape special Typst characters)
-        def _prep_cell(x):
+        def _prep_cell(x: Any) -> str:
             if isinstance(x, float) and np.isnan(x):
                 return ""
             # Keep newlines as-is for Typst (they work natively in cell content)
@@ -1552,6 +1633,8 @@ class MTable:
         # Determine row groups (if MultiIndex on rows)
         row_levels = dfs.index.nlevels
         row_groups_present = row_levels > 1
+        row_groups: list[Any] = []
+        row_groups_len: list[int] = []
         if row_groups_present:
             top_row_id = dfs.index.get_level_values(0).to_list()
             row_groups = list(dict.fromkeys(top_row_id))
@@ -1577,7 +1660,7 @@ class MTable:
             return self._escape_typst(content, escape_asterisks=escape_asterisks)
 
         # Helper to collapse repeated labels into spans (same as TeX logic)
-        def _make_spanner_row(level_labels):
+        def _make_spanner_row(level_labels: list[Any]) -> tuple[list[str], list[int]]:
             cells = []
             spans = []
             i = 0
@@ -1598,17 +1681,20 @@ class MTable:
         lines = []
         lines.append("#table(")
 
-        # Build column alignment: first column left-aligned, data columns per style (default center)
+        # Build column alignment: first column left-aligned, data columns per style
+        # (default center)
         data_align = s.get("data_align", "center")
         align_specs = ["left"] * stub_cols + [data_align] * data_cols
         align_str = ", ".join(align_specs)
 
-        # Set column widths - first column auto-sizes to content, others use 1fr for equal distribution
+        # Set column widths - first column auto-sizes to content, others use 1fr for
+        # equal distribution
         if s.get("first_col_width"):
             first_width = str(s["first_col_width"])
             width_specs = [first_width] + ["1fr"] * (total_cols - 1)
         else:
-            # Default: first column auto-sizes to widest content, others share remaining space equally
+            # Default: first column auto-sizes to widest content, others share remaining
+            # space equally
             width_specs = ["auto"] + ["1fr"] * (total_cols - 1)
 
         width_str = ", ".join(width_specs)
@@ -1616,13 +1702,15 @@ class MTable:
 
         # Add column-gutter for spacing between column groups
         if isinstance(dfs.columns, pd.MultiIndex):
-            # Create gutter pattern: 0.5em where second-level index changes, 0em elsewhere
+            # Create gutter pattern: 0.5em where second-level index changes, 0em
+            # elsewhere
             gutter_specs = ["0em"]  # After stub column
             # Check for changes in the second-level index (index level -2)
             if dfs.columns.nlevels >= 2:
                 second_level_idx = dfs.columns.get_level_values(-2)
                 for i in range(data_cols - 1):
-                    # If the second-level value changes between columns i and i+1, add spacing
+                    # If the second-level value changes between columns i and i+1, add
+                    # spacing
                     if second_level_idx[i] != second_level_idx[i + 1]:
                         gutter_specs.append("0.5em")
                     else:
@@ -1650,12 +1738,14 @@ class MTable:
                 lines.append("  " + ", ".join(row_parts) + ",")
 
                 # cmidrule-like partial lines under each spanner
-                # Typst uses 1-based column indexing, and hlines span the full width of each spanner
+                # Typst uses 1-based column indexing, and hlines span the full width of
+                # each spanner
                 start_col = 1  # First column (including stub)
                 for span in row_spans:
                     end_col = start_col + span
                     lines.append(
-                        f"  table.hline(stroke: 0.03em, start: {start_col}, end: {end_col}),"
+                        f"  table.hline(stroke: 0.03em, start: {start_col}, "
+                        f"end: {end_col}),"
                     )
                     start_col = end_col  # Next spanner starts where this one ends
 
@@ -1687,7 +1777,8 @@ class MTable:
             for gi, (gname, glen) in enumerate(
                 zip(row_groups, row_groups_len, strict=False)
             ):
-                # Add top separator for row group (if not first group or if 't' in rgroup_sep)
+                # Add top separator for row group (if not first group or if 't' in
+                # rgroup_sep)
                 if gi > 0 and "t" in self.rgroup_sep:
                     lines.append("  table.hline(stroke: 0.03em),")
 
@@ -1695,7 +1786,8 @@ class MTable:
                     fmt = str(s.get("group_header_format", "%s"))
                     gtext = fmt % str(gname)
                     gtext = _join_typst_lines(gtext, escape_asterisks=False)
-                    # Use single cell spanning all columns to avoid line breaks in long headers
+                    # Use single cell spanning all columns to avoid line breaks in long
+                    # headers
                     lines.append(f"  [#table.cell(colspan: {total_cols})[{gtext}]],")
 
                 # Add bottom separator for row group (if 'b' in rgroup_sep)
@@ -1727,7 +1819,8 @@ class MTable:
         if notes_text:
             notes_escaped = _join_typst_lines(notes_text, escape_asterisks=True)
             lines.append(
-                f"  [#table.cell(colspan: {total_cols})[#text(size: {notes_fontsize})[{notes_escaped}]]],"
+                f"  [#table.cell(colspan: {total_cols})"
+                f"[#text(size: {notes_fontsize})[{notes_escaped}]]],"
             )
         lines.append(")")
 
@@ -1738,7 +1831,8 @@ class MTable:
             # Build figure wrapper with caption and optional label for references
             caption_line = ""
             if self.caption is not None:
-                # Escape special characters in caption (but preserve * for bold formatting)
+                # Escape special characters in caption (but preserve * for bold
+                # formatting)
                 caption_escaped = self._escape_typst(
                     self.caption, escape_asterisks=False
                 )
@@ -1755,13 +1849,14 @@ class MTable:
         # Apply symbol translation
         typst_table = self._translate_symbols(typst_table, "typst")
 
-        return typst_table
+        # Apply symbol translation
+        return self._translate_symbols(typst_table, "typst")
 
     def _output_gt(
         self,
         gt_style: dict[str, object] | None = None,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> GT:
         # Make a copy of the DataFrame to avoid modifying the original
         dfs = self.df.copy()
         # Resolve GT style (per-call -> class default)
@@ -1772,10 +1867,10 @@ class MTable:
         # HTML-escape user text line by line, then join the lines with our own
         # <br> tags - so line breaks render while any markup in the text itself
         # still shows up as plain text.
-        def _escape_br(text):
+        def _escape_br(text: str) -> str:
             return "<br>".join(_stdlib_html.escape(line) for line in text.split("\n"))
 
-        def _br(x):
+        def _br(x: Any) -> Any:
             return _escape_br(x) if isinstance(x, str) else x
 
         # Body cells, row labels and row-group names. great_tables < 1.0 does
@@ -1794,27 +1889,29 @@ class MTable:
         # HTML-escape plain strings in every great_tables version, so wrap the
         # pre-escaped text in great_tables.html() so GT trusts it and doesn't
         # re-escape our deliberately-inserted <br> tags.
-        def _gt_linebreak(text):
+        def _gt_linebreak(text: Any) -> Any:
             if text is None:
                 return None
             return _gt_html(_escape_br(str(text)))
 
         # GT does not support MultiIndex columns, so we need to flatten the columns
         if isinstance(dfs.columns, pd.MultiIndex):
-            # Store labels of the last level of the column index (to use as column names)
+            # Store labels of the last level of the column index (to use as column
+            # names)
             col_names = dfs.columns.get_level_values(-1)
             nlevels = dfs.columns.nlevels
 
             # Assign column numbers to the lowest index level
             col_numbers = list(map(str, range(len(dfs.columns))))
-            # Save the whole column index in order to generate table spanner labels later
+            # Save the whole column index in order to generate table spanner labels
+            # later
             dfcols = dfs.columns.to_list()
             # Flatten the column index just numbering the columns
             dfs.columns = pd.Index(col_numbers)
             # Store the mapping of column numbers to column names
             col_dict = dict(zip(col_numbers, col_names, strict=False))
             # Modify the last elements in each tuple in dfcols
-            dfcols = [(t[:-1] + (col_numbers[i],)) for i, t in enumerate(dfcols)]
+            dfcols = [(*t[:-1], col_numbers[i]) for i, t in enumerate(dfcols)]
         else:
             nlevels = 1
             # GT also HTML-escapes a DataFrame's own default column names (not
@@ -1823,7 +1920,8 @@ class MTable:
             # original names now, before reset_index() adds the stub column(s).
             single_level_col_names = list(dfs.columns)
 
-        # store row index and then reset to have the index as columns to be displayed in the table
+        # store row index and then reset to have the index as columns to be displayed in
+        # the table
         rowindex = dfs.index
 
         # Handle potential name conflicts when resetting index
@@ -1842,15 +1940,14 @@ class MTable:
 
             # Temporarily rename index levels to avoid conflicts
             dfs.index.names = index_names
-        else:
-            if rowindex.name is None or rowindex.name in dfs.columns:
-                # Use a safe default name
-                safe_name = "__index__"
-                while safe_name in dfs.columns:
-                    safe_name = f"__index_{hash(safe_name) % 1000}__"
-                dfs.index.name = safe_name
+        elif rowindex.name is None or rowindex.name in dfs.columns:
+            # Use a safe default name
+            safe_name = "__index__"
+            while safe_name in dfs.columns:
+                safe_name = f"__index_{hash(safe_name) % 1000}__"
+            dfs.index.name = safe_name
 
-        dfs.reset_index(inplace=True)
+        dfs = dfs.reset_index()
 
         # Specify the rowname_col and groupname_col
         if isinstance(rowindex, pd.MultiIndex):
@@ -1861,7 +1958,7 @@ class MTable:
             groupname_col = None
 
         # Generate the table with GT
-        gt = GT(dfs, auto_align=False)
+        gt: Any = GT(dfs, auto_align=False)
 
         # great_tables >= 1.0 HTML-escapes body cells, row labels and row-group
         # names by default; ours are already escaped above, so pass them through
@@ -1884,7 +1981,8 @@ class MTable:
         if nlevels > 1:
             for i in range(nlevels - 1):
                 col_spanners = {}
-                # Iterate over columns and group them by the labels in the respective level
+                # Iterate over columns and group them by the labels in the respective
+                # level
                 for c in dfcols:
                     key = c[i]
                     if key not in col_spanners:
@@ -1907,7 +2005,8 @@ class MTable:
             rowname_col=rowname_col, groupname_col=groupname_col
         )
 
-        # Handle table_font_size_all - applies to all font sizes except source_notes_font_size
+        # Handle table_font_size_all - applies to all font sizes except
+        # source_notes_font_size
         # Individual font sizes override the all setting if explicitly provided
         if s.get("table_font_size_all"):
             font_size = s["table_font_size_all"]
@@ -1974,7 +2073,11 @@ class MTable:
 
         return gt
 
-    def _repr_mimebundle_(self, include=None, exclude=None):
+    def _repr_mimebundle_(
+        self,
+        include: list[str] | None = None,
+        exclude: list[str] | None = None,
+    ) -> dict[str, str]:
         """
         Return rich mime output for notebooks and Quarto.
 
@@ -2016,18 +2119,18 @@ class MTable:
             "text/typst": typst_output,
         }
 
-    def _ipython_display_(self):
+    def _ipython_display_(self) -> None:
         """Display hook used by IPython/Jupyter for last-expression rendering."""
-        from IPython.display import display
-
         # Always display the full MIME bundle so Quarto/notebooks get all formats.
         display(self._repr_mimebundle_(), raw=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return plain-text fallback representation for rich display contexts."""
         return ""
 
-    def __call__(self, type=None, **kwargs):
+    def __call__(
+        self, type: str | None = None, **kwargs: Any
+    ) -> "GT | str | Any | None":
         """
         Make this object callable, equivalent to calling make().
 

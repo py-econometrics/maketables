@@ -50,7 +50,7 @@ MakeTables originated as the table output functionality within the [PyFixest](ht
 
 ## Installation
 
-### From PyPI 
+### From PyPI
 ```bash
 pip install maketables
 ```
