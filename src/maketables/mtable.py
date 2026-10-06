@@ -257,10 +257,6 @@ class MTable:
         # No other style/render defaults here; handled in output methods
         **kwargs,
     ):
-        requested_type = kwargs.pop("_requested_type", None)
-        if requested_type is None:
-            requested_type = kwargs.pop("type", None)
-
         assert isinstance(df, pd.DataFrame), "df must be a pandas DataFrame."
         assert not isinstance(df.index, pd.MultiIndex) or df.index.nlevels <= 2, (
             "Row index can have at most two levels."
@@ -271,7 +267,6 @@ class MTable:
         self.tab_label = tab_label
         self.rgroup_sep = rgroup_sep
         self.rgroup_display = rgroup_display
-        self._requested_type = requested_type
         if isinstance(default_paths, str):
             self.default_paths = dict.fromkeys(
                 self.ADMISSIBLE_SAVE_TYPES, default_paths
@@ -356,8 +351,9 @@ class MTable:
         r"""
         Create the output object of the table (either gt, tex, typst, docx, html,
         or quarto).
-        If type is None, displays both HTML and LaTeX outputs for compatibility
-        with both notebook viewing and Quarto rendering.
+        If type is None, displays the table as HTML, LaTeX and Typst at once, so
+        it shows in notebooks and works in Quarto documents rendered to any of
+        these formats.
 
         Parameters
         ----------
@@ -398,55 +394,21 @@ class MTable:
                 first_col_width, font_name, font_color_rgb, font_size_pt, notes_font_size_pt,
                 caption_font_name, caption_font_size_pt, caption_align, notes_align,
                 align_center_cells, border_*_rule_sz, cell_margins_dxa, table_style_name.
-                        - For type="quarto":
+            - For type="quarto":
 
-                            - Reads QUARTO_EXECUTE_INFO and resolves target output format.
-                                If Quarto context is unavailable/invalid, falls back to GT.
+              - Reads QUARTO_EXECUTE_INFO and resolves the target output format.
+                If the Quarto context is unavailable or invalid, falls back to GT.
 
         Returns
         -------
         output : object or None
             - If type is specified: returns the backend output object.
-            - If type is None: displays dual output in notebooks (HTML + LaTeX) and returns None.
+            - If type is None: displays the table (HTML, LaTeX and Typst) and
+              returns None.
         """
         if type is None:
-            # If no type is specified, directly display dual output
-            # Create dual output object for notebook/Quarto compatibility
-            class DualOutput:
-                """Display different outputs in notebook vs Quarto rendering."""
-
-                def __init__(self, notebook_html, quarto_latex, quarto_typst):
-                    self.notebook_html = notebook_html
-                    self.quarto_latex = quarto_latex
-                    self.quarto_typst = quarto_typst
-
-                def _repr_mimebundle_(self, include=None, exclude=None):
-                    bundle = {
-                        "text/html": self.notebook_html,
-                        "text/typst": self.quarto_typst,
-                        "text/latex": self.quarto_latex,
-                    }
-                    return bundle
-
-            # Generate both HTML and LaTeX outputs
-            html_output = self._output_gt().as_raw_html()
-            tex_output = self._output_tex()
-            typst_output = self._output_typst()
-
-            # Add CSS to remove zebra striping if desired
-            html_output = (
-                """
-            <style>
-            table tr:nth-child(even) {
-                background-color: transparent !important;
-            }
-            </style>
-            """
-                + html_output
-            )
-            # Create and display the dual output object
-            dual_output = DualOutput(html_output, tex_output, typst_output)
-            display(dual_output)
+            # Display the table in every format (see _repr_mimebundle_)
+            display(self._repr_mimebundle_(), raw=True)
             return None
 
         # For explicitly specified types
@@ -2013,45 +1975,24 @@ class MTable:
         return gt
 
     def _repr_mimebundle_(self, include=None, exclude=None):
-        """Return rich mime output for notebooks and Quarto."""
+        """
+        Return rich mime output for notebooks and Quarto.
+
+        The same bundle is returned in every context, so that the outputs a
+        notebook stores work for any Quarto target, with or without
+        ``quarto render --execute``:
+
+        - ``text/html``: shown in Jupyter and used for HTML output.
+        - ``text/latex``: used by Quarto for PDF output via LaTeX.
+        - ``text/markdown``: a raw LaTeX block and a raw Typst block. Pandoc
+          keeps only the block matching the output format, so Quarto's Typst
+          output (which does not use ``text/typst``) gets the Typst table.
+        - ``text/typst``: the Typst code, for other consumers.
+        """
         tex_style = self._display_styles.get("tex_style", {})
         typst_style = self._display_styles.get("typst_style", {})
         gt_style = self._display_styles.get("gt_style", {})
 
-        # Quarto render path: emit a raw fenced block via markdown so pandoc
-        # reliably consumes backend-specific table code.
-        if os.environ.get("QUARTO_EXECUTE_INFO"):
-            resolved_type = self._resolve_quarto_output_type()
-            if resolved_type == "tex":
-                tex_output = self._output_tex(tex_style=tex_style)
-                raw_block = f"```{{=latex}}\n{tex_output}\n```"
-                return {"text/markdown": raw_block, "text/latex": tex_output}
-            if resolved_type == "typst":
-                typst_output = self._output_typst(typst_style=typst_style)
-                raw_block = f"```{{=typst}}\n{typst_output}\n```"
-                return {"text/markdown": raw_block, "text/typst": typst_output}
-            # For html or unknown formats (resolved_type="gt"), use fallback logic.
-            # If caller explicitly requested Quarto output, emit both raw backend
-            # blocks so either LaTeX or Typst render can consume the matching one.
-            if self._requested_type == "quarto":
-                tex_output = self._output_tex(tex_style=tex_style)
-                typst_output = self._output_typst(typst_style=typst_style)
-                raw_block = (
-                    f"```{{=latex}}\n{tex_output}\n```\n"
-                    f"```{{=typst}}\n{typst_output}\n```"
-                )
-                return {
-                    "text/markdown": raw_block,
-                    "text/typst": typst_output,
-                    "text/latex": tex_output,
-                }
-            # Default Quarto fallback: emit HTML (for notebooks or when type not specified)
-            if resolved_type in ("html", "gt"):
-                return {"text/html": self._output_gt(gt_style=gt_style).as_raw_html()}
-            # Catch-all for any other resolved type
-            return {"text/html": self._output_gt(gt_style=gt_style).as_raw_html()}
-
-        # Interactive notebook path: show HTML while also providing TeX/Typst.
         html_output = self._output_gt(gt_style=gt_style).as_raw_html()
         html_output = (
             """
@@ -2063,10 +2004,16 @@ class MTable:
         """
             + html_output
         )
+        tex_output = self._output_tex(tex_style=tex_style)
+        typst_output = self._output_typst(typst_style=typst_style)
+        raw_blocks = (
+            f"```{{=latex}}\n{tex_output}\n```\n\n```{{=typst}}\n{typst_output}\n```"
+        )
         return {
             "text/html": html_output,
-            "text/typst": self._output_typst(typst_style=typst_style),
-            "text/latex": self._output_tex(tex_style=tex_style),
+            "text/markdown": raw_blocks,
+            "text/latex": tex_output,
+            "text/typst": typst_output,
         }
 
     def _ipython_display_(self):
@@ -2074,7 +2021,6 @@ class MTable:
         from IPython.display import display
 
         # Always display the full MIME bundle so Quarto/notebooks get all formats.
-        # _repr_mimebundle_() handles QUARTO_EXECUTE_INFO detection internally.
         display(self._repr_mimebundle_(), raw=True)
 
     def __repr__(self):
@@ -2088,7 +2034,7 @@ class MTable:
         Parameters
         ----------
         type : str, optional
-            The output type to create. If None, displays dual output.
+            The output type to create. If None, displays the table in all formats.
         **kwargs : dict
             Additional parameters to pass to make().
 
