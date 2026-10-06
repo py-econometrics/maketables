@@ -37,7 +37,7 @@ mt.DTable(df, vars=["mpg", "weight"], bycol=["foreign"])
 - [LaTeX](https://py-econometrics.github.io/maketables/docs/LatexTables.html)
 - [Word](https://py-econometrics.github.io/maketables/docs/DocxTables.html)
 - [Typst](https://py-econometrics.github.io/maketables/docs/TypstTables.html)
-- [Writing papers with Quarto](https://py-econometrics.github.io/maketables/docs/WritingPapers.html): tables render as HTML in notebooks and as LaTeX in the PDF
+- [Writing papers with Quarto](https://py-econometrics.github.io/maketables/docs/WritingPapers.html): tables render as HTML in notebooks and as LaTeX or Typst in the PDF (`quarto render --to pdf` or `--to typst`)
 
 ## Optional
 
