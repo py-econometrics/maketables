@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- linearmodels panel models (`PanelOLS`, `PooledOLS`, ...) showed no S.E. type: these results only expose the private `_cov_type`, which the extractor now falls back to
 - `BTable(group=[...])` returned `nan` p-values with recent pyfixest versions (seen with 0.60): the helper column for the joint group test was named with leading double underscores, which pyfixest silently drops from `i()` terms, so the test ran on an intercept-only model
 
 ### Added

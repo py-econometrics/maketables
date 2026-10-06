@@ -580,10 +580,9 @@ class TestLinearmodelsExtractor:
     def test_misc_methods(self, linearmodels_panelols):
         e = LinearmodelsExtractor()
         info = e.vcov_info(linearmodels_panelols)
-        # PanelEffectsResults only exposes a private _cov_type, so the extractor
-        # reports None for panel models (IV results do expose cov_type).
-        assert info == {"vcov_type": None, "clustervar": None}
-        assert e.stat(linearmodels_panelols, "se_type") is None
+        # Panel results only expose a private _cov_type; IV results expose cov_type.
+        assert info == {"vcov_type": "Clustered", "clustervar": None}
+        assert e.stat(linearmodels_panelols, "se_type") == "Clustered"
         assert e.stat_labels(linearmodels_panelols) is None
         assert e.default_stat_keys(linearmodels_panelols) is None
         assert e.sample_split(linearmodels_panelols) is None
