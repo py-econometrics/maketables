@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # hatch-vcs needs the tags: without them the version is 0.1.dev1, which
+          # pyfixest (requires maketables>=0.1.0) rejects, so pip downgrades it
+          fetch-depth: 0
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
