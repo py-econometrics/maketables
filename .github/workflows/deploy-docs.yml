@@ -33,12 +33,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install jupyter pyyaml
-          pip install -e .
+          pip install -e ".[docs,linearmodels,lifelines]"
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Render Quarto Project
         run: |
-          quarto render --to html
+          quarto render --to html --execute
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
