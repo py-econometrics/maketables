@@ -40,7 +40,7 @@ jobs:
         run: |
           # The notebooks save example files here; the dirs are not in git
           mkdir -p output latex_output
-          quarto render --to html --execute
+          quarto render --to html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
