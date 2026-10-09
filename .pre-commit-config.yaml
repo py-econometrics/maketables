@@ -94,7 +94,6 @@ repos:
     rev: 0.9.1
     hooks:
       - id: nbstripout
-        # Needs Stata, so CI cannot execute it; it keeps its stored outputs
         exclude: ^docs/pystataIntegration\.ipynb$
         args:
           - --extra-keys

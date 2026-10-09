@@ -21,10 +21,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-        with:
-          # hatch-vcs needs the tags: without them the version is 0.1.dev1, which
-          # pyfixest (requires maketables>=0.1.0) rejects, so pip downgrades it
-          fetch-depth: 0
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
@@ -37,14 +33,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install jupyter pyyaml
-          # pyfixest>=0.60: the notebooks need it, and an unmet pin fails loudly
-          # instead of letting pip silently downgrade
-          pip install -e ".[docs,linearmodels,lifelines]" "pyfixest>=0.60"
+          pip install -e ".[docs,linearmodels,lifelines]"
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Render Quarto Project
         run: |
-          # The notebooks save example files here; the dirs are not in git
           mkdir -p output latex_output
           quarto render --to html
       - name: Upload artifact
