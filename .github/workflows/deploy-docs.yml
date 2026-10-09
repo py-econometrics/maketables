@@ -37,7 +37,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install jupyter pyyaml
-          pip install -e ".[docs,linearmodels,lifelines]"
+          # pyfixest>=0.60: the notebooks need it, and an unmet pin fails loudly
+          # instead of letting pip silently downgrade
+          pip install -e ".[docs,linearmodels,lifelines]" "pyfixest>=0.60"
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Render Quarto Project
