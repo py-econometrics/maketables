@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-19
+
 ### Fixed
 - pyfixest `i()` terms were mislabelled with recent pyfixest versions: coefficients are now named like fixest's (`country::Australia`, `country::Australia:x`), and splitting them at every `:` produced labels like `country × × Australia`. They now render as `country=Australia`. Levels containing `:` or brackets in `C()` terms (e.g. `C(t)[T.10:30]`) are no longer split apart either
 - The `AbsorbingLS` example in the linearmodels vignette did not absorb its fixed effects: `absorb` columns without a categorical dtype are treated as continuous variables (and raise an error for strings since linearmodels 7.1)
@@ -96,6 +98,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[Unreleased]: https://github.com/py-econometrics/maketables/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/py-econometrics/maketables/compare/v0.1.9...v0.2.0
+[0.1.9]: https://github.com/py-econometrics/maketables/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/py-econometrics/maketables/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/py-econometrics/maketables/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/py-econometrics/maketables/releases/tag/v0.1.6
