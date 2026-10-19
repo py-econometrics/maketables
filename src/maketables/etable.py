@@ -1279,20 +1279,46 @@ def _relabel_expvar(
     str
         The relabeled variable
     """
-    # First split the variable name by the interaction symbol
+    # First split the variable name by the interaction symbol ":"
     # Note: will just be equal to varname when no interaction term
-    var_parts = varname.split(":")
+    var_parts = _split_interaction(varname)
     # Loop over the variables and relabel them
     for i in range(len(var_parts)):
         # Check whether template for categorical variables is provided &
         # whether the variable is a categorical variable
         v = var_parts[i]
-        if cat_template != "" and ("C(" in v or "[" in v):
+        if cat_template != "" and ("C(" in v or "[" in v or "::" in v):
             var_parts[i] = _rename_categorical(v, template=cat_template, labels=labels)
         else:
             var_parts[i] = labels.get(v, v)
     # Finally join the variables using the interaction symbol
     return interaction_symbol.join(var_parts)
+
+
+def _split_interaction(varname: str) -> list[str]:
+    """
+    Split a coefficient name into its interaction parts at ":".
+
+    Colons inside brackets or parentheses (e.g. a level "10:30" in
+    "C(time)[T.10:30]") and the "::" of pyfixest's i() level names
+    ("var::level") do not split.
+    """
+    parts, start, depth = [], 0, 0
+    for i, ch in enumerate(varname):
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(depth - 1, 0)
+        elif (
+            ch == ":"
+            and depth == 0
+            and varname[i - 1 : i] != ":"
+            and varname[i + 1 : i + 2] != ":"
+        ):
+            parts.append(varname[start:i])
+            start = i + 1
+    parts.append(varname[start:])
+    return parts
 
 
 def _rename_categorical(
@@ -1317,13 +1343,16 @@ def _rename_categorical(
     str
         The renamed categorical variable.
     """
-    # Here two patterns are used to extract the variable and level
-    # Note the second pattern matches the notation when the variable is
+    # Here three patterns are used to extract the variable and level:
+    # "C(var)[T.level]" from formulaic's C() operator, "var::level" from
+    # pyfixest's i() operator, and "var[T.level]" when the variable is
     # categorical at the outset
     if col_name.startswith("C("):
-        pattern = r"C\(([^,]+)(?:,[^]]+)?\)\[(?:T\.)?([^]]+)\]"
+        pattern = r"C\(([^,]+)(?:,[^]]+)?\)\[(?:T\.)?(.+)\]$"
+    elif "::" in col_name and "[" not in col_name.split("::", 1)[0]:
+        pattern = r"^(.+?)::(.+)$"
     else:
-        pattern = r"([^[]+)\[(?:T\.)?([^]]+)\]"
+        pattern = r"([^[]+)\[(?:T\.)?(.+)\]$"
 
     # Replace labels with empty dictionary if not provided
     if labels is None:
