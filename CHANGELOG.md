@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- Adjusted R� was always missing for pyfixest models: the extractor read `_r2_adj`, but pyfixest 0.60 exposes `_adj_r2` (the old name is kept as a fallback)
+- pyfixest `i()` terms were mislabelled with recent pyfixest versions: coefficients are now named like fixest's (`country::Australia`, `country::Australia:x`), and splitting them at every `:` produced labels like `country × × Australia`. They now render as `country=Australia`. Levels containing `:` or brackets in `C()` terms (e.g. `C(t)[T.10:30]`) are no longer split apart either
+- The `AbsorbingLS` example in the linearmodels vignette did not absorb its fixed effects: `absorb` columns without a categorical dtype are treated as continuous variables (and raise an error for strings since linearmodels 7.1)
+- Adjusted R² was always missing for pyfixest models: the extractor read `_r2_adj`, but pyfixest 0.60 exposes `_adj_r2` (the old name is kept as a fallback)
 - linearmodels panel models (`PanelOLS`, `PooledOLS`, ...) showed no S.E. type: these results only expose the private `_cov_type`, which the extractor now falls back to
 - `BTable(group=[...])` returned `nan` p-values with recent pyfixest versions (seen with 0.60): the helper column for the joint group test was named with leading double underscores, which pyfixest silently drops from `i()` terms, so the test ran on an intercept-only model
 
