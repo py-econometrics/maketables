@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `MTable(notes=None)` raised `TypeError` in DOCX output while LaTeX, Typst and HTML accept it. DOCX now treats `None` like an empty note
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

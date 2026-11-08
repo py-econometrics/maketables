@@ -1081,7 +1081,9 @@ class MTable:
         # Add notes (Note: we alsways add notes, even if empty)
         # Add row to the table that consists only of one cell with the notes
         notes_row = table.add_row().cells
-        notes_row[0].text = self._translate_symbols(self.notes, "docx")
+        notes_row[0].text = self._translate_symbols(
+            "" if self.notes is None else self.notes, "docx"
+        )
         # Merge the cell with the notes
         table.cell(-1, 0).merge(table.cell(-1, ncols - 1))
         # Set alignment and font size for the notes
