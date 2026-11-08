@@ -318,8 +318,12 @@ def get_extractor(model: Any) -> ModelExtractor:
     Find and return the appropriate extractor for a given model.
 
     Strategy (in order):
-    1. Check registered extractors (package-specific implementations)
-    2. Check for plug-in format (__maketables_coef_table__ attribute)
+    1. Check for plug-in format (__maketables_coef_table__ attribute)
+    2. Check registered extractors (package-specific implementations)
+
+    The plug-in format is an explicit opt-in by the model's class, so it takes
+    precedence over registered extractors, some of which recognize models by
+    duck typing (e.g. any object with params, bse and pvalues).
 
     The plug-in format allows external packages to integrate without modifying
     maketables.
@@ -338,20 +342,19 @@ def get_extractor(model: Any) -> ModelExtractor:
         TypeError: If no registered extractor or plug-in format can handle
             the model type.
     """
-    for ex in _EXTRACTOR_REGISTRY:
-        try:
-            if ex.can_handle(model):
-                return ex
-        except Exception:
-            continue
-
-    # Check for plug-in format as fallback
     plugin_extractor = PluginExtractor()
     try:
         if plugin_extractor.can_handle(model):
             return plugin_extractor
     except Exception:
         pass
+
+    for ex in _EXTRACTOR_REGISTRY:
+        try:
+            if ex.can_handle(model):
+                return ex
+        except Exception:
+            continue
 
     # Build helpful error message
     model_type = type(model).__name__

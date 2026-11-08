@@ -60,9 +60,11 @@ mt.ETable([res]).make("tex")                     # also "docx", "typst"
 
 ## How detection works
 
-`ETable` looks up an extractor for each model. Built-in extractors handle
-pyfixest, statsmodels, linearmodels and lifelines; any other object that has a
-`__maketables_coef_table__` attribute is handled by the plug-in extractor. Check
+`ETable` looks up an extractor for each model. Any object that has a
+`__maketables_coef_table__` attribute is handled by the plug-in extractor, even
+if a built-in extractor would also recognize it (the statsmodels extractor, for
+example, accepts any object with `params`, `bse` and `pvalues`). Built-in
+extractors handle pyfixest, statsmodels, linearmodels and lifelines. Check
 with `maketables.get_extractor(res)`, which returns a `PluginExtractor` instance
 for plug-in objects, and `maketables.inspect_model(res)`, which prints what
 maketables reads from the object.
