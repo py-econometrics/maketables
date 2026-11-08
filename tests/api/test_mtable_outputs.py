@@ -506,3 +506,83 @@ def test_display_styles_flow_into_bundle():
 
 def test_public_export():
     assert mt.MTable is MTable
+
+
+# ---------------------------------------------------------- unknown keywords
+
+
+@pytest.mark.parametrize("cls", ["MTable", "ETable", "DTable", "BTable"])
+def test_constructors_reject_unknown_keyword(cls, fitted_model, simple_df):
+    args = {
+        "MTable": (_frame(),),
+        "ETable": (fitted_model,),
+        "DTable": (simple_df, ["x"]),
+        "BTable": (simple_df, ["x"]),
+    }[cls]
+    extra = {"group": "group"} if cls == "BTable" else {}
+    with pytest.raises(TypeError, match="captoin"):
+        getattr(mt, cls)(*args, captoin="x", **extra)
+
+
+@pytest.mark.parametrize("cls", ["MTable", "ETable", "DTable", "BTable"])
+def test_constructors_forward_documented_keywords(cls, fitted_model, simple_df):
+    args = {
+        "MTable": (_frame(),),
+        "ETable": (fitted_model,),
+        "DTable": (simple_df, ["x"]),
+        "BTable": (simple_df, ["x"]),
+    }[cls]
+    extra = {"group": "group"} if cls == "BTable" else {}
+    t = getattr(mt, cls)(
+        *args,
+        caption="Cap",
+        tab_label="tab:x",
+        rgroup_sep="t",
+        default_paths="out/",
+        tex_style={"tabcolsep": "9pt"},
+        **extra,
+    )
+    assert (t.caption, t.tab_label, t.rgroup_sep) == ("Cap", "tab:x", "t")
+    assert t.default_paths["tex"] == "out/"
+    assert t._display_styles["tex_style"] == {"tabcolsep": "9pt"}
+
+
+@pytest.mark.parametrize("type_", ["gt", "tex", "typst", "docx", "html", "quarto"])
+def test_make_rejects_unknown_keyword(type_):
+    with pytest.raises(TypeError, match="tex_styel"):
+        _table().make(type_, tex_styel={"tabcolsep": "9pt"})
+
+
+def test_make_accepts_style_keywords():
+    t = _table()
+    assert "9pt" in t.make("tex", tex_style={"tabcolsep": "9pt"})
+    # Styles for other formats are accepted as before (and have no effect).
+    assert t.make("tex", gt_style={"table_width": "50%"}) == t.make("tex")
+
+
+@pytest.mark.parametrize("type_", ["tex", "typst", "docx", "html"])
+def test_save_rejects_unknown_keyword(tmp_path, type_):
+    with pytest.raises(TypeError, match="gt_stlye"):
+        _table().save(type_, file_name=str(tmp_path / "t"), gt_stlye={})
+    assert not list(tmp_path.iterdir())
+
+
+def test_save_accepts_style_keywords(tmp_path):
+    shown = _table().save(
+        "tex",
+        file_name=str(tmp_path / "t"),
+        tex_style={"tabcolsep": "9pt"},
+        gt_style={"table_width": "50%"},
+    )
+    assert "9pt" in (tmp_path / "t.tex").read_text()
+    assert "50%" in shown.as_raw_html()
+
+
+@pytest.mark.parametrize(
+    ("method", "suffix"),
+    [("update_tex", ".tex"), ("update_typst", ".typ"), ("update_docx", ".docx")],
+)
+def test_update_rejects_unknown_keyword(tmp_path, method, suffix):
+    with pytest.raises(TypeError, match="shwo"):
+        getattr(_table(), method)(file_name=str(tmp_path / f"t{suffix}"), shwo=True)
+    assert not list(tmp_path.iterdir())
