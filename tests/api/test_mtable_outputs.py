@@ -82,6 +82,20 @@ def test_no_caption_no_notes():
     assert not any(p.style.name == "Caption" for p in doc.paragraphs)
 
 
+@pytest.mark.parametrize("fmt", ["tex", "typst", "gt", "docx"])
+def test_notes_none_is_accepted_by_every_format(fmt):
+    assert _table(notes=None).make(type=fmt) is not None
+
+
+def test_docx_notes_none_matches_empty_notes():
+    def cells(doc):
+        return [[c.text for c in row.cells] for row in doc.tables[0].rows]
+
+    with_none = _table(notes=None).make(type="docx")
+    with_empty = _table(notes="").make(type="docx")
+    assert cells(with_none) == cells(with_empty)
+
+
 def test_gt_output_has_caption_notes_and_groups():
     html = _table(grouped=True, spanners=True).make(type="html")
     assert "My caption" in html
