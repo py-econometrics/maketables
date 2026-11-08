@@ -999,6 +999,20 @@ def _linearmodels_cov_type(model: Any) -> Any:
     return val
 
 
+def _linearmodels_f_test(model: Any) -> Any:
+    """Return the model F test that matches the reported covariance estimator.
+
+    Panel results expose both ``f_statistic`` (classical, valid only under
+    homoskedasticity) and ``f_statistic_robust`` (Wald test with the model's
+    covariance). IV results only expose ``f_statistic``, which already uses the
+    model's covariance.
+    """
+    robust = getattr(model, "f_statistic_robust", None)
+    if robust is not None and _linearmodels_cov_type(model) != "Unadjusted":
+        return robust
+    return getattr(model, "f_statistic", None)
+
+
 class LinearmodelsExtractor:
     """Extractor for linearmodels regression results."""
 
@@ -1187,9 +1201,9 @@ class LinearmodelsExtractor:
         "aic": "aic",
         "bic": "bic",
         "ll": "loglik",
-        # F-stat (when available)
-        "fvalue": lambda m: getattr(getattr(m, "f_statistic", None), "stat", None),
-        "f_pvalue": lambda m: getattr(getattr(m, "f_statistic", None), "pval", None),
+        # F-stat (when available), consistent with the reported S.E. type
+        "fvalue": lambda m: getattr(_linearmodels_f_test(m), "stat", None),
+        "f_pvalue": lambda m: getattr(_linearmodels_f_test(m), "pval", None),
         # Error scale / RMSE
         "rmse": lambda m: (
             getattr(m, "root_mean_squared_error", None)

@@ -475,15 +475,63 @@ class TestLinearmodelsExtractor:
         assert e.stat(linearmodels_panelols, "r2_within") == pytest.approx(
             linearmodels_panelols.rsquared_within
         )
+        # Clustered fixture: F follows the covariance estimator
         assert e.stat(linearmodels_panelols, "fvalue") == pytest.approx(
-            linearmodels_panelols.f_statistic.stat
+            linearmodels_panelols.f_statistic_robust.stat
         )
         assert e.stat(linearmodels_panelols, "f_pvalue") == pytest.approx(
-            linearmodels_panelols.f_statistic.pval
+            linearmodels_panelols.f_statistic_robust.pval
         )
         assert e.stat(linearmodels_panelols, "nope") is None
         sup = e.supported_stats(linearmodels_panelols)
         assert {"N", "r2", "r2_within", "fvalue"} <= sup
+
+    @pytest.mark.parametrize(
+        ("cov_type", "kwargs"),
+        [
+            ("unadjusted", {}),
+            ("robust", {}),
+            ("clustered", {"cluster_entity": True}),
+            ("kernel", {}),
+        ],
+    )
+    def test_panel_fvalue_follows_cov_type(self, panel_df, cov_type, kwargs):
+        from linearmodels import PanelOLS
+
+        res = PanelOLS.from_formula("y ~ x1 + x2 + EntityEffects", panel_df).fit(
+            cov_type=cov_type, **kwargs
+        )
+        # Wald test of all slopes = 0 with the reported covariance, divided by
+        # the number of restrictions (PanelOLS defaults to debiased=True)
+        b = res.params.to_numpy()
+        wald_f = b @ np.linalg.solve(res.cov.to_numpy(), b) / len(b)
+        e = LinearmodelsExtractor()
+        assert e.stat(res, "fvalue") == pytest.approx(wald_f)
+        if cov_type == "unadjusted":
+            # the classical F, unchanged
+            assert e.stat(res, "fvalue") == pytest.approx(res.f_statistic.stat)
+        else:
+            assert e.stat(res, "fvalue") != pytest.approx(res.f_statistic.stat)
+        assert e.stat(res, "f_pvalue") == pytest.approx(res.f_statistic_robust.pval)
+
+    def test_panel_unadjusted_not_debiased_keeps_classical_f(self, panel_df):
+        from linearmodels import PanelOLS
+
+        res = PanelOLS.from_formula("y ~ x1 + x2 + EntityEffects", panel_df).fit(
+            debiased=False
+        )
+        assert LinearmodelsExtractor().stat(res, "fvalue") == pytest.approx(
+            res.f_statistic.stat
+        )
+
+    def test_iv_fvalue_unchanged(self, linearmodels_iv2sls):
+        e = LinearmodelsExtractor()
+        assert e.stat(linearmodels_iv2sls, "fvalue") == pytest.approx(
+            linearmodels_iv2sls.f_statistic.stat
+        )
+        assert e.stat(linearmodels_iv2sls, "f_pvalue") == pytest.approx(
+            linearmodels_iv2sls.f_statistic.pval
+        )
 
     def test_rmse_branches(self):
         e = LinearmodelsExtractor()

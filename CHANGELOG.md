@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The F statistic for linearmodels panel models (`PanelOLS`, `PooledOLS`, ...) was the classical, homoskedastic `f_statistic` even when the table showed robust, clustered or Driscoll-Kraay standard errors. It now uses `f_statistic_robust` unless the covariance is unadjusted, matching linearmodels IV results and statsmodels, whose F already follows the covariance type
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
