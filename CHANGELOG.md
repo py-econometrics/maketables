@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed-effect rows in `ETable` showed "-" for every fixed effect of a pyfixest model with more than one (`y ~ x | f + g`, `csw0(f, g)`): pyfixest stores the fixed effects as `"f + g"`, and the presence check split that string on a bare `+`, leaving `"f "` and `" g"`
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

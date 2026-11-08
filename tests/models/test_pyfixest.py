@@ -1,5 +1,6 @@
 """Base snapshot tests for pyfixest models."""
 
+import pandas as pd
 import pytest
 from helpers import OUTPUT_TYPES, render_table
 
@@ -43,3 +44,51 @@ class TestPyfixest:
         # Should expand FixestMulti objects and create a table
         table = mt.ETable(models)
         assert render_table(table, output_type) == snapshot
+
+
+class TestFixedEffectRows:
+    """Fixed-effect presence rows for multi-FE pyfixest models."""
+
+    @pytest.fixture
+    def fe_df(self):
+        import numpy as np
+
+        rng = np.random.default_rng(0)
+        n = 200
+        return pd.DataFrame(
+            {
+                "y": rng.normal(size=n),
+                "x": rng.normal(size=n),
+                "f": rng.integers(0, 5, n),
+                "g": rng.integers(0, 3, n),
+            }
+        )
+
+    def _fe_rows(self, table):
+        fe = table.df.loc["fe"]
+        return {label: list(row) for label, row in fe.iterrows()}
+
+    @pytest.mark.parametrize("fml", ["y ~ x | f + g", "y ~ x | f+g"])
+    def test_both_fixed_effects_marked(self, fe_df, fml):
+        import pyfixest as pf
+
+        table = mt.ETable([pf.feols("y ~ x | f", fe_df), pf.feols(fml, fe_df)])
+        assert self._fe_rows(table) == {"f": ["x", "x"], "g": ["-", "x"]}
+
+    def test_cumulative_stepwise_fixed_effects(self, fe_df):
+        import pyfixest as pf
+
+        table = mt.ETable(pf.feols("y ~ x | csw0(f, g)", fe_df))
+        assert self._fe_rows(table) == {"f": ["-", "x", "x"], "g": ["-", "-", "x"]}
+
+    def test_interacted_fixed_effect_is_one_row(self, fe_df):
+        import pyfixest as pf
+
+        table = mt.ETable(
+            [pf.feols("y ~ x | f^g", fe_df), pf.feols("y ~ x | f + g", fe_df)]
+        )
+        assert self._fe_rows(table) == {
+            "f": ["-", "x"],
+            "f^g": ["x", "-"],
+            "g": ["-", "x"],
+        }

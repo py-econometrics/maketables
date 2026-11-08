@@ -538,6 +538,13 @@ class ETable(MTable):
             pass
         return merged
 
+    @staticmethod
+    def _split_fixef_string(fx: str | None) -> list[str]:
+        # pyfixest stores "f + g" (with spaces), linearmodels "entity+time".
+        if not fx or fx == "0":
+            return []
+        return [x for x in re.split(r"\s*\+\s*", fx) if x]
+
     def _collect_fixef_list(
         self, models: list[Any], show_fe: bool, feorder: list[str] | None = None
     ) -> list[str]:
@@ -545,10 +552,7 @@ class ETable(MTable):
             return []
         fixef_list: list[str] = []
         for m in models:
-            fx = self._extract_fixef_string(m)
-            if fx and fx != "0":
-                fixef_list += re.split(r"\s*\+\s*", fx)
-        fixef_list = [x for x in fixef_list if x]
+            fixef_list += self._split_fixef_string(self._extract_fixef_string(m))
 
         # Apply optional ordering if provided via feorder parameter
         if feorder is not None:
@@ -688,12 +692,9 @@ class ETable(MTable):
         for fx in fixef_list:
             row = []
             for m in models:
-                fx_str = self._extract_fixef_string(m) or ""
-                has = (
-                    (fx_str != "")
-                    and (fx in fx_str.split("+"))
-                    and not getattr(m, "_use_mundlak", False)
-                )
+                has = fx in self._split_fixef_string(
+                    self._extract_fixef_string(m)
+                ) and not getattr(m, "_use_mundlak", False)
                 row.append(
                     self.DEFAULT_FE_MARKER[0] if has else self.DEFAULT_FE_MARKER[1]
                 )
