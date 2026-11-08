@@ -875,7 +875,8 @@ class MTable:
                 # Find the end of the table environment
                 table_end = content.find("\\end{table}", label_pos)
                 if table_end != -1:
-                    table_end = content.find("\n", table_end) + 1
+                    # Keep whatever follows \end{table} (possibly nothing).
+                    table_end += len("\\end{table}")
                     # Replace the entire table environment
                     content = content[:table_start] + new_table + content[table_end:]
                     replaced = True

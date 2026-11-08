@@ -306,6 +306,34 @@ def test_update_tex_appends_with_spacing(tmp_path):
     assert f.read_text().startswith("text\n\n")
 
 
+@pytest.mark.parametrize(
+    ("prefix", "suffix"),
+    [
+        ("", ""),
+        ("", "\n"),
+        ("\\begin{document}\nBefore.\n\n", "\nAfter.\n\\end{document}\n"),
+    ],
+)
+def test_update_tex_replaces_table_in_place(tmp_path, prefix, suffix):
+    # save(type="tex") writes no trailing newline after \end{table}; the
+    # replacement must not depend on one, and must keep surrounding text as is.
+    f = tmp_path / "doc.tex"
+    f.write_text(prefix + _table(caption="Old").make(type="tex") + suffix)
+    new = _table(caption="New")
+    new.update_tex(str(f))
+    assert f.read_text() == prefix + new.make(type="tex") + suffix
+
+
+def test_update_tex_after_save(tmp_path):
+    f = tmp_path / "doc.tex"
+    _table(caption="Old").save("tex", str(f), show=False)
+    _table(caption="New").update_tex(str(f))
+    text = f.read_text()
+    assert text.count("\\begin{table}") == 1
+    assert "Old" not in text
+    assert "New" in text
+
+
 def test_update_tex_defaults_and_errors(tmp_path):
     t = _table(default_paths=str(tmp_path), tab_label="lbl")
     t.update_tex()
