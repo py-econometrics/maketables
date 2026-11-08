@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- LaTeX output did not compile when the table notes contained `%`, as the default `ETable` note does for `coef_fmt` with confidence-interval tokens ("95% CI Lower"): the `%` commented out the closing `\end{minipage}`. A `%` in the notes is now escaped in the tex output; other formats are unchanged
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

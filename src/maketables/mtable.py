@@ -1519,13 +1519,18 @@ class MTable:
         # Wrap threeparttable
         if self.notes is not None:
             notes_intro = str(s.get("notes_intro", r"\footnotesize"))
+            # The notes are emitted on one line, so an unescaped % would comment
+            # out the closing \end{minipage}. Escape every % not already preceded
+            # by an odd run of backslashes (\% stays as is; \\% is a line break
+            # followed by %, so it becomes \\\%).
+            notes_tex = re.sub(r"(?<!\\)((?:\\\\)*)%", r"\1\\%", self.notes)
             latex_res = (
                 "\\begin{threeparttable}\n"
                 + latex_res
                 + "\n\\noindent\\begin{minipage}{\\linewidth}\\smallskip"
                 + notes_intro
                 + "\n"
-                + self.notes.replace("\n", r"\\")
+                + notes_tex.replace("\n", r"\\")
                 + "\\end{minipage}\n"
                 + "\n\\end{threeparttable}"
             )
