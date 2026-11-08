@@ -1569,7 +1569,8 @@ class MTable:
             Text to escape
         escape_asterisks : bool, default True
             Whether to escape asterisks (*, **, etc.). Set to False for header cells
-            that intentionally use *text* for bold formatting.
+            that intentionally use *text* for bold formatting; an unpaired asterisk
+            is still escaped there, since Typst cannot compile an unclosed *.
 
         Returns
         -------
@@ -1581,24 +1582,33 @@ class MTable:
         # Temporarily preserve actual newlines by replacing them with a placeholder
         newline_placeholder = "\x00NEWLINE\x00"
         text = text.replace("\n", newline_placeholder)
+        # A user-escaped \* is a literal asterisk: keep it away from the backslash
+        # escaping below, which would turn it into a literal "\" plus a bare "*"
+        star_placeholder = "\x00STAR\x00"
+        text = text.replace("\\*", star_placeholder)
 
         # Escape backslashes (must be first!)
         text = text.replace("\\", "\\\\")
         # Escape bracket characters that interfere with Typst table syntax
         text = text.replace("[", "\\[")
         text = text.replace("]", "\\]")
-        # Escape other special characters
-        text = text.replace("#", "\\#")
-        if escape_asterisks:
-            # Only escape asterisks that are NOT already preceded by backslash
-            # (to preserve intentional escapes like \* from user input)
-            text = re.sub(r"(?<!\\)\*", r"\\*", text)
-        text = text.replace("<", "\\<")
-        text = text.replace(">", "\\>")
-        text = text.replace("_", "\\_")
+        # Escape the other markup-mode characters
+        # (https://typst.app/docs/reference/syntax/): code, math, raw text,
+        # label, reference, emphasis and the "~" (non-breaking space) shorthand
+        for char in "#$`<>@_~":
+            text = text.replace(char, "\\" + char)
+        if escape_asterisks or text.count("*") % 2:
+            text = text.replace("*", "\\*")
+        # "//" and "/*" open comments, which swallow the cell's closing "]".
+        # After ":" it is a URL ("https://"), which Typst lexes as a link instead.
+        text = re.sub(r"(?<!:)/(?=[/*])", r"\\/", text)
+        text = text.replace(star_placeholder, "\\*")
 
         # Restore actual newlines
-        return text.replace(newline_placeholder, "\n")
+        text = text.replace(newline_placeholder, "\n")
+        # Heading (=), list (-), enum (+) and term-list (/) markers: a line that
+        # starts with one of them followed by a space
+        return re.sub(r"^([ \t]*)([=+/-])(?=\s)", r"\1\\\2", text, flags=re.MULTILINE)
 
     def _output_typst(
         self,
