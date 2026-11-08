@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `update_docx(tab_num=...)` now follows its documented 1-based indexing: `tab_num=0` overwrote the last table and negative values raised `IndexError`, while values outside `1..n_tables` are documented to append. Replacing a table now writes a new table in its place, where it used to reuse the old one. Reusing it raised `IndexError` when the new table had more columns, left empty columns when it had fewer, and added a second set of cell margins on each replacement
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

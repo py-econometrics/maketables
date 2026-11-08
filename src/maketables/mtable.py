@@ -632,13 +632,13 @@ class MTable:
             n_tables = 0
 
         # Check whether existing table should be replaced
-        if n_tables > 0 and tab_num is not None and tab_num <= n_tables:
+        if tab_num is not None and 1 <= tab_num <= n_tables:
             # Replace the table at position tab_num
-            table = document.tables[tab_num - 1]
+            old_table = document.tables[tab_num - 1]
             # Replace the caption before the table
             if self.caption is not None:
                 # Find the paragraph before the table
-                table_idx = list(document._body._body).index(table._element)
+                table_idx = list(document._body._body).index(old_table._element)
                 if table_idx > 0:
                     prev_par_element = document._body._element[table_idx - 1]
                     if (
@@ -648,11 +648,13 @@ class MTable:
                         # replace text in last subelement of prev_par_element
                         # (this should be the old caption)
                         prev_par_element[-1].text = f": {self.caption}"
-            # Delete all rows in the old table
-            for row in table.rows:
-                table._element.remove(row._element)
-            # Build the new table in the existing document
+            # Build a new table and put it where the old one was. Reusing the
+            # old table would keep its column grid and table properties.
+            table = document.add_table(rows=0, cols=self.df.shape[1] + 1)
+            table.style = s.get("table_style_name") or "Table Grid"
             self._build_docx_table(table, s)
+            old_table._element.addnext(table._element)
+            old_table._element.getparent().remove(old_table._element)
         else:
             # Add a caption if specified
             if self.caption is not None:

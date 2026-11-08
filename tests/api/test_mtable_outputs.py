@@ -384,6 +384,40 @@ def test_update_docx_creates_appends_and_replaces(tmp_path):
     assert len(Document(str(f)).tables) == 3
 
 
+def _ncol_table(tag, ncol):
+    return MTable(pd.DataFrame({f"c{j}": [tag] for j in range(ncol)}, index=["row"]))
+
+
+@pytest.mark.parametrize("tab_num", [0, -1, -5])
+def test_update_docx_non_positive_tab_num_appends(tmp_path, tab_num):
+    # tab_num is 1-based; anything outside 1..n_tables appends.
+    f = tmp_path / "doc.docx"
+    _ncol_table("FIRST", 2).update_docx(str(f))
+    _ncol_table("LAST", 2).update_docx(str(f))
+    _ncol_table("NEW", 2).update_docx(str(f), tab_num=tab_num)
+    assert [t.cell(1, 1).text for t in Document(str(f)).tables] == [
+        "FIRST",
+        "LAST",
+        "NEW",
+    ]
+
+
+@pytest.mark.parametrize(("old_ncol", "new_ncol"), [(2, 3), (3, 1), (2, 2)])
+def test_update_docx_replaced_table_matches_fresh_table(tmp_path, old_ncol, new_ncol):
+    # Replacing a table must give the same table as appending one, whatever
+    # the width of the table it replaces.
+    f = tmp_path / "doc.docx"
+    _ncol_table("BEFORE", 1).update_docx(str(f))
+    _ncol_table("OLD", old_ncol).update_docx(str(f))
+    _ncol_table("AFTER", 1).update_docx(str(f))
+    _ncol_table("NEW", new_ncol).update_docx(str(f), tab_num=2)
+    fresh = tmp_path / "fresh.docx"
+    _ncol_table("NEW", new_ncol).update_docx(str(fresh))
+    tables = Document(str(f)).tables
+    assert [t.cell(1, 1).text for t in tables] == ["BEFORE", "NEW", "AFTER"]
+    assert tables[1]._tbl.xml == Document(str(fresh)).tables[0]._tbl.xml
+
+
 def test_update_docx_replace_without_caption(tmp_path):
     f = tmp_path / "doc.docx"
     _table(caption=None).update_docx(str(f))
