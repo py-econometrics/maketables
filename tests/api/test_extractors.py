@@ -92,6 +92,46 @@ def test_get_extractor_falls_back_to_plugin(clean_registry):
     assert isinstance(get_extractor(Plug()), PluginExtractor)
 
 
+class _DuckTypedPlugin:
+    """Plug-in object that also has statsmodels-style params/bse/pvalues."""
+
+    params = pd.Series([1.0, 2.0], index=["a", "b"])
+    bse = pd.Series([0.1, 0.1], index=["a", "b"])
+    pvalues = pd.Series([0.5, 0.5], index=["a", "b"])
+    __maketables_depvar__ = "outcome"
+
+    @property
+    def __maketables_coef_table__(self):
+        return pd.DataFrame(
+            {"b": [9.0, 8.0], "se": [1.0, 1.0], "t": [9.0, 8.0], "p": [0.0, 0.0]},
+            index=["a", "b"],
+        )
+
+    def __maketables_stat__(self, key):
+        return 123 if key == "N" else None
+
+
+def test_plugin_wins_over_builtin_duck_typing():
+    # Uses the real registry: the statsmodels extractor's can_handle() also
+    # accepts this object, but the plug-in attributes are an explicit opt-in.
+    m = _DuckTypedPlugin()
+    assert StatsmodelsExtractor().can_handle(m)
+    e = get_extractor(m)
+    assert isinstance(e, PluginExtractor)
+    assert e.coef_table(m)["b"].tolist() == [9.0, 8.0]
+    assert e.stat(m, "N") == 123
+    assert e.depvar(m) == "outcome"
+
+
+def test_plugin_values_reach_etable():
+    from maketables import ETable
+
+    tex = ETable(_DuckTypedPlugin(), model_stats=["N"]).make("tex")
+    assert "9.000" in tex
+    assert "123" in tex
+    assert "outcome" in tex
+
+
 def test_get_extractor_plugin_check_exception_is_swallowed(clean_registry):
     class Weird:
         @property

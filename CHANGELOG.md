@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Objects implementing the plug-in format (`__maketables_coef_table__`) were handled by a built-in extractor instead when they also matched its checks: an object with `params`, `bse` and `pvalues` went to the statsmodels extractor, and its plug-in coefficients, statistics and dependent variable were ignored. The plug-in format is now checked first
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
