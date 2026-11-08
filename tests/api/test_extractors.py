@@ -301,7 +301,7 @@ class TestStatsmodelsExtractor:
         np.testing.assert_allclose(df["ci95l"], [1 - 0.98, 2 - 0.98])
         np.testing.assert_allclose(df["ci90u"], [1 + 0.8225, 2 + 0.8225])
 
-    def test_coef_table_fallback_when_conf_int_fails(self):
+    def test_coef_table_no_normal_approximation_when_conf_int_fails(self):
         def bad(alpha=0.05):
             raise RuntimeError
 
@@ -313,9 +313,35 @@ class TestStatsmodelsExtractor:
             conf_int=bad,
         )
         df = StatsmodelsExtractor().coef_table(m)
-        assert df["ci95l"].iloc[0] == pytest.approx(-0.96)
-        assert df["ci90u"].iloc[0] == pytest.approx(2.645)
+        assert df[["ci95l", "ci95u", "ci90l", "ci90u"]].isna().all().all()
         assert df["t"].iloc[0] == 1.0
+
+    @pytest.fixture
+    def array_ols(self):
+        import statsmodels.api as sm
+
+        rng = np.random.default_rng(1)
+        x = sm.add_constant(rng.standard_normal((20, 2)))
+        y = x @ [2.0, 1.0, -0.5] + rng.standard_normal(20)
+        return sm.OLS(y, x).fit()
+
+    def test_coef_table_array_input_uses_exog_names(self, array_ols):
+        df = StatsmodelsExtractor().coef_table(array_ols)
+        assert list(df.index) == ["const", "x1", "x2"]
+        np.testing.assert_allclose(df["b"], array_ols.params)
+
+    def test_coef_table_array_input_uses_model_conf_int(self, array_ols):
+        df = StatsmodelsExtractor().coef_table(array_ols)
+        np.testing.assert_allclose(df[["ci95l", "ci95u"]], array_ols.conf_int(0.05))
+        np.testing.assert_allclose(df[["ci90l", "ci90u"]], array_ols.conf_int(0.10))
+
+    def test_etable_with_array_input(self, array_ols):
+        from maketables import ETable
+
+        tex = ETable(array_ols, coef_fmt="b [ci95l, ci95u]").make("tex")
+        lo, hi = array_ols.conf_int(0.05)[1]
+        assert "x1" in tex
+        assert f"[{lo:.3f}, {hi:.3f}]" in tex
 
     def test_stats(self, statsmodels_ols, statsmodels_logit):
         e = StatsmodelsExtractor()

@@ -819,6 +819,13 @@ class StatsmodelsExtractor:
     def coef_table(self, model: Any) -> pd.DataFrame:
         """Extract coefficient table from statsmodels result with canonical tokens."""
         params = pd.Series(model.params)
+        # Fits on numpy arrays return unnamed arrays; statsmodels keeps the
+        # names (const, x1, ...) on the model.
+        exog_names = _follow(model, ["model", "exog_names"])
+        if not isinstance(model.params, pd.Series) and (
+            isinstance(exog_names, list) and len(exog_names) == len(params)
+        ):
+            params.index = pd.Index(exog_names)
         params.index.name = "Coefficient"
         se = pd.Series(getattr(model, "bse", np.nan), index=params.index)
         pvalues = pd.Series(getattr(model, "pvalues", np.nan), index=params.index)
@@ -838,31 +845,22 @@ class StatsmodelsExtractor:
                 pd.Series(tvalues, index=params.index), errors="coerce"
             )
 
-        # Extract confidence intervals if available
-        if hasattr(model, "conf_int"):
-            try:
-                ci = model.conf_int(alpha=0.05)  # 95% CI
-                df["ci95l"] = pd.to_numeric(ci.iloc[:, 0], errors="coerce")
-                df["ci95u"] = pd.to_numeric(ci.iloc[:, 1], errors="coerce")
-            except Exception:
-                df["ci95l"] = df["b"] - 1.96 * df["se"]
-                df["ci95u"] = df["b"] + 1.96 * df["se"]
-        else:
-            df["ci95l"] = df["b"] - 1.96 * df["se"]
-            df["ci95u"] = df["b"] + 1.96 * df["se"]
-
-        # Also add 90% CI
-        if hasattr(model, "conf_int"):
-            try:
-                ci90 = model.conf_int(alpha=0.10)  # 90% CI
-                df["ci90l"] = pd.to_numeric(ci90.iloc[:, 0], errors="coerce")
-                df["ci90u"] = pd.to_numeric(ci90.iloc[:, 1], errors="coerce")
-            except Exception:
-                df["ci90l"] = df["b"] - 1.645 * df["se"]
-                df["ci90u"] = df["b"] + 1.645 * df["se"]
-        else:
-            df["ci90l"] = df["b"] - 1.645 * df["se"]
-            df["ci90u"] = df["b"] + 1.645 * df["se"]
+        # Confidence intervals come from the model itself (t- or normal-based
+        # as the model defines). Only objects without conf_int() get the
+        # normal approximation; if conf_int() fails the bounds stay missing.
+        for alpha, z, lo, hi in (
+            (0.05, 1.96, "ci95l", "ci95u"),
+            (0.10, 1.645, "ci90l", "ci90u"),
+        ):
+            if hasattr(model, "conf_int"):
+                try:
+                    ci = np.asarray(model.conf_int(alpha=alpha), dtype=float)
+                    df[lo], df[hi] = ci[:, 0], ci[:, 1]
+                except Exception:
+                    df[lo] = df[hi] = np.nan
+            else:
+                df[lo] = df["b"] - z * df["se"]
+                df[hi] = df["b"] + z * df["se"]
 
         # Reorder columns
         ordered = [
