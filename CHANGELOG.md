@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Missing cell values rendered differently per format: `None` and `pd.NA` printed as "None"/"<NA>" in LaTeX, Typst and DOCX, DOCX showed "nan" for `NaN`, and HTML emitted an unescaped `<NA>`. Missing values (`None`, `NaN`, `pd.NA`, `NaT`) now render as blank cells in every format
+- `ETable(custom_model_stats=...)` with a row shorter than the number of models silently left the remaining cells missing (and a longer row raised a pandas length error). Each row must now have one entry per model, as for `custom_stats` and `model_heads`, and a plain string raises `TypeError` instead of being split into characters
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

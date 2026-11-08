@@ -7,7 +7,6 @@ import re
 from pathlib import Path
 from typing import Any, ClassVar, cast
 
-import numpy as np
 import pandas as pd
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -19,6 +18,12 @@ from great_tables import html as _gt_html
 from IPython.display import display
 
 from .symbols import translate_symbols
+
+
+def _is_missing(x: Any) -> bool:
+    """Missing cell values (None, NaN, pd.NA, NaT) render as blank cells."""
+    return pd.api.types.is_scalar(x) and bool(pd.isna(x))
+
 
 # Methods
 # -	make: Just return output object (gt, docx, tex, html) or display directly
@@ -1036,13 +1041,15 @@ class MTable:
                 row_cells = table.add_row().cells
                 row_cells[0].text = self._translate_symbols(str(row_index[1]), "docx")
                 for i, val in enumerate(row):
-                    row_cells[i + 1].text = self._translate_symbols(str(val), "docx")
+                    text = "" if _is_missing(val) else str(val)
+                    row_cells[i + 1].text = self._translate_symbols(text, "docx")
         else:
             for idx, row in dfs.iterrows():
                 row_cells = table.add_row().cells
                 row_cells[0].text = self._translate_symbols(str(idx), "docx")
                 for i, val in enumerate(row):
-                    row_cells[i + 1].text = self._translate_symbols(str(val), "docx")
+                    text = "" if _is_missing(val) else str(val)
+                    row_cells[i + 1].text = self._translate_symbols(text, "docx")
 
         # Set first column width if specified
         if s.get("first_col_width") is not None:
@@ -1296,7 +1303,7 @@ class MTable:
             return text
 
         def _prep_cell(x: Any) -> str:
-            if isinstance(x, float) and np.isnan(x):
+            if _is_missing(x):
                 return ""
             if isinstance(x, str):
                 return _wrap_linebreaks(x)
@@ -1621,7 +1628,7 @@ class MTable:
 
         # Prepare cell content (escape special Typst characters)
         def _prep_cell(x: Any) -> str:
-            if isinstance(x, float) and np.isnan(x):
+            if _is_missing(x):
                 return ""
             # Keep newlines as-is for Typst (they work natively in cell content)
             # Don't escape yet - we'll handle that after formatting for multi-line cells
@@ -1871,6 +1878,8 @@ class MTable:
             return "<br>".join(_stdlib_html.escape(line) for line in text.split("\n"))
 
         def _br(x: Any) -> Any:
+            if _is_missing(x):
+                return ""
             return _escape_br(x) if isinstance(x, str) else x
 
         # Body cells, row labels and row-group names. great_tables < 1.0 does
