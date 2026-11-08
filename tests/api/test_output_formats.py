@@ -14,9 +14,11 @@ All layers run against the ``sample_table`` fixture family from conftest.py
 formatted, merged-header and wide tables.
 """
 
+import re
 import shutil
 import subprocess
 
+import pandas as pd
 import pytest
 from helpers import normalize_latex, normalize_typst
 
@@ -42,6 +44,15 @@ TEX_PREAMBLE = (
     "\\begin{document}\n"
 )
 TEX_POSTAMBLE = "\n\\end{document}\n"
+
+CI_COEF_FMT = "b:.3f (se:.3f) [ci95l:.3f, ci95u:.3f]"
+
+
+def latex_notes(tex: str) -> str:
+    """Return the notes text inside the threeparttable notes minipage."""
+    match = re.search(r"\\footnotesize\n(.*)\\end\{minipage\}", tex, re.DOTALL)
+    assert match is not None, tex
+    return match.group(1)
 
 
 def docx_table_text(document) -> list[list[list[str]]]:
@@ -126,6 +137,33 @@ class TestLatexOutput:
         result = compile_pdflatex(sample_table, tmp_path, check=False)
         assert result.returncode == 0, result.stdout[-2000:]
         assert (tmp_path / "out.pdf").stat().st_size > 0
+
+    def test_ci_note_percent_escaped(self, fitted_model):
+        """The default note's "95% CI" labels must not start a TeX comment."""
+        table = mt.ETable([fitted_model], coef_fmt=CI_COEF_FMT)
+        notes_tex = latex_notes(table.make(type="tex"))
+        assert r"[95\% CI Lower, 95\% CI Upper]" in notes_tex
+        assert re.search(r"(?<!\\)%", notes_tex) is None
+        # Escaping happens at TeX emission; other formats keep the plain label.
+        assert "95% CI Lower" in table.notes
+
+    @pytest.mark.parametrize(
+        ("notes", "expected"),
+        [
+            ("50% share", r"50\% share"),
+            (r"already escaped 10\%", r"already escaped 10\%"),
+            ("line one\n%line two", r"line one\\\%line two"),
+        ],
+    )
+    def test_notes_percent_escaped(self, notes, expected):
+        table = mt.MTable(pd.DataFrame({"a": [1]}), notes=notes)
+        assert latex_notes(table.make(type="tex")) == expected
+
+    @needs_pdflatex
+    def test_ci_note_compiles(self, fitted_model, tmp_path):
+        table = mt.ETable([fitted_model], coef_fmt=CI_COEF_FMT)
+        result = compile_pdflatex(table, tmp_path, check=False)
+        assert result.returncode == 0, result.stdout[-2000:]
 
 
 class TestLatexPdfOutput:
