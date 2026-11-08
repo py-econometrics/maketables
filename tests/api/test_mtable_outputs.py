@@ -7,6 +7,7 @@ from unittest import mock
 import pandas as pd
 import pytest
 from docx import Document
+from docx.oxml.ns import qn
 
 import maketables as mt
 from maketables import MTable
@@ -211,6 +212,152 @@ def test_docx_style_options():
     assert doc.tables
     for align in ("left", "right"):
         _table().make(type="docx", docx_style={"caption_align": align})
+
+
+# Child element order from the ECMA-376 schema (CT_TcPr, CT_TcBorders, CT_PPr,
+# CT_TblPr); each child may appear at most once.
+_TCPR_SEQ = (
+    "cnfStyle",
+    "tcW",
+    "gridSpan",
+    "hMerge",
+    "vMerge",
+    "tcBorders",
+    "shd",
+    "noWrap",
+    "tcMar",
+    "textDirection",
+    "tcFitText",
+    "vAlign",
+    "hideMark",
+    "headers",
+    "cellIns",
+    "cellDel",
+    "cellMerge",
+    "tcPrChange",
+)
+_TCBORDERS_SEQ = (
+    "top",
+    "left",
+    "bottom",
+    "right",
+    "insideH",
+    "insideV",
+    "tl2br",
+    "tr2bl",
+)
+_PPR_SEQ = (
+    "pStyle",
+    "keepNext",
+    "keepLines",
+    "pageBreakBefore",
+    "framePr",
+    "widowControl",
+    "numPr",
+    "suppressLineNumbers",
+    "pBdr",
+    "shd",
+    "tabs",
+    "suppressAutoHyphens",
+    "kinsoku",
+    "wordWrap",
+    "overflowPunct",
+    "topLinePunct",
+    "autoSpaceDE",
+    "autoSpaceDN",
+    "bidi",
+    "adjustRightInd",
+    "snapToGrid",
+    "spacing",
+    "ind",
+    "contextualSpacing",
+    "mirrorIndents",
+    "suppressOverlap",
+    "jc",
+    "textDirection",
+    "textAlignment",
+    "textboxTightWrap",
+    "outlineLvl",
+    "divId",
+    "cnfStyle",
+    "rPr",
+    "sectPr",
+    "pPrChange",
+)
+_TBLPR_SEQ = (
+    "tblStyle",
+    "tblpPr",
+    "tblOverlap",
+    "bidiVisual",
+    "tblStyleRowBandSize",
+    "tblStyleColBandSize",
+    "tblW",
+    "jc",
+    "tblCellSpacing",
+    "tblInd",
+    "tblBorders",
+    "shd",
+    "tblLayout",
+    "tblCellMar",
+    "tblLook",
+    "tblCaption",
+    "tblDescription",
+    "tblPrChange",
+)
+
+
+def _assert_schema_order(element, seq):
+    names = [child.tag.split("}")[1] for child in element]
+    positions = [seq.index(name) for name in names]
+    assert positions == sorted(set(positions)), names
+
+
+def _borders(cell):
+    (borders,) = cell._tc.tcPr.findall(qn("w:tcBorders"))
+    return {
+        child.tag.split("}")[1]: (child.get(qn("w:val")), child.get(qn("w:sz")))
+        for child in borders
+    }
+
+
+@pytest.mark.parametrize(
+    "kwargs", [{}, {"grouped": True, "spanners": True}, {"grouped": True}]
+)
+def test_docx_xml_has_one_tcborders_per_cell_in_schema_order(kwargs):
+    table = _table(**kwargs).make(type="docx").tables[0]
+    tbl = table._tbl
+    _assert_schema_order(tbl.tblPr, _TBLPR_SEQ)
+    for tc in tbl.iter(qn("w:tc")):
+        _assert_schema_order(tc.tcPr, _TCPR_SEQ)
+        (borders,) = tc.tcPr.findall(qn("w:tcBorders"))
+        _assert_schema_order(borders, _TCBORDERS_SEQ)
+    for p in tbl.iter(qn("w:p")):
+        _assert_schema_order(p.pPr, _PPR_SEQ)
+
+
+def test_docx_cell_borders_draw_the_table_rules():
+    # Two header levels, groups "Coefs" (rows 2-4) and "Stats" (rows 5-7),
+    # then the notes row.
+    rows = _table(grouped=True, spanners=True).make(type="docx").tables[0].rows
+    nil = ("nil", None)
+    top, header, group = ("single", "8"), ("single", "4"), ("single", "4")
+    expected = {
+        0: {"top": top, "left": nil, "bottom": nil, "right": nil},
+        1: {"top": header, "left": nil, "bottom": header, "right": nil},
+        2: {"top": group, "left": nil, "bottom": group, "right": nil},
+        3: {"top": nil, "left": nil, "bottom": nil, "right": nil},
+        5: {"top": group, "left": nil, "bottom": group, "right": nil},
+        7: {"top": nil, "left": nil, "bottom": ("single", "8"), "right": nil},
+        8: {"top": nil, "left": nil, "bottom": nil, "right": nil},
+    }
+    for r, edges in expected.items():
+        cells = rows[r].cells
+        if r == 1:
+            # the spanner rule above the second header row skips the stub
+            assert _borders(cells[0])["top"] == nil
+            cells = cells[1:]
+        for cell in cells:
+            assert _borders(cell) == edges, r
 
 
 # ---------------------------------------------------------------- save
