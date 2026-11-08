@@ -247,6 +247,34 @@ def test_save_relative_name_joins_default_path(tmp_path):
     assert (tmp_path / "rel.tex").exists()
 
 
+@pytest.mark.parametrize("type_", ["tex", "typst", "html", "docx"])
+@pytest.mark.parametrize("trailing_sep", [True, False])
+def test_save_default_path_without_file_name(
+    tmp_path, monkeypatch, type_, trailing_sep
+):
+    # file_name=None: the file is <default path>/<tab_label>.<type>, whether the
+    # default path is relative or absolute and with or without a trailing "/".
+    (tmp_path / "out").mkdir()
+    monkeypatch.chdir(tmp_path)
+    sep = "/" if trailing_sep else ""
+    for default in ("out" + sep, str(tmp_path / "out") + sep):
+        t = _table(default_paths=default, tab_label="tab1")
+        t.save(type_, show=False, replace=True)
+        assert sorted(p.name for p in (tmp_path / "out").iterdir()) == [f"tab1.{type_}"]
+        assert sorted(p.name for p in tmp_path.iterdir()) == ["out"]
+
+
+def test_save_respects_default_replace_class_attribute(tmp_path, monkeypatch):
+    target = tmp_path / "x.tex"
+    target.write_text("old")
+    monkeypatch.setattr(MTable, "DEFAULT_REPLACE", True)
+    _table().save("tex", str(target), show=False)
+    assert target.read_text() != "old"
+    target.write_text("old")
+    with pytest.raises(ValueError, match="already exists"):
+        _table().save("tex", str(target), show=False, replace=False)
+
+
 def test_save_errors(tmp_path):
     with pytest.raises(ValueError, match="types must be"):
         _table().save(type="pdf", file_name="x")

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `save()` without `file_name` built the path from `default_paths` incorrectly: a relative default path was prepended twice (`out/out/tab1 is not a valid path`), the path and `tab_label` were concatenated without a separator (`default_paths="out"` wrote `outtab1`), and no file extension was added. It now writes `<default path>/<tab_label>.<type>`. `save()` also ignored `MTable.DEFAULT_REPLACE`, which its error message recommends: `replace` now defaults to `None`, meaning the class attribute's value at call time
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

@@ -496,7 +496,7 @@ class MTable:
         type: str = DEFAULT_SAVE_TYPE,
         file_name: str | None = None,
         show: bool = True,
-        replace: bool = DEFAULT_REPLACE,
+        replace: bool | None = None,
         **kwargs: Any,
     ) -> "GT | None":
         """
@@ -507,11 +507,12 @@ class MTable:
         type : str, optional
             Output type to save ("tex", "docx", "html"). Default is 'html'.
         file_name : str, optional
-            Path to save the file. If None, uses DEFAULT_SAVE_PATH[type] + tab_label.
+            Path to save the file. If None, uses DEFAULT_SAVE_PATH[type]/tab_label.
         show : bool, optional
             If True, also returns the table as a GT object for display. Default True.
         replace : bool, optional
-            If False and file exists, raises unless DEFAULT_REPLACE or replace=True.
+            Whether to overwrite an existing file. If None (default), uses the
+            class attribute DEFAULT_REPLACE (False unless changed).
         **kwargs : Arguments forwarded to the respective output method:
             - type="tex": tex_style (see make()).
             - type="docx": docx_style (see make()).
@@ -535,15 +536,16 @@ class MTable:
                 raise ValueError(
                     f"Default path for type {type} has to be set if file_name is None"
                 )
-            # file name will be default path and tab_label:
-            file_name = cast("str", self.default_paths.get(type)) + self.tab_label
-        elif not os.path.splitext(file_name)[1]:
+            file_name = self.tab_label
+        if not os.path.splitext(file_name)[1]:
             # if file_name does not have an extension, add the extension
             file_name += f".{type}"
         if self.default_paths.get(type) is not None and not os.path.isabs(file_name):
             # if file_name is not an absolute path, and default path is set,
             # then add default path to file_name
             file_name = os.path.join(self.default_paths.get(type, ""), file_name)
+        if replace is None:
+            replace = self.DEFAULT_REPLACE
         if not replace and file_name is not None and os.path.exists(file_name):
             # when replace is False, check if file exists & abort if it does
             raise ValueError(
