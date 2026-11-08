@@ -20,6 +20,20 @@ from IPython.display import display
 
 from .symbols import translate_symbols
 
+# make/save/update_* forward these to every output method they call (e.g. save
+# with show=True also renders GT), so each output method accepts and ignores
+# the styles of the other formats.
+_STYLE_KWARGS = frozenset({"tex_style", "typst_style", "docx_style", "gt_style"})
+
+
+def _reject_unknown_kwargs(method: str, kwargs: dict[str, Any]) -> None:
+    unknown = sorted(set(kwargs) - _STYLE_KWARGS)
+    if unknown:
+        names = ", ".join(repr(k) for k in unknown)
+        msg = f"{method}() got unexpected keyword argument(s): {names}"
+        raise TypeError(msg)
+
+
 # Methods
 # -	make: Just return output object (gt, docx, tex, html) or display directly
 # in notebook or as tex when rendered to pdf in Quarto
@@ -275,8 +289,6 @@ class MTable:
         typst_style: dict[str, object] | None = None,
         docx_style: dict[str, object] | None = None,
         gt_style: dict[str, object] | None = None,
-        # No other style/render defaults here; handled in output methods
-        **kwargs: Any,
     ) -> None:
         if not isinstance(df, pd.DataFrame):
             raise TypeError("df must be a pandas DataFrame.")
@@ -436,6 +448,7 @@ class MTable:
             - If type is None: displays the table (HTML, LaTeX and Typst) and
               returns None.
         """
+        _reject_unknown_kwargs("make", kwargs)
         if type is None:
             # Display the table in every format (see _repr_mimebundle_)
             display(self._repr_mimebundle_(), raw=True)
@@ -522,6 +535,7 @@ class MTable:
         output : GT
             When show=True, returns a GT object for display (HTML).
         """
+        _reject_unknown_kwargs("save", kwargs)
         # No instance default injection; defaults resolved in output methods
 
         if type not in self.ADMISSIBLE_SAVE_TYPES:
@@ -595,13 +609,16 @@ class MTable:
         docx_style : Dict[str, object], optional
             Per-call overrides for MTable.DEFAULT_DOCX_STYLE (see make()).
             Can include first_col_width for column width control.
-        **kwargs : dict.
+        **kwargs : dict
+            gt_style for the GT object returned when show=True. Other
+            keywords raise TypeError.
 
         Returns
         -------
         output : GT
             When show=True, returns a GT object for display (HTML).
         """
+        _reject_unknown_kwargs("update_docx", kwargs)
         if file_name is None:
             raise ValueError("file_name must be provided")
         # Resolve DOCX style (per-call -> class default)
@@ -699,8 +716,10 @@ class MTable:
         typst_style : Dict[str, object], optional
             Per-call overrides for MTable.DEFAULT_TYPST_STYLE (see make()).
         **kwargs : dict
-            Forwarded to _output_typst (e.g., symbol translation overrides).
+            gt_style for the GT object returned when show=True. Other
+            keywords raise TypeError.
         """
+        _reject_unknown_kwargs("update_typst", kwargs)
         label = tab_label or self.tab_label
         if label is None:
             raise ValueError("tab_label must be provided")
@@ -820,8 +839,10 @@ class MTable:
         tex_style : Dict[str, object], optional
             Per-call overrides for MTable.DEFAULT_TEX_STYLE (see make()).
         **kwargs : dict
-            Forwarded to _output_tex (e.g., symbol translation overrides).
+            gt_style for the GT object returned when show=True. Other
+            keywords raise TypeError.
         """
+        _reject_unknown_kwargs("update_tex", kwargs)
         label = tab_label or self.tab_label
         if label is None:
             raise ValueError("tab_label must be provided")

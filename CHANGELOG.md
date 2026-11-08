@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Misspelled keyword arguments were silently ignored: `ETable(m, captoin="...")` built a table without a caption and `make("tex", tex_styel={...})` dropped the style. The `MTable`, `ETable`, `DTable` and `BTable` constructors and `make`, `save`, `update_tex`, `update_typst` and `update_docx` now raise `TypeError` naming the unexpected keyword. The four style dicts (`tex_style`, `typst_style`, `docx_style`, `gt_style`) are still accepted by every output method. Code that passed unused keywords needs updating
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
