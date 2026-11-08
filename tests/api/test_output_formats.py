@@ -128,6 +128,37 @@ class TestLatexOutput:
         assert (tmp_path / "out.pdf").stat().st_size > 0
 
 
+class TestLatexSignificanceNote:
+    """The default significance note must survive pdflatex's OT1 encoding."""
+
+    def test_tex_note_uses_math_less_than(self, fitted_model):
+        tex = mt.ETable([fitted_model]).make(type="tex")
+        assert "* p $<$ 0.1, ** p $<$ 0.05, *** p $<$ 0.01." in tex
+        assert "p < " not in tex
+
+    def test_other_formats_keep_plain_less_than(self, fitted_model):
+        table = mt.ETable([fitted_model])
+        assert "* p < 0.1" in table.notes
+        docx_notes = table.make(type="docx").tables[0].rows[-1].cells[0].text
+        assert "* p < 0.1" in docx_notes
+
+    def test_user_notes_are_not_rewritten(self, fitted_model):
+        tex = mt.ETable([fitted_model], notes="Math: $a<b$.").make(type="tex")
+        assert "Math: $a<b$." in tex
+
+    def test_edited_default_note_is_not_rewritten(self, fitted_model):
+        table = mt.ETable([fitted_model])
+        table.notes = "Own note: $a<b$."
+        assert "Own note: $a<b$." in table.make(type="tex")
+
+    @needs_pdflatex
+    def test_pdf_has_no_inverted_exclamation(self, fitted_model, tmp_path):
+        compile_pdflatex(mt.ETable([fitted_model]), tmp_path, check=True)
+        text = pdf_text(tmp_path / "out.pdf")
+        assert "\u00a1" not in text
+        assert "p<0.1" in text.replace(" ", "")
+
+
 class TestLatexPdfOutput:
     """Layer 4 PDF-content snapshot for the LaTeX renderer (needs pdflatex)."""
 

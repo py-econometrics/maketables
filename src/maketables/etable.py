@@ -392,6 +392,7 @@ class ETable(MTable):
         with contextlib.suppress(Exception):
             res_all.columns.names = [None] * res_all.columns.nlevels
 
+        default_notes = notes == ""
         # --- notes ---
         if notes == "":
             note_parts = []
@@ -414,6 +415,24 @@ class ETable(MTable):
             rgroup_display=False,
             **kwargs,
         )
+        self._default_notes = notes if default_notes else None
+
+    def _output_tex(
+        self,
+        tex_style: dict[str, object] | None = None,
+        **kwargs: Any,
+    ) -> str:
+        # pdflatex's default OT1 font encoding prints a text-mode "<" as an
+        # inverted "!". Only the generated note is rewritten: user notes are raw
+        # LaTeX and may already contain math such as "$p<0.1$".
+        default = self._default_notes
+        if default is None or self.notes != default:
+            return super()._output_tex(tex_style=tex_style, **kwargs)
+        self.notes = default.replace(" < ", " $<$ ")
+        try:
+            return super()._output_tex(tex_style=tex_style, **kwargs)
+        finally:
+            self.notes = default
 
     # ---------- Dispatch helpers (package detection) ----------
 
