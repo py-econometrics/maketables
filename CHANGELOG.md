@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Multi-level column headers merged equal neighbouring labels across a boundary of a higher level, e.g. `model_heads=[["US", "US", "UK", "UK"], ["OLS", "IV", "IV", "OLS"]]` drew one "IV" spanning the US/UK split. All four renderers (LaTeX, Typst, HTML, DOCX) now compute spanners with one helper that only merges columns whose labels agree at that level and every level above it
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

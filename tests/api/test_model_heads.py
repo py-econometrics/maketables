@@ -189,3 +189,95 @@ class TestSampleSplitExtractorHardening:
         # No sample-split header should be inferred for an extractor that
         # cannot report one: only the depvar/model-number levels appear.
         assert list(table.df.columns) == [("y", "(1)")]
+
+
+class TestNestedSpannerBoundaries:
+    """A lower header level never merges across a higher-level boundary."""
+
+    @pytest.fixture
+    def crossing_table(self):
+        cols = pd.MultiIndex.from_tuples(
+            [
+                ("US", "OLS", "(1)"),
+                ("US", "IV", "(2)"),
+                ("UK", "IV", "(3)"),
+                ("UK", "OLS", "(4)"),
+            ]
+        )
+        return mt.MTable(
+            pd.DataFrame([["1", "2", "3", "4"]], index=["x"], columns=cols)
+        )
+
+    @staticmethod
+    def _docx_spans(row):
+        spans = []
+        for cell in row.cells[1:]:
+            if spans and cell._tc is spans[-1][0]:  # noqa: SLF001
+                spans[-1][2] += 1
+            else:
+                spans.append([cell._tc, cell.text, 1])  # noqa: SLF001
+        return [(text, n) for _, text, n in spans]
+
+    def test_latex(self, crossing_table):
+        lines = crossing_table.make(type="tex").splitlines()
+        assert (
+            " & \\multicolumn{1}{c}{OLS} & \\multicolumn{1}{c}{IV}"
+            " & \\multicolumn{1}{c}{IV} & \\multicolumn{1}{c}{OLS} \\\\"
+        ) in lines
+        assert (
+            "\\cmidrule(lr){2-2} \\cmidrule(lr){3-3} "
+            "\\cmidrule(lr){4-4} \\cmidrule(lr){5-5}"
+        ) in lines
+
+    def test_typst(self, crossing_table):
+        typst = crossing_table.make(type="typst")
+        assert "[#table.cell(colspan: 2)[IV]]" not in typst
+        assert typst.count("[#table.cell(colspan: 1)[IV]]") == 2
+        assert "column-gutter: (0em, 0.5em, 0.5em, 0.5em)," in typst
+
+    def test_gt(self, crossing_table):
+        import re
+
+        html = crossing_table.make(type="gt").as_raw_html()
+        spans = re.findall(
+            r'colspan="(\d)"[^>]*>\s*<span class="gt_column_spanner">(\w+)<', html
+        )
+        assert spans == [
+            ("2", "US"),
+            ("2", "UK"),
+            ("1", "OLS"),
+            ("1", "IV"),
+            ("1", "IV"),
+            ("1", "OLS"),
+        ]
+
+    def test_docx(self, crossing_table):
+        rows = crossing_table.make(type="docx").tables[0].rows
+        assert self._docx_spans(rows[0]) == [("US", 2), ("UK", 2)]
+        assert self._docx_spans(rows[1]) == [
+            ("OLS", 1),
+            ("IV", 1),
+            ("IV", 1),
+            ("OLS", 1),
+        ]
+
+    def test_run_inside_one_group_still_merges(self):
+        cols = pd.MultiIndex.from_tuples(
+            [("US", "IV", "(1)"), ("US", "IV", "(2)"), ("UK", "IV", "(3)")]
+        )
+        table = mt.MTable(pd.DataFrame([["1", "2", "3"]], index=["x"], columns=cols))
+        tex = table.make(type="tex")
+        assert " & \\multicolumn{2}{c}{IV} & \\multicolumn{1}{c}{IV} \\\\" in tex
+        assert self._docx_spans(table.make(type="docx").tables[0].rows[1]) == [
+            ("IV", 2),
+            ("IV", 1),
+        ]
+
+    def test_etable_model_heads(self, fitted_models):
+        table = mt.ETable(
+            fitted_models * 2,
+            model_heads=[["US", "US", "UK", "UK"], ["OLS", "IV", "IV", "OLS"]],
+        )
+        tex = table.make(type="tex")
+        assert "\\multicolumn{2}{c}{IV}" not in tex
+        assert tex.count("\\multicolumn{1}{c}{IV}") == 2
