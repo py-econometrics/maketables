@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The Typst style keys `tab_width`, `row_height`, `first_row_addlinespace`, `data_addlinespace` and `rgroup_addlinespace` were listed in `DEFAULT_TYPST_STYLE` but ignored by `make(type="typst")`. They now set the table width, a fixed row height and extra space above the first row of each row group, between data rows and between row groups. Output with the default values is unchanged
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
