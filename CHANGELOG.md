@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- LaTeX output did not compile when a line after a line break started with `[`, e.g. `coef_fmt="b:.3f \n [t:.2f]"`: LaTeX read `\\ [...]` as the optional spacing argument of `\\`. Such lines are now emitted as `\\{}[...]` in cells, labels, row-group headers and notes ([#95](https://github.com/py-econometrics/maketables/issues/95))
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

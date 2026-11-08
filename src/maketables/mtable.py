@@ -40,6 +40,17 @@ from .symbols import translate_symbols
 #       specified, use default_path to update the file_path
 
 
+def _tex_linebreaks(text: str) -> str:
+    r"""Convert newlines to LaTeX line breaks (\\).
+
+    LaTeX reads a ``[`` after ``\\`` (spaces skipped) as its optional spacing
+    argument, so a line starting with ``[`` is preceded by ``{}`` to keep the
+    bracket as text. Spaces before that ``[`` are dropped: ``\\`` used to
+    swallow them, but after ``{}`` they would be typeset and shift the line.
+    """
+    return re.sub(r"\n[ \t]*(?=\[)", r"\\\\{}", text).replace("\n", r"\\")
+
+
 class MTable:
     r"""
     A table creation class supporting multiple output formats.
@@ -1286,7 +1297,7 @@ class MTable:
         # directly inside a tabular cell position (data cell, header/spanner
         # multicolumn, or row label) without it.
         def _wrap_linebreaks(text: str, align: str | None = None) -> str:
-            text = text.replace("\n", r"\\")
+            text = _tex_linebreaks(text)
             if r"\\" in text:
                 # Omit the [align] spec for makecell's own default (center) so
                 # data-cell output (the common case) is byte-identical to
@@ -1430,7 +1441,9 @@ class MTable:
                     # like \emph{...} (i.e. formatting the joined text as one
                     # unit) breaks makecell's line-splitting.
                     gname_lines = str(gname).split("\n")
-                    gtext = r"\\".join(fmt % line for line in gname_lines)
+                    gtext = _tex_linebreaks(
+                        "\n".join(fmt % line for line in gname_lines)
+                    )
                     if len(gname_lines) > 1:
                         # [l]: left-align lines relative to each other (matching
                         # the stub column's own left alignment), rather than
@@ -1525,7 +1538,7 @@ class MTable:
                 + "\n\\noindent\\begin{minipage}{\\linewidth}\\smallskip"
                 + notes_intro
                 + "\n"
-                + self.notes.replace("\n", r"\\")
+                + _tex_linebreaks(self.notes)
                 + "\\end{minipage}\n"
                 + "\n\\end{threeparttable}"
             )

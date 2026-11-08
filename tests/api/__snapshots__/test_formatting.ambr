@@ -114,10 +114,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{1.986 \\ (0.006) \\ [315.23]} \\
+  x & \makecell{1.986 \\ (0.006) \\{}[315.23]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.131 \\ (0.021) \\ [6.28]} \\
+  Intercept & \makecell{0.131 \\ (0.021) \\{}[6.28]} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
@@ -750,10 +750,10 @@
    & (1) \\
   \midrule
   \addlinespace[1ex]
-  x & \makecell{1.986 \\ [315.23]} \\
+  x & \makecell{1.986 \\{}[315.23]} \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  Intercept & \makecell{0.131 \\ [6.28]} \\
+  Intercept & \makecell{0.131 \\{}[6.28]} \\
   \addlinespace[0.5ex]
   \midrule
   \addlinespace[1ex]
