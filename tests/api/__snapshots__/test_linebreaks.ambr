@@ -342,7 +342,7 @@
   \end{tabularx}
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
-  Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
+  Significance levels: * p $<$ 0.1, ** p $<$ 0.05, *** p $<$ 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
   '''
@@ -377,7 +377,7 @@
   \end{tabularx}
   \endgroup
   \noindent\begin{minipage}{\linewidth}\smallskip\footnotesize
-  Significance levels: * p < 0.1, ** p < 0.05, *** p < 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
+  Significance levels: * p $<$ 0.1, ** p $<$ 0.05, *** p $<$ 0.01. Format of coefficient cell: Coefficient   (Std. Error)\end{minipage}
   
   \end{threeparttable}
   '''

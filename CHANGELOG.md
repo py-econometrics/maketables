@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The default `ETable` significance note printed as "* p ¡ 0.1" in LaTeX documents that use pdflatex's default OT1 font encoding, where a text-mode `<` is an inverted exclamation mark. The LaTeX output of the generated note now uses `$<$`; notes passed by the user and the other output formats are unchanged
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
