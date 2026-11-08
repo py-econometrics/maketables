@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Default `BTable` notes lower-cased everything after the first character, so user labels changed case (`labels={"state": "US State"}` gave "clustered on us state"), and several notes ended in a doubled period ("std. dev..", "robust standard errors..") or in none (fixed effects with clustered errors). `DTable`'s note likewise ended in "Std. Dev..". Labels now keep their case and each sentence ends with exactly one period
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

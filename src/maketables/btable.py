@@ -5,7 +5,7 @@ from typing import Any, Literal, cast
 import numpy as np
 import pandas as pd
 
-from .dtable import DTable
+from .dtable import DTable, _end_sentence
 
 PyfixestVcov = Literal["iid", "hetero", "HC1", "HC2", "HC3", "nid"]
 
@@ -226,11 +226,13 @@ class BTable(DTable):
                 slist = [sdict.get(k, k) for k in stats]
                 if counts_row_below:
                     slist = [s for s in slist if s.lower() != "n"]
-                chunks.append("Displayed statistics are " + ", ".join(slist) + ".")
+                chunks.append(
+                    _end_sentence("Displayed statistics are " + ", ".join(slist))
+                )
 
             se_str = ""
             if isinstance(vcov, str) and vcov in {"hetero", "HC1", "HC2", "HC3"}:
-                se_str = "robust standard errors."
+                se_str = "robust standard errors"
             elif isinstance(vcov, dict):
                 clusters = []
                 for k, v in vcov.items():
@@ -245,8 +247,10 @@ class BTable(DTable):
 
             if fe_str and se_str:
                 chunks.append(
-                    f"p-values based on specifications including {fe_str} "
-                    f"fixed effects and {se_str}"
+                    _end_sentence(
+                        f"p-values based on specifications including {fe_str} "
+                        f"fixed effects and {se_str}"
+                    )
                 )
             elif fe_str:
                 chunks.append(
@@ -254,11 +258,9 @@ class BTable(DTable):
                     "fixed effects."
                 )
             elif se_str:
-                chunks.append(f"p-values based on {se_str}.")
+                chunks.append(_end_sentence(f"p-values based on {se_str}"))
 
             if chunks:
-                n = " ".join(chunks)
-                n = n[0] + n[1:].lower()
-                self.notes = "Note: " + n
+                self.notes = "Note: " + " ".join(chunks)
         else:
             self.notes = notes

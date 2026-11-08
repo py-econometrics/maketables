@@ -84,7 +84,7 @@ class TestDTable:
     def test_bycol_hide_stats_notes(self, df):
         t = mt.DTable(df, vars=["x"], bycol=["g"], hide_stats=True)
         assert t.df.columns.nlevels == 1
-        assert "Displayed statistics are N, Mean, Std. Dev." in t.notes
+        assert t.notes == "Note: Displayed statistics are N, Mean, Std. Dev."
         t2 = mt.DTable(df, vars=["x"], bycol=["g"], hide_stats=True, notes="mine")
         assert t2.notes == "mine"
 
@@ -232,7 +232,7 @@ class TestBTable:
         t = mt.BTable(
             df, vars=["x"], group="g", vcov={"CRV1": "h"}, labels={"h": "Hgroup"}
         )
-        assert "clustered on hgroup" in t.notes
+        assert "clustered on Hgroup" in t.notes
         t = mt.BTable(df, vars=["x"], group="g", fixed_effects=["h"])
         assert "h fixed effects" in t.notes
         t = mt.BTable(df, vars=["x"], group="g", fixed_effects=["h"], vcov="HC1")
@@ -254,7 +254,40 @@ class TestBTable:
             stats=["count", "mean"],
             counts_row_below=True,
         )
-        assert t.notes.endswith("mean.")
+        assert t.notes.endswith("Mean.")
+
+    @pytest.mark.parametrize(
+        ("kwargs", "expected"),
+        [
+            (
+                {"vcov": {"CRV1": "h"}, "labels": {"h": "US State"}},
+                "Note: p-values based on standard errors clustered on US State.",
+            ),
+            (
+                {"vcov": "hetero"},
+                "Note: p-values based on robust standard errors.",
+            ),
+            (
+                {"hide_stats": True, "vcov": "hetero"},
+                "Note: Displayed statistics are Mean, Std. Dev. "
+                "p-values based on robust standard errors.",
+            ),
+            (
+                {
+                    "fixed_effects": ["h"],
+                    "vcov": {"CRV1": "h"},
+                    "labels": {"h": "US State"},
+                },
+                "Note: p-values based on specifications including US State "
+                "fixed effects and standard errors clustered on US State.",
+            ),
+        ],
+    )
+    def test_default_notes_keep_label_case_and_single_period(
+        self, df, kwargs, expected
+    ):
+        t = mt.BTable(df, vars=["x"], group="g", **kwargs)
+        assert t.notes == expected
 
     def test_custom_notes(self, df):
         t = mt.BTable(df, vars=["x"], group="g", notes="Custom")

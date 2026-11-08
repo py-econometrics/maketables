@@ -306,10 +306,9 @@ class DTable(MTable):
             if hide_stats:
                 res.columns = res.columns.droplevel(-1)
                 if notes == "":
-                    notes = (
+                    notes = _end_sentence(
                         "Note: Displayed statistics are "
                         + ", ".join([stats_dict.get(k, k) for k in stats])
-                        + "."
                     )
 
         res = res.fillna("")
@@ -356,6 +355,11 @@ class DTable(MTable):
         except (ValueError, TypeError):
             # fallback to sensible default
             return self._format_number(x, None, digits=digits)
+
+
+def _end_sentence(text: str) -> str:
+    """End a note sentence with one period, also after labels like "Std. Dev."."""
+    return text if text.endswith(".") else text + "."
 
 
 def _relabel_index(
