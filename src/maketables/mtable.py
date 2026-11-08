@@ -1847,9 +1847,6 @@ class MTable:
             typst_table = f"#figure([\n{typst_table}\n]{caption_line}){label_line}"
 
         # Apply symbol translation
-        typst_table = self._translate_symbols(typst_table, "typst")
-
-        # Apply symbol translation
         return self._translate_symbols(typst_table, "typst")
 
     def _output_gt(
