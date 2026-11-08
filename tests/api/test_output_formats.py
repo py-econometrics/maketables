@@ -14,9 +14,11 @@ All layers run against the ``sample_table`` fixture family from conftest.py
 formatted, merged-header and wide tables.
 """
 
+import re
 import shutil
 import subprocess
 
+import pandas as pd
 import pytest
 from helpers import normalize_latex, normalize_typst
 
@@ -126,6 +128,56 @@ class TestLatexOutput:
         result = compile_pdflatex(sample_table, tmp_path, check=False)
         assert result.returncode == 0, result.stdout[-2000:]
         assert (tmp_path / "out.pdf").stat().st_size > 0
+
+    # A line starting with "[" after a line break: LaTeX reads "\\ [...]" as
+    # the optional spacing argument of \\ (it skips spaces to find "[").
+    BRACKET_AFTER_BREAK = re.compile(r"\\\\\s*\[")
+
+    @pytest.mark.parametrize(
+        "coef_fmt",
+        ["b:.3f \n [t:.2f]", "b:.3f\n[t:.2f]", "b:.3f \n (se:.3f) \n [t:.2f]"],
+    )
+    def test_coef_fmt_bracket_line(self, fitted_model, coef_fmt):
+        """A coef_fmt line starting with '[' is not emitted as \\[...]."""
+        tex = mt.ETable([fitted_model], coef_fmt=coef_fmt).make(type="tex")
+        assert "\\makecell" in tex
+        assert not self.BRACKET_AFTER_BREAK.search(tex)
+        # No space after {}: it would be typeset and push the line off-centre.
+        assert "\\\\{}[" in tex
+
+    @pytest.mark.parametrize(
+        "where", ["cell", "row label", "column label", "row group", "notes"]
+    )
+    def test_bracket_line_in_mtable(self, where):
+        """Every place a newline becomes \\ guards a following '['."""
+        cell = "1.0\n[2.0]" if where == "cell" else "1.0"
+        row = "x\n[y]" if where == "row label" else "x"
+        col = "a\n[b]" if where == "column label" else "a"
+        group = "g\n[h]" if where == "row group" else "g"
+        notes = "first\n[second]" if where == "notes" else ""
+        index = pd.MultiIndex.from_tuples([(group, row)])
+        table = mt.MTable(
+            pd.DataFrame({col: [cell]}, index=index), notes=notes, rgroup_display=True
+        )
+        tex = table.make(type="tex", tex_style={"group_header_format": "%s"})
+        bracketed = {
+            "cell": "[2.0]",
+            "row label": "[y]",
+            "column label": "[b]",
+            "row group": "[h]",
+            "notes": "[second]",
+        }
+        assert bracketed[where] in tex
+        assert not self.BRACKET_AFTER_BREAK.search(tex)
+
+    @needs_pdflatex
+    def test_coef_fmt_bracket_line_compiles(self, fitted_model, tmp_path):
+        """The bracketed second line typesets instead of failing to compile."""
+        table = mt.ETable([fitted_model], coef_fmt="b:.3f \n [t:.2f]")
+        result = compile_pdflatex(table, tmp_path, check=False)
+        assert result.returncode == 0, result.stdout[-2000:]
+        tstat = f"[{fitted_model.tstat().iloc[0]:.2f}]"
+        assert tstat in pdf_text(tmp_path / "out.pdf")
 
 
 class TestLatexPdfOutput:
