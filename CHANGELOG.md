@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- linearmodels models fitted without a formula had no usable dependent variable name: `PanelOLS(y, X).fit()` (and the other panel models) raised `TypeError: attribute name must be string, not 'int'` in `ETable`, and `IV2SLS(dep, exog, endog, instr).fit()` showed an empty name because its `formula` is `""`. The name now comes from the dependent data's column
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

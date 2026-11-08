@@ -1089,15 +1089,16 @@ class LinearmodelsExtractor:
             ("model", "dependent", "name"),
             ("model", "dependent", "var_name"),
             ("model", "dependent", "pandas", "name"),
-            ("model", "dependent", "vars", 0),  # AbsorbingLS stores vars as list
         ]:
             val = _follow(model, cast("list[Any]", list(chain)))
-            if isinstance(val, str):
+            # IV models fitted without a formula have formula == ""
+            if isinstance(val, str) and val:
                 if chain[-1] == "formula" and "~" in val:
                     return val.split("~", 1)[0].strip()
                 return val
 
-        # For AbsorbingLS, try to get column name from dependent DataFrame
+        # Without a formula, take the column name from the dependent data:
+        # IVData (IV models, AbsorbingLS) has .cols, PanelData has .dataframe
         mdl = getattr(model, "model", None)
         if mdl is not None:
             dep = getattr(mdl, "dependent", None)
@@ -1106,9 +1107,9 @@ class LinearmodelsExtractor:
                     # dep.cols contains the column names
                     cols = dep.cols
                     if isinstance(cols, list) and len(cols) > 0:
-                        return cols[0]
+                        return str(cols[0])
                 elif hasattr(dep, "dataframe") and hasattr(dep.dataframe, "columns"):
-                    return dep.dataframe.columns[0]
+                    return str(dep.dataframe.columns[0])
 
         return "y"
 

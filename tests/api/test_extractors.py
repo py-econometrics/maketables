@@ -508,6 +508,41 @@ class TestLinearmodelsExtractor:
         assert e.depvar(linearmodels_absorbingls) == "y"
         assert e.depvar(linearmodels_iv2sls) == "y"
 
+    @pytest.mark.parametrize("case", ["panel_series", "panel_frame", "iv_arrays"])
+    def test_depvar_without_formula(self, panel_df, case):
+        from linearmodels import PanelOLS, PooledOLS
+        from linearmodels.iv import IV2SLS
+
+        from maketables import ETable
+
+        panel = panel_df.rename(columns={"y": "wage"})
+        if case == "panel_series":
+            res = PanelOLS(
+                panel["wage"], panel[["x1", "x2"]], entity_effects=True
+            ).fit()
+        elif case == "panel_frame":
+            res = PooledOLS(panel[["wage"]], panel[["x1", "x2"]]).fit()
+        else:
+            df = panel.reset_index().assign(const=1.0)
+            res = IV2SLS(df["wage"], df[["const"]], df[["x1"]], df[["x2"]]).fit()
+        assert LinearmodelsExtractor().depvar(res) == "wage"
+        assert "wage" in ETable(res).make("tex")
+
+    def test_depvar_unnamed_series(self, panel_df):
+        from linearmodels import PanelOLS
+
+        y = pd.Series(panel_df["y"].to_numpy(), index=panel_df.index)
+        res = PanelOLS(y, panel_df[["x1"]]).fit()
+        # pandas gives an unnamed Series the integer column label 0
+        assert LinearmodelsExtractor().depvar(res) == "0"
+
+    def test_depvar_empty_formula_falls_through(self):
+        dep = types.SimpleNamespace(cols=["wage"])
+        m = types.SimpleNamespace(
+            model=types.SimpleNamespace(formula="", dependent=dep)
+        )
+        assert LinearmodelsExtractor().depvar(m) == "wage"
+
     def test_depvar_fallbacks(self):
         e = LinearmodelsExtractor()
         assert e.depvar(types.SimpleNamespace()) == "y"
