@@ -136,6 +136,8 @@ text. `maketables.inspect_model()` also prints the `vcov_info` values.
 
 If you cannot add attributes to the result class (e.g. for a third-party
 package), implement the `maketables.ModelExtractor` protocol in a separate class
-and register it with `maketables.register_extractor(MyExtractor())`. See the
+and register it with `maketables.register_extractor(MyExtractor())`.
+Registered extractors are tried before the built-in ones, so they can also
+change how a built-in package's models are handled. See the
 [documentation on adding model classes](https://py-econometrics.github.io/maketables/docs/AddingModelClasses.html)
 for both approaches in detail.

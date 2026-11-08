@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Extractors added with `register_extractor()` were tried after the built-in ones, so a user extractor for a model that a built-in extractor also accepts (such as the `MyStatsmodelsExtractor` example in the docs) was never used. Registered extractors are now tried before the built-in ones, in registration order
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

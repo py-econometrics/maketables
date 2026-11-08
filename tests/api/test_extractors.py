@@ -58,6 +58,41 @@ def test_register_extractor_appends_and_is_used(clean_registry):
     assert get_extractor(_Dummy()) is mine
 
 
+@pytest.fixture
+def builtin_registry(monkeypatch):
+    """Run with a copy of the real registry (built-ins included)."""
+    monkeypatch.setattr(ex, "_EXTRACTOR_REGISTRY", list(ex._EXTRACTOR_REGISTRY))
+    return ex._EXTRACTOR_REGISTRY
+
+
+def test_registered_extractor_overrides_builtin(builtin_registry, statsmodels_ols):
+    # The docs example: a user extractor for statsmodels OLS results.
+    from statsmodels.regression.linear_model import RegressionResultsWrapper
+
+    class MyStatsmodelsExtractor(StatsmodelsExtractor):
+        def can_handle(self, model):
+            return isinstance(model, RegressionResultsWrapper)
+
+        def depvar(self, model):
+            return "custom"
+
+    mine = MyStatsmodelsExtractor()
+    register_extractor(mine)
+    assert get_extractor(statsmodels_ols) is mine
+    from maketables import ETable
+
+    assert "custom" in ETable(statsmodels_ols).make("tex")
+
+
+def test_registered_extractors_precede_builtins_in_order(builtin_registry):
+    builtins = list(builtin_registry)
+    first, second = _DummyExtractor(), _DummyExtractor()
+    register_extractor(first)
+    register_extractor(second)
+    assert builtin_registry == [first, second, *builtins]
+    assert get_extractor(_Dummy()) is first
+
+
 def test_get_extractor_first_match_wins_and_skips_failing(clean_registry):
     bad = _DummyExtractor(raises=True)
     no = _DummyExtractor(handles=False)

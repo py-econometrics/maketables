@@ -33,7 +33,7 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
-from .extractors import register_extractor
+from .extractors import _register_builtin
 
 # Optional import for PyStata
 try:
@@ -832,4 +832,4 @@ def extract_current_stata_results(
 
 # Register the PyStata extractor if PyStata is available
 if PYSTATA_AVAILABLE:
-    register_extractor(PyStataExtractor())
+    _register_builtin(PyStataExtractor())
