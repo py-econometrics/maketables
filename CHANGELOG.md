@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- LaTeX output ignored the `t`/`b` distinction in `rgroup_sep`: `"tb"`, `"t"` and `"b"` all drew a single `\midrule` between row groups. As in the Typst, Word and HTML output, `t` now draws a rule above each row group after the first and `b` a rule below each displayed row-group name, so the default `"tb"` gains a rule under each row-group name when names are shown
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

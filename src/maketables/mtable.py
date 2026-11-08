@@ -1437,6 +1437,9 @@ class MTable:
                         # makecell's own default of centering them on each other.
                         gtext = f"\\makecell[l]{{{gtext}}}"
                     body_lines.append(gtext + r" \\")
+                    # Rule below the group header (if 'b' in rgroup_sep)
+                    if "b" in self.rgroup_sep:
+                        body_lines.append(r"\midrule")
                     # Only add space after group header if data_addlinespace is set
                     if s.get("data_addlinespace") is not None:
                         body_lines.append(rf"\addlinespace[{s['data_addlinespace']}]")
@@ -1465,8 +1468,8 @@ class MTable:
                     if rg_space is not None:
                         body_lines.append(rf"\addlinespace[{rg_space}]")
 
-                    # Only add midrule if rgroup_sep is not empty
-                    if self.rgroup_sep != "":
+                    # Rule above the next group (if 't' in rgroup_sep)
+                    if "t" in self.rgroup_sep:
                         body_lines.append(r"\midrule")
                         if rg_space is not None:
                             body_lines.append(rf"\addlinespace[{rg_space}]")
