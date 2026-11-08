@@ -155,6 +155,32 @@ def test_empty_cells_and_nan():
         assert t.make(type=fmt) is not None
 
 
+@pytest.mark.parametrize(
+    "missing", [float("nan"), None, pd.NA], ids=["nan", "None", "pd.NA"]
+)
+def test_missing_cells_render_blank_in_every_format(missing):
+    import re
+
+    df = pd.DataFrame({"A": ["x", missing], "B": ["1", "2"]}, index=["a", "b"])
+    t = MTable(df.astype(object))
+    tex_rows = [ln for ln in t.make(type="tex").splitlines() if ln.startswith("b &")]
+    assert tex_rows == ["b &  & 2 \\\\"]
+    assert "[b], [], [2]," in t.make(type="typst")
+    html = t.make(type="gt").as_raw_html()
+    cells = re.findall(r'gt_stub">b</th>\s*<td[^>]*>([^<]*)</td>', html)
+    assert cells == [""]
+    assert "&lt;NA&gt;" not in html
+    assert "<NA>" not in html
+    docx_row = t.make(type="docx").tables[0].rows[2]
+    assert [c.text for c in docx_row.cells] == ["b", "", "2"]
+
+
+def test_missing_cells_in_float_column_render_blank_in_docx():
+    t = MTable(pd.DataFrame({"A": [float("nan"), 0.5]}, index=["a", "b"]))
+    docx_row = t.make(type="docx").tables[0].rows[1]
+    assert [c.text for c in docx_row.cells] == ["a", ""]
+
+
 def test_constructor_validation():
     with pytest.raises(TypeError):
         MTable([[1, 2]])

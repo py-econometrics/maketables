@@ -274,6 +274,15 @@ class ETable(MTable):
                     raise ValueError(
                         f"custom_stats[{key!r}] must have one entry per model."
                     )
+        for key, values in (custom_model_stats or {}).items():
+            # Tuples, arrays and Series have always worked, so only reject a
+            # str, which pandas would otherwise split into characters.
+            if isinstance(values, str) or not hasattr(values, "__len__"):
+                raise TypeError(f"custom_model_stats[{key!r}] must be a list.")
+            if len(values) != len(models):
+                raise ValueError(
+                    f"custom_model_stats[{key!r}] must have one entry per model."
+                )
         if model_heads is None:
             # Use sample splits if available
             model_heads = [self._extract_sample_split(m) or "" for m in models]

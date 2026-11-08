@@ -67,6 +67,17 @@ class TestETableModelStats:
             actual_rows = table.df.xs("stats").index.tolist()
         assert actual_rows == expected_rows
 
+    @pytest.mark.parametrize("values", [["Yes"], ["Yes", "No", "Yes"]])
+    def test_custom_model_stats_needs_one_entry_per_model(self, fitted_models, values):
+        """A custom_model_stats row must align with the models."""
+        with pytest.raises(ValueError, match="one entry per model"):
+            mt.ETable(fitted_models, custom_model_stats={"Controls": values})
+
+    def test_custom_model_stats_must_be_lists(self, fitted_models):
+        """A plain string is rejected instead of being split into characters."""
+        with pytest.raises(TypeError, match="must be a list"):
+            mt.ETable(fitted_models, custom_model_stats={"Controls": "ab"})
+
     def test_stats_order_rejects_invalid_value(self, fitted_model):
         """Reject unsupported model-statistic block orders."""
         with pytest.raises(ValueError, match="stats_order"):
