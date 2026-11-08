@@ -167,6 +167,22 @@ def test_follow_and_get_attr():
     assert ex._get_attr(wrapped, 3.14) is None  # unsupported spec
 
 
+def test_get_attr_skips_methods():
+    wrapped = types.SimpleNamespace(model=types.SimpleNamespace(deviance=len))
+    assert ex._get_attr(wrapped, "deviance") is None
+
+
+def test_get_attr_not_implemented_is_missing():
+    class Res:
+        model = types.SimpleNamespace(llf=1.0)
+
+        @property
+        def llf(self):
+            raise NotImplementedError
+
+    assert ex._get_attr(Res(), "llf") is None
+
+
 def test_pyfixest_types_present():
     assert len(ex._pyfixest_types()) == 3
     assert len(ex._linearmodels_types()) == 2
@@ -328,6 +344,19 @@ class TestStatsmodelsExtractor:
             statsmodels_logit.prsquared
         )
         assert e.stat(statsmodels_logit, "r2") is None
+
+    def test_rlm_unavailable_stats(self, simple_df):
+        import statsmodels.formula.api as smf
+
+        from maketables import ETable
+
+        m = smf.rlm("y ~ x", data=simple_df).fit()
+        e = StatsmodelsExtractor()
+        assert e.stat(m, "deviance") is None
+        assert e.stat(m, "ll") is None
+        assert {"deviance", "ll"}.isdisjoint(e.supported_stats(m))
+        tex = ETable(m, model_stats=["N", "deviance", "ll"]).make("tex")
+        assert "bound method" not in tex
 
     def test_n_fallback_when_not_integer(self):
         m = types.SimpleNamespace(nobs="many")

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Statistics looked up on a model's `.model` could return methods: for statsmodels `RLM`, `deviance` printed `<bound method RLM.deviance ...>` in the table, and `ll` crashed `ETable` (and `supported_stats`/`inspect_model`) with `NotImplementedError` from `RLMResults.llf`. Methods are no longer treated as statistics, and a statistic whose property raises `NotImplementedError` is shown as missing
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
