@@ -658,6 +658,29 @@ def _get_attr(model: Any, spec: Any) -> Any:
 # ---------- Built-in extractors ----------
 
 
+def _pyfixest_fvalue(model: Any) -> Any:
+    """Return pyfixest's joint Wald F statistic when it is the regression F.
+
+    feols fits run ``wald_test()`` on all coefficients (pyfixest >= 0.50). That
+    joint test includes the intercept, so it only matches the usual regression
+    F (all slopes zero) when the model has no intercept, e.g. with fixed
+    effects. A later ``wald_test(R=...)`` overwrites the result, which the
+    restriction count detects.
+    """
+    wald = getattr(model, "wald", None)  # pyfixest >= 0.70
+    if wald is not None:
+        fstat, n_restrictions = wald.f_statistic, wald.df1
+    else:
+        fstat = getattr(model, "_f_statistic", None)
+        n_restrictions = getattr(model, "_dfn", None)
+    if fstat is None:
+        return None
+    coefnames = list(model.coef().index)
+    if "Intercept" in coefnames or n_restrictions != len(coefnames):
+        return None
+    return fstat
+
+
 class PyFixestExtractor:
     """
     Extractor for pyfixest models (Feols, Fepois, Feiv).
@@ -733,7 +756,7 @@ class PyFixestExtractor:
         "r2_within": "_r2_within",
         "adj_r2_within": "_adj_r2_within",
         "rmse": "_rmse",
-        "fvalue": "_F_stat",
+        "fvalue": _pyfixest_fvalue,
         "f_statistic": "_f_stat_1st_stage",
         # pyfixest may return a sequence; take the first element
         "deviance": lambda m: _first_if_sequence(getattr(m, "deviance", None)),
