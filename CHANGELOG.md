@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `coef_fmt` tokens were recognized only if the first model's coefficient table had them, so mixing packages printed the format text itself (e.g. `[ci90l:.3f, ci90u:.3f]` with a pyfixest model first, `[ci90l, ci90u]` for the pyfixest column otherwise). Tokens from any model are now recognized, and models without that column show `-`
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
