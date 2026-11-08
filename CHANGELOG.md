@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `DTable` left other statistics unformatted when a combined `mean_std`/`mean_newline_std` column was requested without `bycol`/`byrow` (e.g. `4.860610`, `13249.063313`), because the combined column made every column object dtype. Counts (`N`), including the `counts_row_below` row, were printed with `digits` decimals (`100.00`). They are now shown as integers unless `format_spec` sets a format for them. Snapshots for `dtable_plain` and `dtable_grouped` change accordingly
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

@@ -65,19 +65,19 @@
         ]),
         list([
           'x',
-          '43.00',
+          '43',
           '-0.08',
           '0.76',
-          '57.00',
+          '57',
           '-0.13',
           '1.01',
         ]),
         list([
           'y',
-          '43.00',
+          '43',
           '0.13',
           '0.84',
-          '57.00',
+          '57',
           '-0.06',
           '1.03',
         ]),
@@ -108,13 +108,13 @@
         ]),
         list([
           'x',
-          '100.00',
+          '100',
           '-0.10',
           '0.91',
         ]),
         list([
           'y',
-          '100.00',
+          '100',
           '0.02',
           '0.95',
         ]),
@@ -542,10 +542,10 @@
    & N & Mean & Std. Dev. & N & Mean & Std. Dev. \\
   \midrule
   \addlinespace[1ex]
-  x & 43.00 & -0.08 & 0.76 & 57.00 & -0.13 & 1.01 \\
+  x & 43 & -0.08 & 0.76 & 57 & -0.13 & 1.01 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  y & 43.00 & 0.13 & 0.84 & 57.00 & -0.06 & 1.03 \\
+  y & 43 & 0.13 & 0.84 & 57 & -0.06 & 1.03 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -568,10 +568,10 @@
    & N & Mean & Std. Dev. \\
   \midrule
   \addlinespace[1ex]
-  x & 100.00 & -0.10 & 0.91 \\
+  x & 100 & -0.10 & 0.91 \\
   \addlinespace[0.5ex]
   \addlinespace[0.5ex]
-  y & 100.00 & 0.02 & 0.95 \\
+  y & 100 & 0.02 & 0.95 \\
   \addlinespace[0.5ex]
   \bottomrule
   \end{tabularx}
@@ -801,15 +801,15 @@
   '''
   A B
   N Mean Std. Dev. N Mean Std. Dev.
-  x 43.00 −0.08 0.76 57.00 −0.13 1.01
-  y 43.00 0.13 0.84 57.00 −0.06 1.03
+  x 43 −0.08 0.76 57 −0.13 1.01
+  y 43 0.13 0.84 57 −0.06 1.03
   '''
 # ---
 # name: TestTypstOutput.test_typst_pdf_content[dtable_plain]
   '''
   N Mean Std. Dev.
-  x 100.00 −0.10 0.91
-  y 100.00 0.02 0.95
+  x 100 −0.10 0.91
+  y 100 0.02 0.95
   '''
 # ---
 # name: TestTypstOutput.test_typst_pdf_content[etable_formatted]
@@ -918,8 +918,8 @@
     table.hline(stroke: 0.03em, start: 4, end: 7),
     [], [N], [Mean], [Std. Dev.], [N], [Mean], [Std. Dev.],
     table.hline(stroke: 0.05em),
-    [x], [43.00], [-0.08], [0.76], [57.00], [-0.13], [1.01],
-    [y], [43.00], [0.13], [0.84], [57.00], [-0.06], [1.03],
+    [x], [43], [-0.08], [0.76], [57], [-0.13], [1.01],
+    [y], [43], [0.13], [0.84], [57], [-0.06], [1.03],
     table.hline(stroke: 0.08em),
   )
   '''
@@ -932,8 +932,8 @@
     table.hline(stroke: 0.08em),
     [], [N], [Mean], [Std. Dev.],
     table.hline(stroke: 0.05em),
-    [x], [100.00], [-0.10], [0.91],
-    [y], [100.00], [0.02], [0.95],
+    [x], [100], [-0.10], [0.91],
+    [y], [100], [0.02], [0.95],
     table.hline(stroke: 0.08em),
   )
   '''
