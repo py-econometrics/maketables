@@ -40,6 +40,25 @@ from .symbols import translate_symbols
 #       specified, use default_path to update the file_path
 
 
+def _header_runs(columns: Any, level: int) -> list[tuple[Any, int, int]]:
+    """
+    Group adjacent column headers at ``level`` into (label, start, span) runs.
+
+    Two columns share a run only if their labels agree at ``level`` and at
+    every level above it, so a lower spanner never crosses a higher one.
+    ``columns`` is any sequence of tuples, e.g. a pandas MultiIndex.
+    """
+    keys = [tuple(col[: level + 1]) for col in columns]
+    runs: list[tuple[Any, int, int]] = []
+    for i, key in enumerate(keys):
+        if runs and keys[i - 1] == key:
+            label, start, span = runs[-1]
+            runs[-1] = (label, start, span + 1)
+        else:
+            runs.append((key[-1], i, 1))
+    return runs
+
+
 class MTable:
     r"""
     A table creation class supporting multiple output formats.
@@ -991,19 +1010,12 @@ class MTable:
             # Add multiple headline rows for MultiIndex columns
             for level in range(headline_levels):
                 hdr_cells = table.add_row().cells
-                prev_col = None
-                prev_cell_index = None
-                for i, col in enumerate(dfs.columns.get_level_values(level)):
-                    cell_index = i + 1
-                    if col != prev_col:
-                        hdr_cells[cell_index].text = self._translate_symbols(
-                            str(col), "docx"
-                        )
-                        prev_col = col
-                        prev_cell_index = cell_index
-                    # Only merge if prev_cell_index is not None and cell_index is valid
-                    elif prev_cell_index is not None and cell_index < len(hdr_cells):
-                        hdr_cells[prev_cell_index].merge(hdr_cells[cell_index])
+                for col, start, span in _header_runs(dfs.columns, level):
+                    hdr_cells[start + 1].text = self._translate_symbols(
+                        str(col), "docx"
+                    )
+                    if span > 1:
+                        hdr_cells[start + 1].merge(hdr_cells[start + span])
         else:
             hdr_cells = table.add_row().cells
             for i, col in enumerate(dfs.columns):
@@ -1357,31 +1369,16 @@ class MTable:
         # Build header rows (MultiIndex columns -> spanners + cmidrules)
         header_lines = []
 
-        def _make_spanner_row(level_labels: list[Any]) -> tuple[list[str], list[int]]:
-            # level_labels is a list (len = n data columns) of labels at a given level
-            cells = []
-            spans = []
-            i = 0
-            n = len(level_labels)
-            while i < n:
-                label = level_labels[i]
-                span = 1
-                j = i + 1
-                while j < n and level_labels[j] == label:
-                    span += 1
-                    j += 1
-                cells.append(str(label))
-                spans.append(span)
-                i = j
-            return cells, spans
+        def _make_spanner_row(lvl: int) -> tuple[list[str], list[int]]:
+            runs = _header_runs(dfs.columns, lvl)
+            return [str(label) for label, _, _ in runs], [n for _, _, n in runs]
 
         # Prepare column labels by levels
         if isinstance(dfs.columns, pd.MultiIndex):
             col_levels = dfs.columns.nlevels
             # For each level except the last, create a spanner row
             for lvl in range(col_levels - 1):
-                labels_lvl = [dfs.columns[i][lvl] for i in range(len(dfs.columns))]
-                row_cells, row_spans = _make_spanner_row(labels_lvl)
+                row_cells, row_spans = _make_spanner_row(lvl)
                 # Build the LaTeX row: prepend stub blanks, then multicolumns
                 parts = [""] * stub_cols
                 cmid_ranges = []
@@ -1660,22 +1657,9 @@ class MTable:
             return self._escape_typst(content, escape_asterisks=escape_asterisks)
 
         # Helper to collapse repeated labels into spans (same as TeX logic)
-        def _make_spanner_row(level_labels: list[Any]) -> tuple[list[str], list[int]]:
-            cells = []
-            spans = []
-            i = 0
-            n = len(level_labels)
-            while i < n:
-                label = level_labels[i]
-                span = 1
-                j = i + 1
-                while j < n and level_labels[j] == label:
-                    span += 1
-                    j += 1
-                cells.append(str(label))
-                spans.append(span)
-                i = j
-            return cells, spans
+        def _make_spanner_row(lvl: int) -> tuple[list[str], list[int]]:
+            runs = _header_runs(dfs.columns, lvl)
+            return [str(label) for label, _, _ in runs], [n for _, _, n in runs]
 
         # Build the table command with booktabs-style formatting
         lines = []
@@ -1705,13 +1689,13 @@ class MTable:
             # Create gutter pattern: 0.5em where second-level index changes, 0em
             # elsewhere
             gutter_specs = ["0em"]  # After stub column
-            # Check for changes in the second-level index (index level -2)
+            # Check for changes in the second-level index (index level -2) or
+            # any level above it
             if dfs.columns.nlevels >= 2:
-                second_level_idx = dfs.columns.get_level_values(-2)
                 for i in range(data_cols - 1):
-                    # If the second-level value changes between columns i and i+1, add
+                    # If the spanner run changes between columns i and i+1, add
                     # spacing
-                    if second_level_idx[i] != second_level_idx[i + 1]:
+                    if dfs.columns[i][:-1] != dfs.columns[i + 1][:-1]:
                         gutter_specs.append("0.5em")
                     else:
                         gutter_specs.append("0em")
@@ -1728,8 +1712,7 @@ class MTable:
         if isinstance(dfs.columns, pd.MultiIndex):
             col_levels = dfs.columns.nlevels
             for lvl in range(col_levels - 1):
-                labels_lvl = [dfs.columns[i][lvl] for i in range(len(dfs.columns))]
-                row_cells, row_spans = _make_spanner_row(labels_lvl)
+                row_cells, row_spans = _make_spanner_row(lvl)
 
                 row_parts: list[str] = ["[]"] * stub_cols
                 for cell_label, span in zip(row_cells, row_spans, strict=False):
@@ -1980,20 +1963,20 @@ class MTable:
         # Add column spanners based on multiindex
         if nlevels > 1:
             for i in range(nlevels - 1):
-                col_spanners = {}
-                # Iterate over columns and group them by the labels in the respective
-                # level
-                for c in dfcols:
-                    key = c[i]
-                    if key not in col_spanners:
-                        col_spanners[key] = []
-                    col_spanners[key].append(c[-1])
-                for label, columns in col_spanners.items():
+                prev_label, repeat = None, 0
+                for label, start, span in _header_runs(dfcols, i):
+                    # great_tables run-length-encodes spanners by label, so two
+                    # adjacent runs with the same label (split by a higher
+                    # level) would be drawn as one; an empty HTML comment keeps
+                    # their labels distinct without changing what is shown.
+                    repeat = repeat + 1 if label == prev_label else 0
+                    prev_label = label
                     if label != "":
                         gt = gt.tab_spanner(
-                            label=_gt_linebreak(label),
-                            columns=columns,
+                            label=_gt_html(_escape_br(str(label)) + "<!---->" * repeat),
+                            columns=[c[-1] for c in dfcols[start : start + span]],
                             level=nlevels - 1 - i,
+                            id=f"{i}-{start}",
                         )
                 # Restore column names
                 gt = gt.cols_label(**{k: _gt_linebreak(v) for k, v in col_dict.items()})
