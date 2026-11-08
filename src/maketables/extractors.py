@@ -198,15 +198,34 @@ class ModelExtractor(Protocol):
 
 
 _EXTRACTOR_REGISTRY: list[ModelExtractor] = []
+_BUILTIN_EXTRACTORS: list[ModelExtractor] = []
 
 
 def register_extractor(extractor: ModelExtractor) -> None:
     """
     Register a model extractor in the global registry.
 
+    Registered extractors are tried before the built-in ones, in the order
+    they were registered, so they can also take over models that a built-in
+    extractor would handle.
+
     Args:
         extractor: ModelExtractor instance to register.
     """
+    first_builtin = next(
+        (
+            i
+            for i, ex in enumerate(_EXTRACTOR_REGISTRY)
+            if any(ex is b for b in _BUILTIN_EXTRACTORS)
+        ),
+        len(_EXTRACTOR_REGISTRY),
+    )
+    _EXTRACTOR_REGISTRY.insert(first_builtin, extractor)
+
+
+def _register_builtin(extractor: ModelExtractor) -> None:
+    """Register a built-in extractor, after all previously registered ones."""
+    _BUILTIN_EXTRACTORS.append(extractor)
     _EXTRACTOR_REGISTRY.append(extractor)
 
 
@@ -1253,9 +1272,9 @@ class LinearmodelsExtractor:
 
 # Register built-ins
 clear_extractors()
-register_extractor(PyFixestExtractor())
-register_extractor(LinearmodelsExtractor())
-register_extractor(StatsmodelsExtractor())
+_register_builtin(PyFixestExtractor())
+_register_builtin(LinearmodelsExtractor())
+_register_builtin(StatsmodelsExtractor())
 
 
 class LifelinesExtractor:
@@ -1500,4 +1519,4 @@ class LifelinesExtractor:
 
 
 # Register lifelines extractor
-register_extractor(LifelinesExtractor())
+_register_builtin(LifelinesExtractor())
