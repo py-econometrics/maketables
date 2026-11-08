@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `update_tex()` duplicated the whole file when the table to replace was the last thing in it, as in a file written by `save(type="tex")` (no newline after `\end{table}`): the new table was written followed by a full copy of the original file, old table included. It also removed the newline after a replaced table. The replacement now ends exactly at `\end{table}` and leaves the following text untouched
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
