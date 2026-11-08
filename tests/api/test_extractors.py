@@ -629,6 +629,62 @@ class TestPyFixestExtractor:
         assert PyFixestExtractor().stat(m, "adj_r2") == 0.25
         assert PyFixestExtractor().stat(types.SimpleNamespace(), "adj_r2") is None
 
+    def test_fvalue_with_fixed_effects(self, fitted_model_fe):
+        # Without an intercept, pyfixest's joint Wald F tests the slopes.
+        assert PyFixestExtractor().stat(fitted_model_fe, "fvalue") == pytest.approx(
+            fitted_model_fe._f_statistic
+        )
+
+    def test_fvalue_matches_statsmodels_regression_f(self, simple_df):
+        import pyfixest as pf
+        import statsmodels.formula.api as smf
+
+        rng = np.random.default_rng(0)
+        df = simple_df.copy()
+        df["y"] = 0.3 * df["x"] + rng.standard_normal(len(df))
+        fit = pf.feols("y ~ x + C(group) - 1", data=df)
+        sm_fit = smf.ols("y ~ x + C(group) - 1", data=df).fit()
+        joint = np.squeeze(sm_fit.f_test(np.eye(3)).fvalue)
+        assert PyFixestExtractor().stat(fit, "fvalue") == pytest.approx(joint)
+
+    def test_fvalue_not_reported_when_intercept_is_tested(self, fitted_model):
+        # pyfixest's F also tests Intercept = 0, unlike the usual regression F.
+        assert PyFixestExtractor().stat(fitted_model, "fvalue") is None
+
+    def test_fvalue_not_reported_for_other_wald_tests(self, simple_df):
+        import pyfixest as pf
+
+        fit = pf.feols("x ~ C(group) - 1", data=simple_df)
+        assert PyFixestExtractor().stat(fit, "fvalue") is not None
+        fit.wald_test(R=np.array([[1.0, -1.0]]), distribution="chi2")
+        assert PyFixestExtractor().stat(fit, "fvalue") is None
+
+    def test_fvalue_reads_wald_result(self):
+        class Fit:
+            wald = types.SimpleNamespace(f_statistic=4.0, df1=1)
+
+            def coef(self):
+                return pd.Series([1.0], index=["x"])
+
+        assert PyFixestExtractor().stat(Fit(), "fvalue") == 4.0
+
+    @pytest.mark.parametrize(
+        "key",
+        [k for k, v in PyFixestExtractor.STAT_MAP.items() if isinstance(v, str)],
+    )
+    def test_stat_map_attributes_exist(self, key, simple_df):
+        import pyfixest as pf
+
+        df = simple_df.copy()
+        df["y"] = df["x"] + np.random.default_rng(0).standard_normal(len(df))
+        df["z"] = df["x"] + np.random.default_rng(1).standard_normal(len(df))
+        fits = [
+            pf.feols("y ~ x | group", data=df),
+            pf.feols("y ~ 1 | x ~ z", data=df),
+        ]
+        attr = PyFixestExtractor.STAT_MAP[key]
+        assert any(hasattr(f, attr) for f in fits), attr
+
     def test_coef_table(self, fitted_model):
         df = PyFixestExtractor().coef_table(fitted_model)
         assert list(df.columns[:4]) == ["b", "se", "t", "p"]

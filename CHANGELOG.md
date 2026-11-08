@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The `fvalue` statistic was always missing for pyfixest models: the extractor read `_F_stat`, which pyfixest never sets. It now reports pyfixest's joint Wald F (`_f_statistic`, or `wald.f_statistic` from pyfixest 0.70) when that test is the regression F, i.e. the model has no intercept (as with fixed effects). With an intercept pyfixest's test also includes `Intercept = 0`, so `fvalue` stays empty rather than showing a different statistic than statsmodels
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
