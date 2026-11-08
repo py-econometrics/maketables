@@ -242,6 +242,58 @@ class TestBTable:
         t = mt.BTable(df, vars=["x"], group="g")
         assert not t.notes
 
+    @staticmethod
+    def _fe_data(n_groups):
+        """Only group "b" differs; "fe" and "fe2" shift the mean."""
+        rng = np.random.default_rng(3)
+        n = 900
+        frame = pd.DataFrame(
+            {
+                "g": rng.choice(list("abc")[:n_groups], n),
+                "fe": rng.integers(0, 10, n),
+                "fe2": rng.integers(0, 5, n),
+            }
+        )
+        frame["v"] = (
+            rng.normal(size=n)
+            + 0.15 * (frame.g == "b")
+            + 0.1 * frame.fe
+            + 0.2 * frame.fe2
+        )
+        return frame
+
+    @staticmethod
+    def _btable_p(frame, fixed_effects):
+        t = mt.BTable(
+            frame, vars=["v"], group="g", fixed_effects=fixed_effects, pdigits=10
+        )
+        return float(t.df.iloc[0, -1])
+
+    @pytest.mark.parametrize("fixed_effects", [["fe"], ["fe", "fe2"]])
+    def test_fixed_effects_joint_test(self, fixed_effects):
+        """With fixed effects there is no intercept, so the joint test must use the
+        group coefficients by name; compare with dummy-variable OLS.
+        """
+        smf = pytest.importorskip("statsmodels.formula.api")
+        frame = self._fe_data(3)
+        dummies = " + ".join(f"C({fe})" for fe in fixed_effects)
+        ols = smf.ols(f"v ~ C(g) + {dummies}", frame).fit()
+        wald = ols.wald_test("C(g)[T.b] = 0, C(g)[T.c] = 0", scalar=True, use_f=False)
+        assert self._btable_p(frame, fixed_effects) == pytest.approx(
+            float(wald.pvalue), rel=1e-6, abs=1e-10
+        )
+
+    @pytest.mark.parametrize("fixed_effects", [["fe"], ["fe", "fe2"]])
+    def test_fixed_effects_two_groups(self, fixed_effects):
+        """Two groups with fixed effects: the t-test p-value of the group dummy."""
+        smf = pytest.importorskip("statsmodels.formula.api")
+        frame = self._fe_data(2)
+        dummies = " + ".join(f"C({fe})" for fe in fixed_effects)
+        ols = smf.ols(f"v ~ C(g) + {dummies}", frame).fit()
+        assert self._btable_p(frame, fixed_effects) == pytest.approx(
+            float(ols.pvalues["C(g)[T.b]"]), rel=1e-6
+        )
+
     def test_hide_stats_notes(self, df):
         t = mt.BTable(df, vars=["x"], group="g", hide_stats=True)
         assert "displayed statistics are mean, std. dev." in t.notes.lower()

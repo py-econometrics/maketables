@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `BTable` with `fixed_effects` reported the wrong balance p-value: the joint test assumed the first coefficient was the intercept, which a fixed-effects model does not have, so it dropped the first group indicator (with two groups it raised `IndexError`). Group indicators are now selected by name. Several fixed effects are now joined with `+` (they were joined with `.`, which pyfixest rejects)
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
