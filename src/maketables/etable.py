@@ -1,0 +1,1377 @@
+"""Regression table support."""
+
+import contextlib
+import math
+import re
+import warnings
+from collections.abc import ValuesView
+from typing import Any, ClassVar, Literal, cast
+
+import numpy as np
+import pandas as pd
+
+from .extractors import ModelExtractor, get_extractor
+from .mtable import MTable
+
+HeadOrder = Literal["dh", "hd", "d", "h", ""]
+StatsOrder = Literal["cs", "sc", "c", "s", ""]
+
+
+class ETable(MTable):
+    r"""
+    Regression table builder on top of MTable.
+
+    ETable extracts coefficients and model statistics from supported model
+    objects, assembles a publication-style table, and delegates
+    rendering/export to MTable.
+
+    Parameters
+    ----------
+    models :
+        One or more fitted models. Accepts single models, lists, or multi-model
+        containers (e.g., pyfixest's FixestMulti). Supported packages are
+        automatically detected via registered extractors (see extractors.py).
+        Built-in support: pyfixest, statsmodels, linearmodels.
+    signif_code : list[float], optional
+        Three ascending p-value cutoffs for significance stars, default
+        ETable.DEFAULT_SIGNIF_CODE = [0.01, 0.05, 0.10]. Pass an empty list
+        to disable significance stars.
+    coef_fmt : str, optional
+        Cell layout for each coefficient. Tokens:
+          - 'b' (estimate), 'se' (std. error), 't' (t value), 'p' (p-value),
+          - further tokens extracted from the model's coef_table()
+            (e.g., 'ci95l', 'ci95u'),
+          - whitespace, ',', parentheses '(', ')', brackets '[', ']', and
+          - '\\n' for line breaks.
+        Append '*' after a token to add significance stars: e.g., 'b*' or 't:*'.
+        You may also reference keys from custom_stats to inject custom values.
+        Format specifiers can be added after tokens (e.g., 'b:.3f', 'se:.2e', 'N:,.0f'):
+          - '.Nf' for N decimal places (e.g., '.3f' for 3 decimals)
+          - '.Ne' for scientific notation with N decimals (e.g., '.2e')
+          - ',.Nf' for comma thousands separator (e.g., ',.0f')
+          - ':d' for integer formatting
+        Stars syntax: 'b*' (stars after unformatted b), 'b:.3f*' (stars
+        after formatted b).
+        Default ETable.DEFAULT_COEF_FMT = "b:.3f* \n (se:.3f)".
+    model_stats : list[str], optional
+        Bottom panel statistics to display (order is kept). Examples:
+        'N', 'r2', 'adj_r2', 'r2_within', 'se_type'. If None, defaults to
+        ETable.DEFAULT_MODEL_STATS (currently ['N','r2']).
+    model_stats_labels : dict[str, str], optional
+        Mapping from stat key to display label (e.g., {'N': 'Observations'}).
+        Defaults come from ETable.DEFAULT_STAT_LABELS; user-provided entries override.
+    custom_stats : dict, optional
+        Custom per-coefficient values to splice into coef cells via coef_fmt.
+        Shape: {key: list_of_per_model_lists}, where for each key in coef_fmt,
+        custom_stats[key][i] is a list aligned to model i's coefficient index.
+    custom_model_stats : dict, optional
+        Additional bottom rows. Shape: {'Row label': [val_m1, val_m2, ...]}.
+    stats_order : {"cs","sc","c","s",""}, optional
+        Bottom-panel order: c=custom model statistics, s=model statistics.
+        ``"cs"`` preserves the default behavior of showing custom statistics first.
+        A single letter displays only that block; ``""`` hides both blocks.
+    keep : list[str] | str, optional
+        Regex patterns (or exact names with exact_match=True) to keep and order
+        coefficients. If provided, output order follows the pattern order.
+    drop : list[str] | str, optional
+        Regex patterns (or exact names with exact_match=True) to exclude after
+        applying keep.
+    exact_match : bool, default False
+        If True, treat keep/drop patterns as exact names (no regex).
+    order : list[str], optional
+        Explicit order for coefficients in the output table. Provide a list of
+        coefficient names (after keep/drop filtering) to specify the exact order.
+        Any coefficients not in the list will appear at the end in their original order.
+        This is applied after keep/drop filtering.
+        Example: order=['age', 'female', 'education'] will place these first.
+    feorder : list[str], optional
+        Explicit order for fixed effects rows. Provide a list of fixed effect names
+        to specify their display order. Any fixed effects not in the list will appear
+        at the end sorted alphabetically.
+        Example: feorder=['f1', 'f2'] will place these first.
+    labels : dict, optional
+        Variable labels for relabeling dependent vars, regressors, and (if not
+        provided in felabels) fixed effects. If None, labels are collected from
+        each model's source DataFrame via the extractor (e.g., PyFixest: model._data;
+        Statsmodels: result.model.data.frame), merged across models (first seen wins),
+        and any missing entries are filled from MTable.DEFAULT_LABELS.
+    cat_template : str, optional
+        Template to relabel categorical terms, using placeholders
+        '{variable}' and '{value}'. Default ETable.DEFAULT_CAT_TEMPLATE
+        = "{variable}={value}". Use "{value}" to show only category names.
+    show_fe : bool, optional
+        Whether to add a fixed-effects presence panel. Defaults to
+        ETable.DEFAULT_SHOW_FE (True).
+    felabels : dict, optional
+        Custom labels for the fixed-effects rows; falls back to labels when
+        not provided.
+    notes : str, optional
+        Table notes. If "", a default note with significance levels and the
+        coef cell format is generated.
+    model_heads : list[str] | list[list[str]], optional
+        Optional model headers (e.g., country names). Pass a flat list (one
+        entry per model) for a single header row, or a list of levels (each
+        an inner list/tuple with one entry per model) for multiple stacked
+        header rows, e.g. [["USA","USA","UK","UK"], ["OLS","IV","OLS","IV"]].
+        Levels are stacked top-to-bottom in the order given. Each level may
+        be left empty ("") for some models to merge cells via spanners.
+    head_order : {"dh","hd","d","h",""}, optional
+        Header level order: d=dep var, h=model header(s). "" shows only model
+        numbers. When model_heads defines multiple levels, all of them are
+        inserted together wherever "h" appears. Default
+        ETable.DEFAULT_HEAD_ORDER = "dh".
+    caption : str, optional
+        Table caption (passed to MTable).
+    tab_label : str, optional
+        Label/anchor for LaTeX/HTML (passed to MTable).
+    digits : int, optional
+        Number of decimal places for coefficient display. This parameter is only
+        applied when coef_fmt does not already contain format specifiers. If coef_fmt
+        contains format specifiers (e.g., 'b:.3f'), this parameter is ignored.
+        For precise control, use format specifiers in coef_fmt directly.
+    **kwargs
+        Forwarded to MTable (e.g., rgroup_display, rendering options).
+
+    Notes
+    -----
+    - To display the SE type, include "se_type" in model_stats.
+    - Categorical term relabeling applies to plain categorical columns and to
+      formula encodings that expose variable/value names.
+    - When labels is None, labels are sourced from each model's DataFrame (if
+      available) and supplemented by MTable.DEFAULT_LABELS. Use set_var_labels()
+      or import_dta() to populate df.attrs['variable_labels'].
+    - Supported model types are automatically detected via their extractor.
+
+    Returns
+    -------
+    ETable
+        An object holding the assembled table data (as a DataFrame in MTable)
+        and rendering helpers (via MTable.make/save).
+    """
+
+    # ---- Class defaults ----
+    DEFAULT_SIGNIF_CODE: ClassVar[list[float]] = [0.01, 0.05, 0.10]
+    DEFAULT_COEF_FMT: ClassVar[str] = "b:.3f* \n (se:.3f)"
+    DEFAULT_MODEL_STATS: ClassVar[list[str]] = ["N", "r2"]
+    DEFAULT_STATS_ORDER: ClassVar[StatsOrder] = "cs"
+    # Canonical stat key -> printable label (used if model_stats_labels is None)
+    DEFAULT_STAT_LABELS: ClassVar[dict[str, str]] = {
+        "N": "Observations",
+        "n_clusters": "Clusters",
+        "events": "Events",
+        "se_type": "S.E. type",
+        "r2": "R²",
+        "adj_r2": "Adj. R²",
+        "r2_within": "Within R²",
+        "r2_between": "Between R²",
+        "adj_r2_within": "Within Adj. R²",
+        "pseudo_r2": "Pseudo R²",
+        "ll": "Log-likelihood",
+        "llnull": "Null log-likelihood",
+        "aic": "AIC",
+        "bic": "BIC",
+        "df_model": "df(model)",
+        "df_resid": "df(resid)",
+        "deviance": "Deviance",
+        "null_deviance": "Null deviance",
+        "concordance": "Concordance",
+        "fvalue": "F statistic",
+        "f_pvalue": "F p-value",
+        "rmse": "RMSE",
+        "fstat_1st": "First-stage F",
+    }
+    DEFAULT_SHOW_SE_TYPE = True
+    DEFAULT_SHOW_FE = True
+    DEFAULT_HEAD_ORDER: ClassVar[HeadOrder] = "dh"
+    DEFAULT_FELABELS: ClassVar[dict[str, str]] = {}
+    DEFAULT_CAT_TEMPLATE = "{variable}={value}"
+    DEFAULT_LINEBREAK = "\n"
+    DEFAULT_FE_MARKER = ("x", "-")
+
+    def __init__(
+        self,
+        models: Any,
+        *,
+        signif_code: list | None = None,
+        coef_fmt: str | None = None,
+        model_stats: list[str] | None = None,
+        model_stats_labels: dict[str, str] | None = None,
+        custom_stats: dict | None = None,
+        custom_model_stats: dict | None = None,
+        stats_order: StatsOrder | None = None,
+        keep: list | str | None = None,
+        drop: list | str | None = None,
+        exact_match: bool | None = False,
+        order: list[str] | None = None,
+        feorder: list[str] | None = None,
+        labels: dict | None = None,
+        cat_template: str | None = None,
+        show_fe: bool | None = None,
+        felabels: dict | None = None,
+        notes: str = "",
+        model_heads: list[str] | list[list[str]] | None = None,
+        head_order: HeadOrder | None = None,
+        caption: str | None = None,
+        tab_label: str | None = None,
+        digits: int | None = None,
+        **kwargs: Any,
+    ) -> None:
+        # --- defaults from class attributes ---
+        signif_code = self.DEFAULT_SIGNIF_CODE if signif_code is None else signif_code
+        coef_fmt = self.DEFAULT_COEF_FMT if coef_fmt is None else coef_fmt
+
+        # --- Handle digits parameter for backward compatibility ---
+        if digits is not None:
+            # Check if coef_fmt already has format specifiers
+            if not _has_format_specifiers(coef_fmt):
+                # Apply digits to the default or user-provided coef_fmt
+                coef_fmt = _apply_digits_to_coef_fmt(coef_fmt, digits)
+            else:
+                warnings.warn(
+                    "The 'digits' parameter is ignored when coef_fmt already "
+                    "contains format specifiers (e.g., 'b:.3f'). Use format "
+                    "specifiers in coef_fmt for precise control.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        cat_template = (
+            self.DEFAULT_CAT_TEMPLATE if cat_template is None else cat_template
+        )
+        show_fe = self.DEFAULT_SHOW_FE if show_fe is None else show_fe
+        felabels = dict(self.DEFAULT_FELABELS) if felabels is None else felabels
+        head_order = self.DEFAULT_HEAD_ORDER if head_order is None else head_order
+        stats_order = self.DEFAULT_STATS_ORDER if stats_order is None else stats_order
+        custom_stats = {} if custom_stats is None else custom_stats
+        keep = [] if keep is None else keep
+        drop = [] if drop is None else drop
+
+        # --- checks  ---
+        if not (isinstance(signif_code, list) and len(signif_code) == 3):
+            raise ValueError("signif_code must be a list of three p-value cutoffs.")
+        if signif_code:
+            if not all(0 < i < 1 for i in signif_code):
+                raise ValueError("signif_code values must be between 0 and 1.")
+            if not (signif_code[0] < signif_code[1] < signif_code[2]):
+                raise ValueError("signif_code must be in strictly ascending order.")
+
+        models = self._normalize_models(models)
+
+        # Determine labels:
+        # 1) if user provided labels, use them as-is
+        # 2) otherwise, collect from models' DataFrames and fill from MTable defaults
+        if labels is None:
+            labels = self._collect_labels_from_models(models)
+        else:
+            labels = dict(labels)
+
+        if custom_stats:
+            if not isinstance(custom_stats, dict):
+                raise TypeError("custom_stats must be a dict.")
+            for key in custom_stats:
+                if not isinstance(custom_stats[key], list):
+                    raise TypeError(f"custom_stats[{key!r}] must be a list.")
+                if len(custom_stats[key]) != len(models):
+                    raise ValueError(
+                        f"custom_stats[{key!r}] must have one entry per model."
+                    )
+        if model_heads is None:
+            # Use sample splits if available
+            model_heads = [self._extract_sample_split(m) or "" for m in models]
+            if not any(model_heads):
+                model_heads = None
+        model_heads = self._normalize_model_heads(model_heads, len(models))
+
+        if head_order not in ["dh", "hd", "d", "h", ""]:
+            raise ValueError("head_order must be one of 'dh', 'hd', 'd', 'h', ''.")
+        if stats_order not in ["cs", "sc", "c", "s", ""]:
+            raise ValueError("stats_order must be one of 'cs', 'sc', 'c', 's', ''.")
+
+        # --- metadata from models (modular) ---
+        dep_var_list = [self._extract_depvar(m) for m in models]
+        # relabel dependent variables
+        if labels:
+            dep_var_list = [labels.get(d, d) for d in dep_var_list]
+        fixef_list = self._collect_fixef_list(models, show_fe, feorder=feorder)
+
+        # --- bottom model stats keys (modular default) ---
+        if model_stats is None:
+            # For mixed model types, collect default stats from all models
+            # and use their union
+            try:
+                if models:
+                    all_defaults = []
+
+                    # Collect defaults from each model
+                    for model in models:
+                        try:
+                            extractor = get_extractor(model)
+                            if hasattr(extractor, "default_stat_keys"):
+                                ext_defaults = extractor.default_stat_keys(model)
+                                if ext_defaults is not None:
+                                    all_defaults.extend(ext_defaults)
+                                else:
+                                    # Extractor exists but returns None, use
+                                    # general defaults
+                                    all_defaults.extend(self.DEFAULT_MODEL_STATS)
+                            else:
+                                # Extractor doesn't have default_stat_keys,
+                                # use general defaults
+                                all_defaults.extend(self.DEFAULT_MODEL_STATS)
+                        except Exception:
+                            # If extractor lookup fails, use general defaults
+                            all_defaults.extend(self.DEFAULT_MODEL_STATS)
+
+                    # Use union of all defaults, preserving order
+                    if all_defaults:
+                        seen = set()
+                        model_stats = []
+                        for stat in all_defaults:
+                            if stat not in seen:
+                                seen.add(stat)
+                                model_stats.append(stat)
+                    else:
+                        model_stats = list(self.DEFAULT_MODEL_STATS)
+                else:
+                    model_stats = list(self.DEFAULT_MODEL_STATS)
+            except Exception:
+                # If anything goes wrong, fall back to defaults
+                model_stats = list(self.DEFAULT_MODEL_STATS)
+        model_stats = list(model_stats)
+        if not all(isinstance(s, str) for s in model_stats):
+            raise TypeError("model_stats must be a list of strings.")
+        if len(model_stats) != len(set(model_stats)):
+            raise ValueError("model_stats must not contain duplicate keys.")
+
+        # --- build blocks (modular) ---
+        res, coef_fmt_title = self._build_coef_table(
+            models=models,
+            coef_fmt=coef_fmt,
+            signif_code=signif_code,
+            custom_stats=custom_stats,
+            keep=[] if keep is None else ([keep] if isinstance(keep, str) else keep),
+            drop=[] if drop is None else ([drop] if isinstance(drop, str) else drop),
+            order=[] if order is None else order,
+            exact_match=True if exact_match is None else exact_match,
+            labels=labels,
+            cat_template=cat_template,
+        )
+
+        fe_df = self._build_fe_df(
+            models=models,
+            fixef_list=fixef_list,
+            show_fe=show_fe,
+            labels=labels,
+            felabels=felabels,
+            like_columns=res.columns,
+        )
+
+        model_stats_df = self._build_model_stats(
+            models=models,
+            stat_keys=model_stats,
+            stat_labels=model_stats_labels,
+            custom_model_stats=custom_model_stats,
+            stats_order=stats_order,
+            like_index=res.index,
+            like_columns=res.columns,
+        )
+
+        # --- assemble columns header (modular) ---
+        header = self._build_header_columns(
+            dep_var_list=dep_var_list,
+            model_heads=model_heads,
+            head_order=head_order,
+            n_models=len(models),
+        )
+
+        # --- assemble final df ---
+        res_all = pd.concat([res, fe_df, model_stats_df], keys=["coef", "fe", "stats"])
+        if isinstance(header, list):
+            res_all.columns = pd.Index(header)
+        else:
+            res_all.columns = header
+        with contextlib.suppress(Exception):
+            res_all.columns.names = [None] * res_all.columns.nlevels
+
+        # --- notes ---
+        if notes == "":
+            note_parts = []
+            # Only add significance levels explanation if format string contains stars
+            if "*" in coef_fmt:
+                note_parts.append(
+                    f"Significance levels: * p < {signif_code[2]}, "
+                    f"** p < {signif_code[1]}, *** p < {signif_code[0]}."
+                )
+            note_parts.append(f"Format of coefficient cell: {coef_fmt_title}")
+            notes = " ".join(note_parts)
+            # Remove line breaks from notes "\n"
+            notes = notes.replace("\n", " ")
+
+        super().__init__(
+            res_all,
+            notes=notes,
+            caption=caption,
+            tab_label=tab_label,
+            rgroup_display=False,
+            **kwargs,
+        )
+
+    # ---------- Dispatch helpers (package detection) ----------
+
+    def _normalize_models(self, models: Any) -> list[Any]:
+        """
+        Normalize models to a list, expanding multi-model containers.
+
+        Uses duck typing to detect FixestMulti-like objects (anything with a
+        to_list() method). This keeps etable.py package-agnostic. Recursively
+        expands containers within lists.
+        """
+        # Check for multi-model container (has to_list method)
+        if hasattr(models, "to_list") and callable(getattr(models, "to_list", None)):
+            return models.to_list()
+
+        # Handle lists/tuples/ValuesView - recursively expand any containers within
+        if isinstance(models, (list, tuple, ValuesView)):
+            result = []
+            for item in models:
+                # Recursively normalize each item to handle lists of FixestMulti objects
+                if hasattr(item, "to_list") and callable(
+                    getattr(item, "to_list", None)
+                ):
+                    result.extend(item.to_list())
+                else:
+                    result.append(item)
+            return result
+
+        # Single model
+        return [models]
+
+    def _get_extractor(self, model: Any) -> ModelExtractor:
+        return get_extractor(model)
+
+    # --- delegate helpers to extractor ---
+
+    def _extract_depvar(self, model: Any) -> str:
+        return self._get_extractor(model).depvar(model)
+
+    def _extract_fixef_string(self, model: Any) -> str | None:
+        return self._get_extractor(model).fixef_string(model)
+
+    def _extract_sample_split(self, model: Any) -> str | None:
+        extractor = self._get_extractor(model)
+        # sample_split() was added after the extractor Protocol was first published;
+        # third-party extractors registered against the older interface may not
+        # implement it, so this must degrade gracefully rather than crash on every call.
+        if not hasattr(extractor, "sample_split"):
+            return None
+        return extractor.sample_split(model)
+
+    def _extract_vcov_info(self, model: Any) -> dict[str, Any]:
+        return self._get_extractor(model).vcov_info(model)
+
+    def _extract_tidy_df(self, model: Any) -> pd.DataFrame:
+        df = self._get_extractor(model).coef_table(model)
+        # enforce index name
+        if df.index.name != "Coefficient":
+            df.index.name = "Coefficient"
+        return df
+
+    def _extract_se_type(self, model: Any) -> Any:
+        """S.E. type from the "se_type" stat, else built from vcov_info()."""
+        extractor = self._get_extractor(model)
+        raw = extractor.stat(model, "se_type")
+        if raw:
+            return raw
+        # Fallback for extractors/plug-ins that only describe the variance
+        # estimator via vcov_info() ({"vcov_type": ..., "clustervar": ...}).
+        try:
+            vcov = self._extract_vcov_info(model) or {}
+        except Exception:
+            vcov = {}
+        clustervar = vcov.get("clustervar")
+        if clustervar:
+            if not isinstance(clustervar, str):
+                clustervar = "+".join(map(str, clustervar))
+            return f"by: {clustervar}"
+        return vcov.get("vcov_type") or "-"
+
+    def _extract_stat(self, model: Any, key: str) -> str:
+        # format uniformly
+        if key == "se_type":
+            return self._extract_se_type(model)
+        raw = self._get_extractor(model).stat(model, key)
+        if raw is None:
+            return "-"
+        if isinstance(raw, (int, np.integer)):
+            return _format_number(float(raw))
+        if isinstance(raw, (float, np.floating)):
+            return "-" if math.isnan(raw) else _format_number(float(raw))
+        return str(raw)
+
+    def _collect_labels_from_models(self, models: list[Any]) -> dict[str, str]:
+        """
+        Gather variable labels from each model via its extractor.
+
+        Labels are merged across models (first seen wins), then missing
+        entries are filled from MTable.DEFAULT_LABELS.
+        """
+        merged: dict[str, str] = {}
+        for m in models:
+            try:
+                extractor = self._get_extractor(m)
+                model_labels = (
+                    extractor.var_labels(m)
+                    if hasattr(extractor, "var_labels")
+                    else None
+                )
+            except Exception:
+                model_labels = None
+            if isinstance(model_labels, dict):
+                for k, v in model_labels.items():
+                    if v and (k not in merged):
+                        merged[k] = v
+        # Fill remaining with global defaults
+        try:
+            for k, v in getattr(MTable, "DEFAULT_LABELS", {}).items():
+                if v and (k not in merged):
+                    merged[k] = v
+        except Exception:
+            pass
+        return merged
+
+    def _collect_fixef_list(
+        self, models: list[Any], show_fe: bool, feorder: list[str] | None = None
+    ) -> list[str]:
+        if not show_fe:
+            return []
+        fixef_list: list[str] = []
+        for m in models:
+            fx = self._extract_fixef_string(m)
+            if fx and fx != "0":
+                fixef_list += re.split(r"\s*\+\s*", fx)
+        fixef_list = [x for x in fixef_list if x]
+
+        # Apply optional ordering if provided via feorder parameter
+        if feorder is not None:
+            ordered_res = [name for name in feorder if name in fixef_list]
+            remaining = sorted(set(fixef_list) - set(feorder))
+            return ordered_res + remaining
+        return sorted(set(fixef_list))
+
+    def _compute_stars(self, p: pd.Series, signif_code: list[float]) -> pd.Series:
+        if not signif_code:
+            return pd.Series([""] * len(p), index=p.index)
+        s = pd.Series("", index=p.index, dtype=object)
+        s = np.where(
+            p < signif_code[0],
+            "***",
+            np.where(p < signif_code[1], "**", np.where(p < signif_code[2], "*", "")),
+        )
+        return pd.Series(s, index=p.index)
+
+    def _build_coef_table(
+        self,
+        models: list[Any],
+        coef_fmt: str,
+        signif_code: list[float],
+        custom_stats: dict[str, list[list]],
+        keep: list[str],
+        drop: list[str],
+        order: list[str],
+        exact_match: bool,
+        labels: dict[str, str],
+        cat_template: str,
+    ) -> tuple[pd.DataFrame, str]:
+        lbcode = self.DEFAULT_LINEBREAK
+
+        # Get column names from first model to validate tokens
+        first_tidy = self._extract_tidy_df(models[0])
+        available_columns = set(first_tidy.columns)
+        coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(
+            coef_fmt, custom_stats, available_columns
+        )
+
+        cols_per_model = []
+        for i, model in enumerate(models):
+            tidy = self._extract_tidy_df(model)
+            stars = self._compute_stars(tidy["p"], signif_code)
+
+            cell = pd.Series("", index=tidy.index, dtype=object)
+            for element in coef_fmt_elements:
+                token = element["token"]
+                format_spec = element["format"]
+                add_stars = element["add_stars"]
+
+                if token == "b":
+                    # Add coefficient (with stars if marked with *)
+                    formatted = tidy["b"].apply(_format_number, format_spec=format_spec)
+                    if add_stars:
+                        formatted = formatted + stars
+                    cell += formatted
+                elif token == "\n":
+                    cell += lbcode
+                elif token in custom_stats:
+                    # Custom stats from user
+                    if len(custom_stats[token][i]) != len(tidy.index):
+                        raise ValueError(
+                            f"custom_stats[{token!r}][{i}] must have one entry "
+                            "per coefficient."
+                        )
+                    cell += pd.Series(custom_stats[token][i], index=tidy.index).apply(
+                        _format_number, format_spec=format_spec
+                    )
+                elif token in tidy.columns:
+                    # Any column from tidy (se, t, p, ci95l, ci95u, etc.)
+                    formatted = tidy[token].apply(
+                        _format_number, format_spec=format_spec
+                    )
+                    # Add stars if marked with *
+                    if add_stars:
+                        formatted = formatted + stars
+                    cell += formatted
+                else:
+                    # Literal character (parentheses, commas, etc.)
+                    cell += token
+
+            # one column per model, indexed by 'Coefficient'
+            df_i = pd.DataFrame({f"est{i + 1}": pd.Categorical(cell)}, index=tidy.index)
+            df_i.index.name = "Coefficient"
+            cols_per_model.append(df_i)
+
+        # align on coefficient names
+        res = pd.concat(cols_per_model, axis=1)
+        res.index.name = "Coefficient"
+
+        # keep/drop ordering on the index (no reset)
+        idxs = (
+            _select_order_coefs(res.index.tolist(), keep, drop, exact_match, order)
+            if (keep or drop or order)
+            else res.index.tolist()
+        )
+        res = res.loc[idxs]
+
+        # fill NA and ensure empty category exists
+        for c in res.columns:
+            col = res[c]
+            if (
+                isinstance(col.dtype, pd.CategoricalDtype)
+                and "" not in col.cat.categories
+            ):
+                res[c] = col.cat.add_categories([""])
+            res[c] = res[c].fillna("")
+
+        # move intercept to bottom
+        if "Intercept" in res.index:
+            order = [ix for ix in res.index if ix != "Intercept"] + ["Intercept"]
+            res = res.loc[order]
+
+        # relabel coefficient index
+        if (labels != {}) or (cat_template != ""):
+            res.index = res.index.to_series().apply(
+                lambda x: _relabel_expvar(x, labels or {}, " × ", cat_template)
+            )
+            res.index.name = "Coefficient"
+
+        return res, coef_fmt_title
+
+    def _build_fe_df(
+        self,
+        models: list[Any],
+        fixef_list: list[str],
+        show_fe: bool,
+        labels: dict[str, str],
+        felabels: dict[str, str] | None,
+        like_columns: pd.Index,
+    ) -> pd.DataFrame:
+        if not (show_fe and fixef_list):
+            return pd.DataFrame(index=pd.Index([], name=None), columns=like_columns)
+        rows = {}
+        for fx in fixef_list:
+            row = []
+            for m in models:
+                fx_str = self._extract_fixef_string(m) or ""
+                has = (
+                    (fx_str != "")
+                    and (fx in fx_str.split("+"))
+                    and not getattr(m, "_use_mundlak", False)
+                )
+                row.append(
+                    self.DEFAULT_FE_MARKER[0] if has else self.DEFAULT_FE_MARKER[1]
+                )
+            rows[fx] = row
+        fe_df = pd.DataFrame.from_dict(
+            rows, orient="index", columns=cast("Any", list(like_columns))
+        )
+        # relabel FE names
+        felabels = felabels or {}
+        labels = labels or {}
+        return fe_df.rename(index=lambda x: felabels.get(x, labels.get(x, x)))
+
+    def _build_model_stats(
+        self,
+        models: list[Any],
+        stat_keys: list[str],
+        stat_labels: dict[str, str] | None,
+        custom_model_stats: dict[str, list] | None,
+        stats_order: StatsOrder,
+        like_index: pd.Index,
+        like_columns: pd.Index,
+    ) -> pd.DataFrame:
+        # builtin stats via extractor
+        def label_of(k: str) -> str:
+            # Priority: user override > extractor labels > ETable defaults
+            if stat_labels and k in stat_labels:
+                return stat_labels[k]
+            # Check if extractor has stat_labels() method (new optional feature)
+            try:
+                extractor = get_extractor(models[0]) if models else None
+                if extractor and hasattr(extractor, "stat_labels"):
+                    ext_labels = extractor.stat_labels(models[0]) or {}
+                    if k in ext_labels:
+                        return ext_labels[k]
+            except Exception:
+                pass  # If extractor lookup fails, continue to defaults
+            # Fall back to ETable's canonical defaults
+            return self.DEFAULT_STAT_LABELS.get(k, k)
+
+        rows = {
+            label_of(k): [self._extract_stat(m, k) for m in models] for k in stat_keys
+        }
+        builtin_df = (
+            pd.DataFrame.from_dict(rows, orient="index") if rows else pd.DataFrame()
+        )
+
+        # custom bottom rows
+        custom_df = (
+            pd.DataFrame.from_dict(custom_model_stats, orient="index")
+            if custom_model_stats
+            else pd.DataFrame()
+        )
+
+        blocks = {"c": custom_df, "s": builtin_df}
+        selected_blocks = [blocks[key] for key in stats_order if not blocks[key].empty]
+        out = pd.concat(selected_blocks, axis=0) if selected_blocks else pd.DataFrame()
+
+        if out.shape[1] == 0:
+            out = pd.DataFrame(
+                index=pd.Index([], name=like_index.name), columns=like_columns
+            )
+        else:
+            out.columns = like_columns
+        return out
+
+    @staticmethod
+    def _normalize_model_heads(
+        model_heads: list[Any] | None,
+        n_models: int,
+    ) -> list[list[str]] | None:
+        """
+        Normalize model_heads into a list of header levels (each aligned to models).
+
+        Accepts either the flat single-row form (one entry per model) or the
+        nested multi-level form (a list of levels, each itself a list/tuple
+        with one entry per model), and always returns the nested form so that
+        validation and header assembly share a single notion of shape.
+
+        Raises
+        ------
+        AssertionError
+            If a level's length doesn't match n_models, or if the nested form
+            is used but an element isn't itself a list/tuple (which would
+            otherwise be silently iterated into per-character entries).
+        """
+        if model_heads is None:
+            return None
+
+        is_nested = len(model_heads) > 0 and isinstance(model_heads[0], (list, tuple))
+        if is_nested:
+            levels = []
+            for level in model_heads:
+                if not isinstance(level, (list, tuple)):
+                    raise TypeError(
+                        "When model_heads is a list of levels, every level must "
+                        "itself be a list or tuple (one entry per model), not a "
+                        f"plain string: got {level!r}."
+                    )
+                if len(level) != n_models:
+                    raise ValueError("model_heads must have one entry per model.")
+                levels.append([str(h) for h in level])
+        else:
+            if len(model_heads) != n_models:
+                raise ValueError("model_heads must have one entry per model.")
+            levels = [[str(h) for h in model_heads]]
+
+        levels = [lvl for lvl in levels if any(str(h).strip() for h in lvl)]
+        return levels or None
+
+    def _build_header_columns(
+        self,
+        dep_var_list: list[str],
+        model_heads: list[list[str]] | None,
+        head_order: HeadOrder,
+        n_models: int,
+    ) -> list[str] | pd.MultiIndex:
+        id_dep = dep_var_list
+        id_num = [f"({s})" for s in range(1, n_models + 1)]
+
+        # model_heads is already normalized (via _normalize_model_heads) to a
+        # list of header levels, each aligned to models, with fully-blank
+        # levels dropped.
+        head_levels = model_heads
+
+        if head_order == "":
+            return id_num
+
+        header_levels: list[list[str]] = []
+        for c in head_order:
+            if c == "h" and head_levels is not None:
+                header_levels.extend(head_levels)
+            if c == "d":
+                header_levels.append(id_dep)
+        header_levels.append(id_num)
+
+        # filter out fully empty levels
+        def non_empty(arr: list[str]) -> bool:
+            return any((v is not None and str(v) != "") for v in arr)
+
+        header_levels = [lvl for lvl in header_levels if non_empty(lvl)]
+
+        if len(header_levels) == 1:
+            return header_levels[0]
+        return pd.MultiIndex.from_arrays(header_levels)
+
+
+def _format_number(x: float, format_spec: str | None = None) -> str:
+    """
+    Format a number with optional format specifier.
+
+    Parameters
+    ----------
+    x : float
+        The number to format.
+    format_spec : str, optional
+        Format specifier (e.g., '.3f', '.2e', ',.0f', 'd').
+        If None, uses sensible default formatting without scientific notation.
+
+    Returns
+    -------
+    str
+        The formatted number.
+    """
+    if pd.isna(x) or (isinstance(x, float) and np.isnan(x)):
+        return "-"
+
+    if format_spec is None:
+        # Sensible default formatting without scientific notation
+        abs_x = abs(x)
+
+        # Check if it's essentially an integer first
+        if abs(x - round(x)) < 1e-10:  # essentially an integer
+            if abs_x >= 1000:
+                return f"{round(x):,}"  # Use comma separators for large integers
+            return f"{round(x)}"  # No decimals for smaller integers
+
+        # For very small numbers (close to zero), show more precision
+        if abs_x < 0.001 and abs_x > 0:
+            return f"{x:.6f}".rstrip("0").rstrip(".")
+        # For small numbers, use standard precision
+        if abs_x < 1:
+            return f"{x:.3f}".rstrip("0").rstrip(".")
+        # For medium numbers, use standard precision
+        if abs_x < 1000:
+            return f"{x:.3f}"
+        # For large numbers, use comma separators
+        if abs_x >= 1000:
+            return f"{x:,.2f}"
+        return f"{x:.3f}"
+
+    try:
+        # Handle integer formatting
+        if format_spec == "d":
+            return f"{round(x):d}"
+
+        # Use Python's format specification
+        return f"{x:{format_spec}}"
+    except (ValueError, TypeError):
+        # Fallback to default formatting if format_spec is invalid
+        return _format_number(x, None)
+
+
+def _relabel_index(
+    index: pd.Index | list,
+    labels: dict | None = None,
+    stats_labels: dict | None = None,
+) -> pd.Index | list:
+    labels = {} if labels is None else labels
+    if stats_labels is None:
+        if isinstance(index, pd.MultiIndex):
+            index = pd.MultiIndex.from_tuples(
+                [tuple(labels.get(k, k) for k in i) for i in index]
+            )
+        else:
+            index = [labels.get(k, k) for k in index]
+    # if stats_labels is provided, we relabel the lowest level of the index with it
+    elif isinstance(index, pd.MultiIndex):
+        new_index = [
+            tuple([labels.get(k, k) for k in i[:-1]] + [stats_labels.get(i[-1], i[-1])])
+            for i in index
+        ]
+        index = pd.MultiIndex.from_tuples(new_index)
+    else:
+        index = [stats_labels.get(k, k) for k in index]
+    return index
+
+
+def _is_valid_format_spec(spec: str) -> bool:
+    """Check if spec is a valid Python format specification."""
+    try:
+        format(0.0, spec)
+    except ValueError:
+        return False
+    return True
+
+
+def _parse_coef_fmt(
+    coef_fmt: str, custom_stats: dict[str, Any], available_columns: set[Any]
+) -> tuple[list[dict[str, Any]], str]:
+    """
+    Parse the coef_fmt string with format specifiers and star markers.
+
+    Parameters
+    ----------
+    coef_fmt: str
+        The coef_fmt string. Supports format specifiers like 'b:.3f', 'se:.2e', etc.
+        Can also use any column name from the dataframe extracted with coef_table().
+        Append '*' after a token to add significance stars: 'b*', 'b:.3f*', 't:*', etc.
+    custom_stats: dict
+        A dictionary of custom statistics.
+    available_columns: set
+        Set of available column names from the dataframe extracted with
+        coef_table(). Used to validate tokens in the coef_fmt string.
+
+    Returns
+    -------
+    coef_fmt_elements: list
+        List of parsed elements, each being a dict with 'token', 'format',
+        and 'add_stars' keys.
+    coef_fmt_title: str
+        The title for the coef_fmt string.
+    """
+    # Reserved tokens that cannot be overridden
+    reserved_tokens = ["b", "se", "t", "p"]
+
+    # Validate custom_stats don't use reserved tokens
+    custom_elements = [str(key) for key in custom_stats]
+    if any(x in reserved_tokens for x in custom_elements):
+        raise ValueError(f"Custom stats cannot use reserved tokens: {reserved_tokens}")
+
+    # Validate custom_stats don't conflict with available columns
+    if available_columns:
+        conflicting = [x for x in custom_elements if x in available_columns]
+        if conflicting:
+            raise ValueError(
+                "Custom stats cannot use column names from tidy dataframe: "
+                f"{conflicting}. These columns are already available: "
+                f"{sorted(available_columns)}"
+            )
+
+    # Title mappings
+    title_map: dict[str, str] = {
+        "b": "Coefficient",
+        "se": "Std. Error",
+        "t": "t-stats",
+        "p": "p-value",
+        "hr": "Hazard Ratio",
+        "ci95l": "95% CI Lower",
+        "ci95u": "95% CI Upper",
+        "ci90l": "90% CI Lower",
+        "ci90u": "90% CI Upper",
+    }
+
+    # Build list of all valid tokens
+    # Priority: reserved > available columns > custom_stats
+    all_tokens: list[str] = reserved_tokens.copy()
+
+    if available_columns:
+        # Add tidy columns that aren't reserved
+        tidy_tokens = [
+            str(col) for col in available_columns if col not in reserved_tokens
+        ]
+        all_tokens.extend(tidy_tokens)
+
+    # Add custom stats last (lowest priority, already validated for conflicts)
+    all_tokens.extend(custom_elements)
+    token_strings: list[str] = [str(token) for token in all_tokens]
+    token_strings.sort(key=len, reverse=True)
+
+    coef_fmt_elements = []
+    title_parts = []
+    i = 0
+
+    while i < len(coef_fmt):
+        found_token = False
+
+        # Check for tokens with potential format specifiers
+        # Sort by length descending to match longer tokens first
+        # (e.g., "Std. Error" before "Std")
+        for token in token_strings:
+            if coef_fmt[i:].startswith(token):
+                # Check if followed by format specifier
+                after_token_pos = i + len(token)
+                if after_token_pos < len(coef_fmt) and coef_fmt[after_token_pos] == ":":
+                    # Find the end of the format specifier
+                    format_start = after_token_pos + 1
+                    format_end = format_start
+                    # Stop at delimiters: space, newline, brackets, backslash,
+                    # comma, or *. A comma is allowed when it is a valid
+                    # grouping option
+                    # (thousands separator) rather than a literal delimiter.
+                    while (
+                        format_end < len(coef_fmt)
+                        and coef_fmt[format_end]
+                        not in [" ", "\n", "(", ")", "[", "]", "\\", "*"]
+                        and (
+                            coef_fmt[format_end] != ","
+                            or _is_valid_format_spec(
+                                coef_fmt[format_start : format_end + 1]
+                            )
+                        )
+                        and not any(
+                            coef_fmt[format_end:].startswith(t) for t in token_strings
+                        )
+                    ):
+                        format_end += 1
+
+                    format_spec = coef_fmt[format_start:format_end]
+                    # Check if * follows (after format spec)
+                    add_stars = False
+                    if format_end < len(coef_fmt) and coef_fmt[format_end] == "*":
+                        add_stars = True
+                        format_end += 1
+                    coef_fmt_elements.append(
+                        {"token": token, "format": format_spec, "add_stars": add_stars}
+                    )
+                    title_parts.append(str(title_map.get(token, token)))
+                    i = format_end
+                else:
+                    # No format specifier, check for * suffix
+                    add_stars = False
+                    if (
+                        after_token_pos < len(coef_fmt)
+                        and coef_fmt[after_token_pos] == "*"
+                    ):
+                        add_stars = True
+                        after_token_pos += 1
+                    coef_fmt_elements.append(
+                        {"token": token, "format": None, "add_stars": add_stars}
+                    )
+                    title_parts.append(str(title_map.get(token, token)))
+                    i = after_token_pos
+                found_token = True
+                break
+
+        if not found_token:
+            # Handle special sequences and single characters
+            if coef_fmt[i : i + 2] == "\\n":
+                coef_fmt_elements.append(
+                    {"token": "\n", "format": None, "add_stars": False}
+                )
+                title_parts.append("\n")
+                i += 2
+            elif coef_fmt[i : i + 2] in ["\\(", "\\)", "\\[", "\\]"]:
+                escaped_char = coef_fmt[i + 1]
+                coef_fmt_elements.append(
+                    {"token": coef_fmt[i : i + 2], "format": None, "add_stars": False}
+                )
+                title_parts.append(escaped_char)
+                i += 2
+            else:
+                # Single character literal
+                char = coef_fmt[i]
+                coef_fmt_elements.append(
+                    {"token": char, "format": None, "add_stars": False}
+                )
+                title_parts.append(char)
+                i += 1
+
+    coef_fmt_title = "".join(title_parts)
+    return coef_fmt_elements, coef_fmt_title
+
+
+def _select_order_coefs(
+    coefs: list,
+    keep: list | str | None = None,
+    drop: list | str | None = None,
+    exact_match: bool | None = False,
+    order: list[str] | None = None,
+) -> list:
+    r"""
+    Select and order the coefficients based on the pattern.
+
+    Parameters
+    ----------
+    coefs: list
+        Coefficient names to be selected and ordered.
+    keep: str or list of str, optional
+        The pattern for retaining coefficient names. You can pass a string (one
+        pattern) or a list (multiple patterns). Default is keeping all coefficients.
+        You should use regular expressions to select coefficients.
+            "age",            # would keep all coefficients containing age
+            r"^tr",           # would keep all coefficients starting with tr
+            r"\\d$",          # would keep all coefficients ending with number
+        Output will be in the order of the patterns.
+    drop: str or list of str, optional
+        The pattern for excluding coefficient names. You can pass a string (one
+        pattern) or a list (multiple patterns). Syntax is the same as for `keep`.
+        Default is keeping all coefficients. Parameter `keep` and `drop` can be
+        used simultaneously.
+    exact_match: bool, optional
+        Whether to use exact match for `keep` and `drop`. Default is False.
+        If True, the pattern will be matched exactly to the coefficient name
+        instead of using regular expressions.
+    order: list[str], optional
+        Explicit order for coefficients in the output table. Provide a list of
+        coefficient names (after keep/drop filtering) to specify the exact order.
+        Any coefficients not in the list will appear at the end in their original order.
+        This is applied after keep/drop filtering.
+        Example: order=['age', 'female', 'education'] will place these first.
+
+    Returns
+    -------
+    res: list
+        The filtered and ordered coefficient names.
+    """
+    if keep is None:
+        keep = []
+    if drop is None:
+        drop = []
+
+    if isinstance(keep, str):
+        keep = [keep]
+    if isinstance(drop, str):
+        drop = [drop]
+
+    coefs = list(coefs)
+    res = [] if keep else coefs[:]  # Store matched coefs
+
+    # Apply keep patterns
+    for pattern in keep:
+        _coefs = []  # Store remaining coefs
+        for coef in coefs:
+            if (exact_match and pattern == coef) or (
+                exact_match is False and re.findall(pattern, coef)
+            ):
+                res.append(coef)
+            else:
+                _coefs.append(coef)
+        coefs = _coefs
+
+    # Apply drop patterns
+    for pattern in drop:
+        _coefs = []
+        for coef in res:  # Remove previously matched coefs that match the drop pattern
+            if (exact_match and pattern == coef) or (
+                exact_match is False and re.findall(pattern, coef)
+            ):
+                continue
+            _coefs.append(coef)
+        res = _coefs
+
+    # Apply explicit ordering if provided
+    if order is not None:
+        ordered_res = []
+        remaining = list(res)
+
+        for coef_name in order:
+            if coef_name in remaining:
+                ordered_res.append(coef_name)
+                remaining.remove(coef_name)
+
+        # Append any remaining coefficients not in order list
+        ordered_res.extend(remaining)
+        res = ordered_res
+
+    return res
+
+
+def _has_format_specifiers(coef_fmt: str) -> bool:
+    """
+    Check if coef_fmt contains any format specifiers (e.g., 'b:.3f', 'se:.2e').
+
+    Parameters
+    ----------
+    coef_fmt : str
+        The coefficient format string to check.
+
+    Returns
+    -------
+    bool
+        True if format specifiers are found, False otherwise.
+    """
+    # Look for pattern like 'token:format' where token is b, se, t, p or custom.
+    # This is a simple check - if there's a colon after known tokens, assume
+    # format specs. Match patterns like 'b:', 'se:', 't:', 'p:', or any word
+    # followed by ':'
+    return bool(re.search(r"\w+:", coef_fmt))
+
+
+def _apply_digits_to_coef_fmt(coef_fmt: str, digits: int) -> str:
+    """
+    Apply digits formatting to a coef_fmt string that doesn't have format specifiers.
+
+    Parameters
+    ----------
+    coef_fmt : str
+        The coefficient format string.
+    digits : int
+        Number of decimal places to use.
+
+    Returns
+    -------
+    str
+        The updated coef_fmt string with format specifiers applied.
+    """
+    digits = max(digits, 0)
+
+    format_spec = f".{digits}f"
+
+    # Replace tokens with formatted versions
+    updated_fmt = coef_fmt
+
+    # Replace 'b' with 'b:.Nf' (but not if it's already formatted)
+    updated_fmt = re.sub(r"\bb\b(?!:)", f"b:{format_spec}", updated_fmt)
+
+    # Replace 'se' with 'se:.Nf' (but not if it's already formatted)
+    updated_fmt = re.sub(r"\bse\b(?!:)", f"se:{format_spec}", updated_fmt)
+
+    # Replace 't' with 't:.Nf' (but not if it's already formatted)
+    updated_fmt = re.sub(r"\bt\b(?!:)", f"t:{format_spec}", updated_fmt)
+
+    # Replace 'p' with 'p:.Nf' (but not if it's already formatted)
+    return re.sub(r"\bp\b(?!:)", f"p:{format_spec}", updated_fmt)
+
+
+def _relabel_expvar(
+    varname: str, labels: dict, interaction_symbol: str, cat_template: str = ""
+) -> str:
+    """
+    Relabel a variable name using the labels dictionary.
+
+    Also automatically relabel interaction terms using the labels of the
+    individual variables and categorical variables using the cat_template.
+
+    Parameters
+    ----------
+    varname: str
+        The varname in the regression.
+    labels: dict
+        A dictionary to relabel the variables. The keys are the original
+        variable names and the values the new names.
+    interaction_symbol: str
+        The symbol to use for displaying the interaction term.
+    cat_template: str
+        Template to relabel categorical variables. When empty, the function
+        will not relabel categorical variables. You can use {variable},
+        {value}, or {value_int} placeholders. e.g. "{variable}::{value_int}"
+        if you want to force integer format when possible.
+
+    Returns
+    -------
+    str
+        The relabeled variable
+    """
+    # First split the variable name by the interaction symbol ":"
+    # Note: will just be equal to varname when no interaction term
+    var_parts = _split_interaction(varname)
+    # Loop over the variables and relabel them
+    for i in range(len(var_parts)):
+        # Check whether template for categorical variables is provided &
+        # whether the variable is a categorical variable
+        v = var_parts[i]
+        if cat_template != "" and ("C(" in v or "[" in v or "::" in v):
+            var_parts[i] = _rename_categorical(v, template=cat_template, labels=labels)
+        else:
+            var_parts[i] = labels.get(v, v)
+    # Finally join the variables using the interaction symbol
+    return interaction_symbol.join(var_parts)
+
+
+def _split_interaction(varname: str) -> list[str]:
+    """
+    Split a coefficient name into its interaction parts at ":".
+
+    Colons inside brackets or parentheses (e.g. a level "10:30" in
+    "C(time)[T.10:30]") and the "::" of pyfixest's i() level names
+    ("var::level") do not split.
+    """
+    parts, start, depth = [], 0, 0
+    for i, ch in enumerate(varname):
+        if ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(depth - 1, 0)
+        elif (
+            ch == ":"
+            and depth == 0
+            and varname[i - 1 : i] != ":"
+            and varname[i + 1 : i + 2] != ":"
+        ):
+            parts.append(varname[start:i])
+            start = i + 1
+    parts.append(varname[start:])
+    return parts
+
+
+def _rename_categorical(
+    col_name: str, template: str = "{variable}::{value}", labels: dict | None = None
+) -> str:
+    """
+    Rename categorical variables, converting floats to ints where possible.
+
+    Parameters
+    ----------
+    col_name : str
+        A single coefficient string (e.g. "C(var)[T.1]").
+    template: str, optional
+        String template for formatting. You can use {variable}, {value}, or
+        {value_int} placeholders. e.g. "{variable}::{value_int}" if you want
+        to force integer format when possible.
+    labels: dict, optional
+        Dictionary that replaces variable names with user-specified labels.
+
+    Returns
+    -------
+    str
+        The renamed categorical variable.
+    """
+    # Here three patterns are used to extract the variable and level:
+    # "C(var)[T.level]" from formulaic's C() operator, "var::level" from
+    # pyfixest's i() operator, and "var[T.level]" when the variable is
+    # categorical at the outset
+    if col_name.startswith("C("):
+        pattern = r"C\(([^,]+)(?:,[^]]+)?\)\[(?:T\.)?(.+)\]$"
+    elif "::" in col_name and "[" not in col_name.split("::", 1)[0]:
+        pattern = r"^(.+?)::(.+)$"
+    else:
+        pattern = r"([^[]+)\[(?:T\.)?(.+)\]$"
+
+    # Replace labels with empty dictionary if not provided
+    if labels is None:
+        labels = {}
+    # Apply the regex to extract the variable and value
+    match = re.search(pattern, col_name)
+    if match:
+        variable = match.group(1)
+        variable = labels.get(variable, variable)  # apply label if any
+        value_raw = match.group(2)
+
+        # Try parsing as float so that e.g. "2.0" can become "2"
+        value_int = value_raw
+        try:
+            numeric_val = float(value_raw)
+            value_int = int(numeric_val) if numeric_val.is_integer() else numeric_val
+        except ValueError:
+            # If not numeric at all, we'll leave it as-is
+            pass
+
+        return template.format(variable=variable, value=value_raw, value_int=value_int)
+    return col_name

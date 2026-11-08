@@ -1,0 +1,375 @@
+"""Pytest fixtures for maketables snapshot tests."""
+
+import numpy as np
+import pandas as pd
+import pytest
+
+
+@pytest.fixture
+def simple_df():
+    """Create a simple DataFrame for basic table tests."""
+    np.random.seed(42)
+    n = 100
+    return pd.DataFrame(
+        {
+            "x": np.random.randn(n),
+            "y": np.random.randn(n),
+            "group": np.random.choice(["A", "B"], n),
+        }
+    )
+
+
+@pytest.fixture
+def btable_factorial_df():
+    """Create 2x2 grouped data for BTable tests."""
+    return pd.DataFrame(
+        {
+            "x": [
+                1.0,
+                1.2,
+                2.0,
+                2.2,
+                3.0,
+                3.2,
+                4.0,
+                4.2,
+                1.5,
+                1.7,
+                2.5,
+                2.7,
+                3.5,
+                3.7,
+                4.5,
+                4.7,
+            ],
+            "z": [
+                2.0,
+                2.2,
+                2.5,
+                2.7,
+                3.5,
+                3.7,
+                4.0,
+                4.2,
+                2.1,
+                2.3,
+                2.6,
+                2.8,
+                3.6,
+                3.8,
+                4.1,
+                4.3,
+            ],
+            "treatment": ["control"] * 8 + ["treated"] * 8,
+            "period": ["pre", "pre", "post", "post"] * 4,
+        },
+    )
+
+
+@pytest.fixture
+def dtable_binary_df():
+    """Create data with binary and continuous variables for DTable/BTable tests."""
+    return pd.DataFrame(
+        {
+            "binary": [0, 1, 1, 0, 0, 1, 1, 0],
+            "continuous": [1.0, 2.0, 4.0, 5.0, 1.5, 2.5, 4.5, 5.5],
+            "group": ["A", "A", "B", "B", "A", "A", "B", "B"],
+        }
+    )
+
+
+@pytest.fixture
+def binary_type_df():
+    """Create binary and non-binary columns across several dtypes."""
+    return pd.DataFrame(
+        {
+            "int_binary": [0, 1, 1, 0],
+            "non_indicator_numeric_binary": [1, 2, np.nan, 2],
+            "float_binary": [0.0, 1.0, np.nan, 1.0],
+            "bool_binary": [True, False, True, False],
+            "nullable_bool_binary": pd.Series(
+                [True, False, pd.NA, True],
+                dtype="boolean",
+            ),
+            "string_binary": ["yes", "no", None, "yes"],
+            "categorical_binary": pd.Categorical(
+                ["treated", "control", None, "treated"],
+            ),
+            "datetime_binary": pd.to_datetime(
+                ["2020-01-01", "2020-01-02", None, "2020-01-01"],
+            ),
+            "single_level": [1, 1, np.nan, 1],
+            "three_level": ["a", "b", "c", None],
+            "all_missing": [None, None, None, None],
+        }
+    )
+
+
+@pytest.fixture
+def fitted_model(simple_df):
+    """Create a single fitted pyfixest model."""
+    import pyfixest as pf
+
+    np.random.seed(42)
+    df = pd.DataFrame(
+        {
+            "x": [1.0, 2.0, 3.0, 4.0, 5.0] * 20,  # 100 rows
+            "y": [2.1, 4.1, 6.1, 8.1, 10.1] * 20,
+        }
+    )
+    df["y"] = df["y"] + np.random.randn(len(df)) * 0.1
+    return pf.feols("y ~ x", data=df)
+
+
+@pytest.fixture
+def fitted_models(simple_df):
+    """Create multiple fitted pyfixest models for multi-column tables."""
+    import pyfixest as pf
+
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
+    df = simple_df.copy()
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
+
+    return [
+        pf.feols("y ~ x", data=df),
+        pf.feols("y ~ x + C(group)", data=df),
+    ]
+
+
+@pytest.fixture
+def fitted_model_fe(simple_df):
+    """Create a pyfixest model with fixed effects."""
+    import pyfixest as pf
+
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
+    df = simple_df.copy()
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
+
+    # Model with group fixed effects
+    return pf.feols("y ~ x | group", data=df)
+
+
+# Statsmodels fixtures
+
+
+@pytest.fixture
+def statsmodels_ols(simple_df):
+    """Create a statsmodels OLS model."""
+    import statsmodels.formula.api as smf
+
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
+    df = simple_df.copy()
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
+    return smf.ols("y ~ x", data=df).fit()
+
+
+@pytest.fixture
+def statsmodels_logit(simple_df):
+    """Create a statsmodels Logit model."""
+    import statsmodels.formula.api as smf
+
+    np.random.seed(42)
+    df = simple_df.copy()
+    logits = -0.25 + 1.1 * df["x"]
+    probs = 1 / (1 + np.exp(-logits))
+    df["y_binary"] = np.random.binomial(1, probs)
+    return smf.logit("y_binary ~ x", data=df).fit(disp=0)
+
+
+@pytest.fixture
+def statsmodels_probit(simple_df):
+    """Create a statsmodels Probit model."""
+    import statsmodels.formula.api as smf
+
+    np.random.seed(42)
+    df = simple_df.copy()
+    latent = -0.25 + 1.1 * df["x"] + np.random.randn(len(df)) * 0.6
+    df["y_binary"] = (latent > 0).astype(int)
+    return smf.probit("y_binary ~ x", data=df).fit(disp=0)
+
+
+# Linearmodels fixtures
+
+
+@pytest.fixture
+def panel_df():
+    """Create a panel DataFrame for linearmodels tests."""
+    np.random.seed(42)
+    n_entities = 20
+    n_periods = 5
+    n_obs = n_entities * n_periods
+
+    # Create panel structure
+    entity_id = np.repeat(np.arange(n_entities), n_periods)
+    time_id = np.tile(np.arange(n_periods), n_entities)
+
+    # Entity and time effects
+    entity_effects = np.random.randn(n_entities)
+    time_effects = np.random.randn(n_periods)
+
+    # Create panel data
+    df = pd.DataFrame(
+        {
+            "entity": entity_id,
+            "time": time_id,
+            "x1": np.random.randn(n_obs),
+            "x2": np.random.randn(n_obs),
+        }
+    )
+
+    # Create outcome with entity effects
+    df["y"] = (
+        2 * df["x1"]
+        + 0.5 * df["x2"]
+        + entity_effects[entity_id]
+        + time_effects[time_id]
+        + np.random.randn(n_obs) * 0.1
+    )
+
+    # Set MultiIndex for panel structure
+    return df.set_index(["entity", "time"])
+
+
+@pytest.fixture
+def linearmodels_panelols(panel_df):
+    """Create a linearmodels PanelOLS with entity effects."""
+    from linearmodels import PanelOLS
+
+    mod = PanelOLS.from_formula("y ~ x1 + x2 + EntityEffects", data=panel_df)
+    return mod.fit(cov_type="clustered", cluster_entity=True)
+
+
+@pytest.fixture
+def linearmodels_pooledols(panel_df):
+    """Create a linearmodels PooledOLS without fixed effects."""
+    from linearmodels import PooledOLS
+
+    mod = PooledOLS.from_formula("y ~ x1 + x2", data=panel_df)
+    return mod.fit(cov_type="robust")
+
+
+@pytest.fixture
+def linearmodels_absorbingls():
+    """Create a linearmodels AbsorbingLS with high-dimensional fixed effects."""
+    from linearmodels import AbsorbingLS
+
+    np.random.seed(42)
+    n_firms = 50
+    n_obs = 200
+
+    # Create firm-level data
+    firm_id = np.random.choice(n_firms, size=n_obs)
+    firm_effects = np.random.randn(n_firms)
+
+    df = pd.DataFrame(
+        {
+            "firm_id": firm_id,
+            "x1": np.random.randn(n_obs),
+            "x2": np.random.randn(n_obs),
+        }
+    )
+
+    df["y"] = (
+        2 * df["x1"]
+        + 0.5 * df["x2"]
+        + firm_effects[firm_id]
+        + np.random.randn(n_obs) * 0.1
+    )
+
+    # Fit AbsorbingLS
+    mod = AbsorbingLS(
+        dependent=df[["y"]],
+        exog=df[["x1", "x2"]],
+        absorb=df[["firm_id"]],
+    )
+    return mod.fit(cov_type="robust")
+
+
+@pytest.fixture
+def linearmodels_iv2sls():
+    """Create a linearmodels IV2SLS with instrumental variables."""
+    from linearmodels.iv import IV2SLS
+
+    np.random.seed(42)
+    n_obs = 200
+
+    # Create IV data: z is instrument for x (endogenous)
+    z = np.random.randn(n_obs)  # Instrument
+    x_endog = 0.5 * z + np.random.randn(n_obs) * 0.5  # Endogenous regressor
+    x_exog = np.random.randn(n_obs)  # Exogenous regressor
+    y = 2 * x_endog + 0.5 * x_exog + np.random.randn(n_obs) * 0.1
+
+    df = pd.DataFrame(
+        {
+            "y": y,
+            "x_endog": x_endog,
+            "x_exog": x_exog,
+            "z": z,
+        }
+    )
+
+    # IV2SLS: y ~ x_exog + [x_endog ~ z]
+    mod = IV2SLS.from_formula("y ~ 1 + x_exog + [x_endog ~ z]", data=df)
+    return mod.fit(cov_type="robust")
+
+
+# Sample-table family shared by the output-format tests
+
+SAMPLE_TABLE_IDS = [
+    "etable_plain",
+    "etable_multi_model",
+    "etable_formatted",
+    "etable_merged_heads",
+    "etable_wide",
+    "dtable_plain",
+    "dtable_grouped",
+    "btable",
+]
+
+
+@pytest.fixture(params=SAMPLE_TABLE_IDS)
+def sample_table(request):
+    """Build one table of each kind: plain, multi-model, formatted, merged heads.
+
+    Parametrized so every output-format test runs against the whole family.
+    Fixtures are requested lazily, so each table only needs what it uses.
+    """
+    import maketables as mt
+
+    def get(name):
+        return request.getfixturevalue(name)
+
+    builders = {
+        "etable_plain": lambda: mt.ETable([get("fitted_model")]),
+        "etable_multi_model": lambda: mt.ETable(get("fitted_models")),
+        "etable_formatted": lambda: mt.ETable(
+            get("fitted_models"),
+            coef_fmt="b:.1f \n (se:.1f)",
+            labels={"x": "Regressor", "y": "Outcome"},
+            caption="Regression results",
+            notes="Custom note.",
+        ),
+        "etable_merged_heads": lambda: mt.ETable(
+            get("fitted_models"),
+            model_heads=[["Panel A", "Panel A"], ["Spec 1", "Spec 2"]],
+            head_order="h",
+        ),
+        "etable_wide": lambda: mt.ETable(get("fitted_models") * 3),
+        "dtable_plain": lambda: mt.DTable(get("simple_df"), vars=["x", "y"]),
+        "dtable_grouped": lambda: mt.DTable(
+            get("simple_df"), vars=["x", "y"], bycol=["group"]
+        ),
+        "btable": lambda: mt.BTable(
+            get("simple_df"), vars=["x", "y"], group="group", stats=["mean"]
+        ),
+    }
+    return builders[request.param]()

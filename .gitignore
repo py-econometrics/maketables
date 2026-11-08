@@ -172,6 +172,18 @@ Desktop.ini
 # Custom folder
 mystuff/
 
+# Generated output directories
+latex_output/
+output/
+README_files/
+
+# Misc
+database.db
+objects.json
+
+# Auto-generated version file
+src/maketables/_version.py
+
 # Quarto
 _site/
 .quarto/
@@ -182,3 +194,6 @@ _site/
 
 **/*.quarto_ipynb
 _freeze/
+
+# Claude Code local settings
+.claude/settings.local.json
