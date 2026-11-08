@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Typst output translated symbols twice, so `≤` and `≥` came out as `$$≤$$` (two empty equations around a text-mode symbol) instead of `$≤$`
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

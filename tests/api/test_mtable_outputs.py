@@ -10,6 +10,7 @@ from docx import Document
 
 import maketables as mt
 from maketables import MTable
+from maketables.symbols import SYMBOLS
 
 
 def _frame(*, grouped=False, spanners=False):
@@ -139,6 +140,12 @@ def test_special_characters_in_typst_and_docx():
     assert "r\\_1" in t.make(type="typst")
     assert "\\#" in t.make(type="typst")
     assert t.make(type="docx").tables[0].cell(1, 1).text
+
+
+@pytest.mark.parametrize("symbol", list(SYMBOLS))
+def test_typst_translates_each_symbol_once(symbol):
+    out = MTable(pd.DataFrame({"A": ["1"]}, index=[symbol])).make(type="typst")
+    assert f"[{SYMBOLS[symbol]['typst']}], [1]," in out
 
 
 def test_linebreaks_in_cells():
