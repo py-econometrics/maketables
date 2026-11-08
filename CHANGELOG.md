@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `ETable` moved the intercept to the last row even when `order` or `keep` placed it elsewhere (`order=['Intercept', 'x2', 'x1']` gave `x2, x1, Intercept`). The intercept now stays last only when `'Intercept'` is not listed in `keep` or `order`
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
