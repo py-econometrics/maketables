@@ -84,6 +84,8 @@ class ETable(MTable):
         Any coefficients not in the list will appear at the end in their original order.
         This is applied after keep/drop filtering.
         Example: order=['age', 'female', 'education'] will place these first.
+        The intercept is shown last unless 'Intercept' is listed in keep or
+        order, in which case that position is used.
     feorder : list[str], optional
         Explicit order for fixed effects rows. Provide a list of fixed effect names
         to specify their display order. Any fixed effects not in the list will appear
@@ -659,8 +661,8 @@ class ETable(MTable):
                 res[c] = col.cat.add_categories([""])
             res[c] = res[c].fillna("")
 
-        # move intercept to bottom
-        if "Intercept" in res.index:
+        # move intercept to bottom, unless the user positioned it via keep/order
+        if "Intercept" in res.index and "Intercept" not in [*keep, *order]:
             order = [ix for ix in res.index if ix != "Intercept"] + ["Intercept"]
             res = res.loc[order]
 
