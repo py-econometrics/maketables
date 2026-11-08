@@ -641,7 +641,7 @@ def _get_attr(model: Any, spec: Any) -> Any:
     --------
         _get_attr(model, "nobs")  # Returns model.nobs or model.model.nobs
         _get_attr(model, ("model", "endog", "name"))  # Returns model.model.endog.name
-        _get_attr(model, lambda m: m.s2 ** 0.5)  # Returns computed RMSE
+        _get_attr(model, lambda m: (m.resid_ss / m.nobs) ** 0.5)  # Returns RMSE
     """
     if isinstance(spec, str):
         return getattr(model, spec, getattr(getattr(model, "model", None), spec, None))
@@ -1190,11 +1190,13 @@ class LinearmodelsExtractor:
         # F-stat (when available)
         "fvalue": lambda m: getattr(getattr(m, "f_statistic", None), "stat", None),
         "f_pvalue": lambda m: getattr(getattr(m, "f_statistic", None), "pval", None),
-        # Error scale / RMSE
+        # RMSE = sqrt(resid_ss / nobs), as for pyfixest. Not sqrt(s2): s2 is the
+        # covariance estimator's residual variance, whose degrees-of-freedom
+        # correction depends on cov_type and debiased.
         "rmse": lambda m: (
             getattr(m, "root_mean_squared_error", None)
             if hasattr(m, "root_mean_squared_error")
-            else (float(m.s2) ** 0.5 if hasattr(m, "s2") and m.s2 is not None else None)
+            else (float(m.resid_ss / m.nobs) ** 0.5 if m.resid_ss is not None else None)
         ),
         # IV diagnostics: TODO
     }

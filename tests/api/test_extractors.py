@@ -393,6 +393,14 @@ class TestStatsmodelsExtractor:
 # ---------------------------------------------------------------- linearmodels
 
 
+@pytest.fixture
+def fitted_model_fe_panel(panel_df):
+    """Pyfixest twin of the PanelOLS entity-effects model on ``panel_df``."""
+    import pyfixest as pf
+
+    return pf.feols("y ~ x1 + x2 | entity", panel_df.reset_index())
+
+
 class TestLinearmodelsExtractor:
     def test_can_handle(self, linearmodels_panelols, statsmodels_ols):
         e = LinearmodelsExtractor()
@@ -488,9 +496,46 @@ class TestLinearmodelsExtractor:
     def test_rmse_branches(self):
         e = LinearmodelsExtractor()
         assert e.stat(types.SimpleNamespace(root_mean_squared_error=2.0), "rmse") == 2.0
-        assert e.stat(types.SimpleNamespace(s2=4.0), "rmse") == 2.0
-        assert e.stat(types.SimpleNamespace(s2=None), "rmse") is None
+        assert e.stat(types.SimpleNamespace(resid_ss=36.0, nobs=9), "rmse") == 2.0
+        # s2 is the covariance estimator's residual variance, not the RMSE
+        assert e.stat(types.SimpleNamespace(s2=4.0), "rmse") is None
+        assert e.stat(types.SimpleNamespace(resid_ss=None, nobs=9), "rmse") is None
         assert e.stat(types.SimpleNamespace(), "rmse") is None
+
+    @pytest.mark.parametrize(
+        ("cov_type", "kwargs"),
+        [
+            ("unadjusted", {}),
+            ("robust", {}),
+            ("clustered", {"cluster_entity": True}),
+            ("kernel", {}),
+        ],
+    )
+    def test_rmse_does_not_depend_on_cov_type(
+        self, panel_df, fitted_model_fe_panel, cov_type, kwargs
+    ):
+        from linearmodels import PanelOLS
+
+        res = PanelOLS.from_formula("y ~ x1 + x2 + EntityEffects", panel_df).fit(
+            cov_type=cov_type, **kwargs
+        )
+        rmse = LinearmodelsExtractor().stat(res, "rmse")
+        assert rmse == pytest.approx(np.sqrt(np.mean(res.resids**2)))
+        # Same model, same definition as the pyfixest extractor
+        assert rmse == pytest.approx(
+            PyFixestExtractor().stat(fitted_model_fe_panel, "rmse")
+        )
+
+    @pytest.mark.parametrize(
+        "fixture", ["linearmodels_iv2sls", "linearmodels_absorbingls"]
+    )
+    def test_rmse_iv_and_absorbing(self, request, fixture):
+        res = request.getfixturevalue(fixture)
+        # debiased=True rescales the covariance estimator's s2 by n / (n - k)
+        for fit in (res, res.model.fit(cov_type="unadjusted", debiased=True)):
+            assert LinearmodelsExtractor().stat(fit, "rmse") == pytest.approx(
+                np.sqrt(np.mean(fit.resids**2))
+            )
 
     def test_n_fallback_when_not_integer(self):
         assert LinearmodelsExtractor().stat(types.SimpleNamespace(nobs="x"), "N") == "x"

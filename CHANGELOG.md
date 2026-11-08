@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- RMSE for linearmodels models was `sqrt(s2)`, the covariance estimator's residual variance, so it changed with `cov_type` and `debiased` (e.g. 0.922 unadjusted vs 0.842 clustered for the same `PanelOLS` fit). It is now `sqrt(resid_ss / nobs)`, the same definition as for pyfixest models
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
