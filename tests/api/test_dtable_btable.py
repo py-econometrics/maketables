@@ -116,6 +116,39 @@ class TestDTable:
         t = mt.DTable(df, vars=["x"], byrow="g", counts_row_below=True)
         assert "N" in t.df.columns
 
+    @pytest.mark.parametrize("combined", ["mean_std", "mean_newline_std"])
+    def test_combined_stat_does_not_leave_raw_floats(self, df, combined):
+        # Adding a combined column must not change how the other columns are
+        # formatted (it makes the frame object dtype).
+        stats = ["count", "mean", "std"]
+        plain = mt.DTable(df, vars=["x", "y"], stats=stats, digits=3).df
+        mixed = mt.DTable(df, vars=["x", "y"], stats=[*stats, combined], digits=3).df
+        pd.testing.assert_frame_equal(mixed[plain.columns], plain)
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {},
+            {"stats": ["count", "mean", "mean_std"]},
+            {"bycol": ["h"]},
+            {"byrow": "h"},
+            {"byrow": "h", "bycol": ["g"]},
+        ],
+    )
+    def test_counts_are_integers(self, df, kwargs):
+        kwargs.setdefault("stats", ["count", "mean", "std"])
+        t = mt.DTable(df, vars=["x", "y"], digits=3, **kwargs)
+        counts = (
+            t.df.xs("N", axis=1, level=-1) if t.df.columns.nlevels > 1 else t.df[["N"]]
+        )
+        assert set(counts.to_numpy().ravel()) <= {"120", "60", "40", "20"}
+
+    @pytest.mark.parametrize("bycol", [None, ["h"]])
+    def test_counts_row_below_is_integer(self, df, bycol):
+        t = mt.DTable(df, vars=["x", "y"], bycol=bycol, counts_row_below=True)
+        row = t.df.loc[("nobs", "N")]
+        assert [v for v in row if v] == (["120"] if bycol is None else ["60", "60"])
+
     def test_missing_values_dash(self):
         data = pd.DataFrame({"x": [1.0, 2.0], "y": [np.nan, np.nan]})
         t = mt.DTable(data, vars=["x", "y"], stats=["mean", "std"])

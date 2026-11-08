@@ -1,7 +1,7 @@
 """Descriptive statistics table support."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -56,7 +56,8 @@ class DTable(MTable):
     digits : int, optional
         Number of decimal places for statistics display. This parameter is only
         applied when format_spec is None or when specific statistics are not
-        specified in format_spec. Default is 2.
+        specified in format_spec. Default is 2. Counts are shown as integers
+        unless format_spec says otherwise.
     notes : str
         Table notes to be displayed at the bottom of the table.
     counts_row_below : bool
@@ -119,6 +120,8 @@ class DTable(MTable):
                     self.format_specs[stat], dict
                 ):
                     return self.format_specs[stat]
+            if stat == "count":
+                return ",.0f"
             return None
 
         # Determine labels: prefer DataFrame attrs; fall back to MTable defaults
@@ -229,20 +232,18 @@ class DTable(MTable):
                 # formatted strings
                 if stat_name in ["mean_std", "mean_newline_std"]:
                     continue
-                # Only format numeric columns or when a format_spec exists for
-                # this stat or any var
-                if not (
-                    pd.api.types.is_numeric_dtype(res[col])
-                    or stat_name in self.format_specs
-                    or any(str(v) in self.format_specs for v in res.index)
-                ):
-                    continue
-                # Format each cell using the row index as the variable name
+                # Format each numeric cell using the row index as the variable
+                # name. Check cells, not the column dtype: a combined statistic
+                # makes every column object dtype.
                 formatted = []
                 for var_label, val in zip(res.index, res[col], strict=False):
                     var_name = str(var_label) if var_label is not None else None
                     fmt = get_format_spec(var_name, stat_name)
-                    formatted.append(self._format_number(val, fmt, digits=digits))
+                    formatted.append(
+                        self._format_number(cast("float", val), fmt, digits=digits)
+                        if pd.api.types.is_number(val)
+                        else val
+                    )
                 res[col] = formatted
 
             if counts_row_below:
@@ -267,7 +268,11 @@ class DTable(MTable):
                     res = res.drop("count", axis=1, level=-1)
                     if "count" in stats:
                         stats.remove("count")
-                    res[stats_dict["count"], stats[0]] = nobs
+                    res[stats_dict["count"], stats[0]] = nobs.map(
+                        lambda n: self._format_number(
+                            n, get_format_spec(None, "count"), digits=digits
+                        )
+                    )
                 else:
                     counts_row_below = False
 
@@ -280,16 +285,15 @@ class DTable(MTable):
                 var_name = col[0] if isinstance(res.columns, pd.MultiIndex) else col
                 if stat_name in ["mean_std", "mean_newline_std"]:
                     continue
-                if (
-                    (pd.api.types.is_numeric_dtype(res[col]))
-                    or stat_name in self.format_specs
-                    or var_name in self.format_specs
-                ):
-                    res[col] = res[col].apply(
-                        lambda x, sn=stat_name, vn=var_name: self._format_number(
-                            x, get_format_spec(vn, sn), digits=digits
+                res[col] = res[col].apply(
+                    lambda x, sn=stat_name, vn=var_name: (
+                        self._format_number(
+                            cast("float", x), get_format_spec(vn, sn), digits=digits
                         )
+                        if pd.api.types.is_number(x)
+                        else x
                     )
+                )
 
             res = pd.DataFrame(res.stack(level=0, future_stack=True))
             res.columns.names = ["Statistics"]
