@@ -1119,103 +1119,42 @@ class MTable:
                         run.font.color.rgb = RGBColor(*rgb_all)
                         run.font.size = size
 
+        set_border = self._set_docx_cell_border
         # First hide all borders
         for row in table.rows:
             for cell in row.cells:
-                tcPr = cell._element.get_or_add_tcPr()
-                borders = OxmlElement("w:tcBorders")
-                top_border = OxmlElement("w:top")
-                top_border.set(qn("w:val"), "nil")
-                borders.append(top_border)
-                bottom_border = OxmlElement("w:bottom")
-                bottom_border.set(qn("w:val"), "nil")
-                borders.append(bottom_border)
-                left_border = OxmlElement("w:left")
-                left_border.set(qn("w:val"), "nil")
-                borders.append(left_border)
-                right_border = OxmlElement("w:right")
-                right_border.set(qn("w:val"), "nil")
-                borders.append(right_border)
-                tcPr.append(borders)
+                for edge in ("top", "left", "bottom", "right"):
+                    set_border(cell, edge, "nil")
 
         # Add a thicker line above the top row
         for cell in table.rows[0].cells:
-            tcPr = cell._element.get_or_add_tcPr()
-            borders = OxmlElement("w:tcBorders")
-            top_border = OxmlElement("w:top")
-            top_border.set(qn("w:val"), "single")
-            top_border.set(
-                qn("w:sz"), str(int(cast("Any", s.get("border_top_rule_sz", 8))))
-            )
-            borders.append(top_border)
-            tcPr.append(borders)
+            set_border(cell, "top", "single", s.get("border_top_rule_sz", 8))
 
         # Add a line to the last headline row
         for cell in table.rows[headline_levels - 1].cells:
-            tcPr = cell._element.get_or_add_tcPr()
-            borders = OxmlElement("w:tcBorders")
-            bottom_border = OxmlElement("w:bottom")
-            bottom_border.set(qn("w:val"), "single")
-            bottom_border.set(
-                qn("w:sz"), str(int(cast("Any", s.get("border_header_rule_sz", 4))))
-            )
-            borders.append(bottom_border)
-            tcPr.append(borders)
+            set_border(cell, "bottom", "single", s.get("border_header_rule_sz", 4))
 
         # If the column index has more than one level, add a line above the last
         # headline
         # row that spans all but the first cell
         if headline_levels > 1:
             for cell in table.rows[headline_levels - 1].cells[1:]:
-                tcPr = cell._element.get_or_add_tcPr()
-                borders = OxmlElement("w:tcBorders")
-                top_border = OxmlElement("w:top")
-                top_border.set(qn("w:val"), "single")
-                top_border.set(
-                    qn("w:sz"),
-                    str(int(cast("Any", s.get("border_header_rule_sz", 4)))),
-                )
-                borders.append(top_border)
-                tcPr.append(borders)
+                set_border(cell, "top", "single", s.get("border_header_rule_sz", 4))
 
         # Row group lines
         for row in row_group_rows:
             if "t" in self.rgroup_sep:
                 for cell in table.rows[row].cells:
-                    tcPr = cell._element.get_or_add_tcPr()
-                    borders = OxmlElement("w:tcBorders")
-                    top_border = OxmlElement("w:top")
-                    top_border.set(qn("w:val"), "single")
-                    top_border.set(
-                        qn("w:sz"),
-                        str(int(cast("Any", s.get("border_group_rule_sz", 4)))),
-                    )
-                    borders.append(top_border)
-                    tcPr.append(borders)
+                    set_border(cell, "top", "single", s.get("border_group_rule_sz", 4))
             if self.rgroup_display and "b" in self.rgroup_sep:
                 for cell in table.rows[row].cells:
-                    tcPr = cell._element.get_or_add_tcPr()
-                    borders = OxmlElement("w:tcBorders")
-                    bottom_border = OxmlElement("w:bottom")
-                    bottom_border.set(qn("w:val"), "single")
-                    bottom_border.set(
-                        qn("w:sz"),
-                        str(int(cast("Any", s.get("border_group_rule_sz", 4)))),
+                    set_border(
+                        cell, "bottom", "single", s.get("border_group_rule_sz", 4)
                     )
-                    borders.append(bottom_border)
-                    tcPr.append(borders)
 
         # Add a thicker line below the last row
         for cell in table.rows[-2].cells:
-            tcPr = cell._element.get_or_add_tcPr()
-            borders = OxmlElement("w:tcBorders")
-            bottom_border = OxmlElement("w:bottom")
-            bottom_border.set(qn("w:val"), "single")
-            bottom_border.set(
-                qn("w:sz"), str(int(cast("Any", s.get("border_bottom_rule_sz", 8))))
-            )
-            borders.append(bottom_border)
-            tcPr.append(borders)
+            set_border(cell, "bottom", "single", s.get("border_bottom_rule_sz", 8))
 
         # Adapt cell margins
         tc = table._element
@@ -1230,7 +1169,9 @@ class MTable:
             node.set(qn("w:w"), str(int(_margins.get(m, 0))))
             node.set(qn("w:type"), "dxa")
             tblCellMar.append(node)
-        tblPr.append(tblCellMar)
+        tblPr.insert_element_before(
+            tblCellMar, "w:tblLook", "w:tblCaption", "w:tblDescription", "w:tblPrChange"
+        )
 
         # Prevent page breaks within table (keep table together)
         if s.get("prevent_page_breaks", True):
@@ -1239,16 +1180,59 @@ class MTable:
             for row in table.rows:
                 for cell in row.cells:
                     for paragraph in cell.paragraphs:
-                        # Get paragraph properties
-                        pPr = paragraph._element.get_or_add_pPr()
+                        paragraph.paragraph_format.keep_together = True
+                        paragraph.paragraph_format.keep_with_next = True
 
-                        # Add "Keep lines together" property
-                        keepLines = OxmlElement("w:keepLines")
-                        pPr.append(keepLines)
+    # Child order of w:tcPr after w:tcBorders, and of w:tcBorders, per ECMA-376.
+    _TCPR_AFTER_TCBORDERS = (
+        "w:shd",
+        "w:noWrap",
+        "w:tcMar",
+        "w:textDirection",
+        "w:tcFitText",
+        "w:vAlign",
+        "w:hideMark",
+        "w:headers",
+        "w:cellIns",
+        "w:cellDel",
+        "w:cellMerge",
+        "w:tcPrChange",
+    )
+    _TCBORDERS_ORDER = (
+        "top",
+        "left",
+        "bottom",
+        "right",
+        "insideH",
+        "insideV",
+        "tl2br",
+        "tr2bl",
+    )
 
-                        # Add "Keep with next" property
-                        keepNext = OxmlElement("w:keepNext")
-                        pPr.append(keepNext)
+    @classmethod
+    def _set_docx_cell_border(
+        cls, cell: Any, edge: str, val: str, sz: object = None
+    ) -> None:
+        """Set one edge in the cell's single w:tcBorders, creating it if needed.
+
+        python-docx (1.2) has no API for cell borders, so this edits the XML,
+        keeping one w:tcBorders per cell and the schema's element order.
+        """
+        tcPr = cell._element.get_or_add_tcPr()
+        borders = tcPr.find(qn("w:tcBorders"))
+        if borders is None:
+            borders = OxmlElement("w:tcBorders")
+            tcPr.insert_element_before(borders, *cls._TCPR_AFTER_TCBORDERS)
+        old = borders.find(qn(f"w:{edge}"))
+        if old is not None:
+            borders.remove(old)
+        node = OxmlElement(f"w:{edge}")
+        node.set(qn("w:val"), val)
+        if sz is not None:
+            node.set(qn("w:sz"), str(int(cast("Any", sz))))
+        borders.append(node)
+        order = [qn(f"w:{e}") for e in cls._TCBORDERS_ORDER]
+        borders[:] = sorted(borders, key=lambda e: order.index(e.tag))
 
     def _output_tex(
         self,

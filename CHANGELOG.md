@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Word output wrote invalid table XML: each border pass appended another `w:tcBorders` to a cell (up to four per cell, where the schema allows one), and `w:keepNext`/`w:keepLines`, the border edges and `w:tblCellMar` were out of schema order. How Word and LibreOffice resolve duplicates is not defined. Each cell now has a single `w:tcBorders` whose edges are overwritten in the same order as before, so the intended rules are unchanged, and all elements follow the schema order
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
