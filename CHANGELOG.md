@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Passing `rgroup_display`, which the `ETable` and `BTable` docstrings list as a forwarded keyword, raised `TypeError: ... got multiple values for keyword argument 'rgroup_display'` in `ETable`, `DTable` and `BTable`. It now overrides the default (`False` for `ETable`; for `DTable`/`BTable`, shown only when `byrow` is set)
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

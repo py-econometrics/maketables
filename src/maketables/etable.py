@@ -406,12 +406,12 @@ class ETable(MTable):
             # Remove line breaks from notes "\n"
             notes = notes.replace("\n", " ")
 
+        kwargs.setdefault("rgroup_display", False)
         super().__init__(
             res_all,
             notes=notes,
             caption=caption,
             tab_label=tab_label,
-            rgroup_display=False,
             **kwargs,
         )
 
