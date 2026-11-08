@@ -72,6 +72,29 @@ class TestETableModelStats:
         with pytest.raises(ValueError, match="stats_order"):
             mt.ETable([fitted_model], stats_order="invalid")
 
+    def test_model_stats_string_is_one_key(self, fitted_model):
+        """A plain string is one stat key, not a sequence of characters."""
+        as_str = mt.ETable([fitted_model], model_stats="r2")
+        as_list = mt.ETable([fitted_model], model_stats=["r2"])
+        assert as_str.df.xs("stats").index.tolist() == ["R²"]
+        assert as_str.df.equals(as_list.df)
+
+    def test_model_stats_duplicate_display_labels_raise(self, fitted_model):
+        """Two stats shown under one label would silently drop a row."""
+        with pytest.raises(ValueError, match="same label 'R2'"):
+            mt.ETable(
+                [fitted_model],
+                model_stats=["r2", "adj_r2"],
+                model_stats_labels={"r2": "R2", "adj_r2": "R2"},
+            )
+
+    def test_model_stats_unknown_key_shows_dash(self, fitted_model):
+        """Unknown keys stay as a row of "-" (models may lack a statistic)."""
+        table = mt.ETable([fitted_model], model_stats=["N", "not_a_stat"])
+        stats = table.df.xs("stats")
+        assert stats.index.tolist() == ["Observations", "not_a_stat"]
+        assert stats.loc["not_a_stat"].tolist() == ["-"]
+
 
 class TestBTableStats:
     """Snapshot tests for BTable statistics."""

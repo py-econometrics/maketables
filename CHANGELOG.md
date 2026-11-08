@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `ETable(model_stats="r2")` split the string into the statistics "r" and "2"; a single string is now one statistic, as for `keep` and `drop`. Two statistics shown under the same label (e.g. via `model_stats_labels`) silently kept only the last row and now raise `ValueError`
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

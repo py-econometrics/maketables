@@ -53,8 +53,9 @@ class ETable(MTable):
         Stars syntax: 'b*' (stars after unformatted b), 'b:.3f*' (stars
         after formatted b).
         Default ETable.DEFAULT_COEF_FMT = "b:.3f* \n (se:.3f)".
-    model_stats : list[str], optional
-        Bottom panel statistics to display (order is kept). Examples:
+    model_stats : list[str] | str, optional
+        Bottom panel statistics to display (order is kept); a single string is
+        one statistic. Examples:
         'N', 'r2', 'adj_r2', 'r2_within', 'se_type'. If None, defaults to
         ETable.DEFAULT_MODEL_STATS (currently ['N','r2']).
     model_stats_labels : dict[str, str], optional
@@ -194,7 +195,7 @@ class ETable(MTable):
         *,
         signif_code: list | None = None,
         coef_fmt: str | None = None,
-        model_stats: list[str] | None = None,
+        model_stats: list[str] | str | None = None,
         model_stats_labels: dict[str, str] | None = None,
         custom_stats: dict | None = None,
         custom_model_stats: dict | None = None,
@@ -336,7 +337,9 @@ class ETable(MTable):
             except Exception:
                 # If anything goes wrong, fall back to defaults
                 model_stats = list(self.DEFAULT_MODEL_STATS)
-        model_stats = list(model_stats)
+        model_stats = (
+            [model_stats] if isinstance(model_stats, str) else list(model_stats)
+        )
         if not all(isinstance(s, str) for s in model_stats):
             raise TypeError("model_stats must be a list of strings.")
         if len(model_stats) != len(set(model_stats)):
@@ -733,8 +736,19 @@ class ETable(MTable):
             # Fall back to ETable's canonical defaults
             return self.DEFAULT_STAT_LABELS.get(k, k)
 
+        labels = [label_of(k) for k in stat_keys]
+        for label in labels:
+            if labels.count(label) > 1:
+                keys = [
+                    k for k, lab in zip(stat_keys, labels, strict=True) if lab == label
+                ]
+                raise ValueError(
+                    f"model_stats {keys} have the same label {label!r}; "
+                    "give them distinct model_stats_labels."
+                )
         rows = {
-            label_of(k): [self._extract_stat(m, k) for m in models] for k in stat_keys
+            label: [self._extract_stat(m, k) for m in models]
+            for k, label in zip(stat_keys, labels, strict=True)
         }
         builtin_df = (
             pd.DataFrame.from_dict(rows, orient="index") if rows else pd.DataFrame()
