@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Typst output did not compile when a label, cell, caption or note contained `$`, `@`, a backtick, `//` or an unpaired `*` in a header or caption (e.g. `Costs in US$ 2020`, `contact a@b.org`), and silently rendered `~` as a space and a leading `- `, `+ `, `= ` or `/ ` as a list, numbered item, heading or term. These characters are now escaped and print as typed; URLs and paired `*bold*` in headers keep working
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

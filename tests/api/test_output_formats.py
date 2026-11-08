@@ -17,6 +17,7 @@ formatted, merged-header and wide tables.
 import shutil
 import subprocess
 
+import pandas as pd
 import pytest
 from helpers import normalize_latex, normalize_typst
 
@@ -153,3 +154,64 @@ class TestDocxOutput:
             "tables": docx_table_text(document),
             "paragraphs": docx_paragraph_text(document),
         } == snapshot
+
+
+# Text with Typst markup characters, as a user might write it in a label or note
+TYPST_MARKUP_TEXT = [
+    "Costs in US$ 2020",
+    "contact a@b",
+    "code `x",
+    "a // b",
+    "a /* b",
+    "~0.5",
+    "- sub",
+    "= base",
+    "+ ctrl",
+    "/ term: x",
+    "Model*",
+    "*bold",
+]
+TEXT_SLOTS = ["cell", "row_label", "header", "spanner", "rgroup", "notes", "caption"]
+
+
+def _table_with_text(text, slot):
+    """Return a one-cell MTable with ``text`` placed in the given text slot."""
+    row = (
+        (text, "r") if slot == "rgroup" else ("G", text if slot == "row_label" else "r")
+    )
+    col = (text if slot == "spanner" else "S", text if slot == "header" else "A")
+    df = pd.DataFrame(
+        [[text if slot == "cell" else "1"]],
+        index=pd.MultiIndex.from_tuples([row]),
+        columns=pd.MultiIndex.from_tuples([col]),
+    )
+    kwargs = {slot: text} if slot in ("notes", "caption") else {}
+    return mt.MTable(df, **kwargs)
+
+
+@needs_typst
+@pytest.mark.parametrize("slot", TEXT_SLOTS)
+@pytest.mark.parametrize("text", TYPST_MARKUP_TEXT)
+def test_typst_markup_characters_render_literally(text, slot, tmp_path):
+    """Typst markup characters in any text slot compile and print as typed."""
+    result = compile_typst(_table_with_text(text, slot), tmp_path, check=False)
+    assert result.returncode == 0, result.stderr
+    assert text in pdf_text(tmp_path / "out.pdf")
+
+
+@needs_typst
+@pytest.mark.parametrize("slot", ["cell", "header"])
+def test_typst_escaped_asterisk_renders_as_asterisk(slot, tmp_path):
+    r"""A user-escaped ``\*`` renders as a literal ``*`` (also in headers)."""
+    result = compile_typst(_table_with_text(r"a \* b", slot), tmp_path, check=False)
+    assert result.returncode == 0, result.stderr
+    assert "a * b" in pdf_text(tmp_path / "out.pdf")
+
+
+@needs_typst
+def test_typst_url_in_notes_stays_a_link(tmp_path):
+    """Escaping ``//`` leaves URLs intact, so Typst still lexes them as links."""
+    table = _table_with_text("Source: https://example.org/a_b", "notes")
+    assert "https://example.org" in table.make(type="typst")
+    compile_typst(table, tmp_path, check=True)
+    assert "Source: https://example.org/a_b" in pdf_text(tmp_path / "out.pdf")
