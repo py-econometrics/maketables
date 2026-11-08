@@ -668,7 +668,7 @@ class TestPyFixestExtractor:
         assert e.stat(fitted_model, "se_type") == fitted_model._vcov_type
         sup = e.supported_stats(fitted_model)
         assert {"N", "r2", "se_type"} <= sup
-        assert "r2_within" in sup
+        assert "r2_within" not in sup
 
     def test_clustered_se_type_and_n_clusters(self, simple_df):
         import pyfixest as pf
@@ -697,6 +697,47 @@ class TestPyFixestExtractor:
     def test_sample_split_without_value(self):
         m = types.SimpleNamespace(_sample_split_var="g", _sample_split_value=None)
         assert PyFixestExtractor().sample_split(m) is None
+
+    @pytest.mark.parametrize("split_value", [None, 0, "A"])
+    def test_typed_sample_split(self, split_value):
+        m = types.SimpleNamespace(
+            model=types.SimpleNamespace(
+                sample_split=types.SimpleNamespace(var="g", value=split_value)
+            )
+        )
+        assert PyFixestExtractor().sample_split(m) == (
+            "all" if split_value is None else str(split_value)
+        )
+
+    def test_typed_unavailable_statistics(self):
+        # Existing typed NaN/None values are authoritative even when stale
+        # legacy fields would advertise a statistic.
+        m = types.SimpleNamespace(
+            sample_info=types.SimpleNamespace(n_obs=100),
+            fitstat=types.SimpleNamespace(r2=np.nan, adj_r2=None),
+            _r2=0.9,
+            _adj_r2=0.8,
+            _F_stat=99,
+            _f_stat_1st_stage=88,
+        )
+        e = PyFixestExtractor()
+        assert e.supported_stats(m) == {"N"}
+        assert e.stat(m, "r2") is None
+        assert e.stat(m, "adj_r2") is None
+
+    def test_typed_first_stage_and_wald(self):
+        m = types.SimpleNamespace(
+            sample_info=types.SimpleNamespace(n_obs=100),
+            fitstat=types.SimpleNamespace(deviance=2.5),
+            first_stage=types.SimpleNamespace(
+                diagnostics=types.SimpleNamespace(f_stat=12)
+            ),
+            wald=types.SimpleNamespace(f_statistic=8),
+        )
+        e = PyFixestExtractor()
+        assert e.stat(m, "f_statistic") == 12
+        assert e.stat(m, "fvalue") == 8
+        assert e.stat(m, "deviance") == 2.5
 
     def test_poisson_deviance(self, simple_df):
         import pyfixest as pf

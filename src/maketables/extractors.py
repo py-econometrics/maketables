@@ -667,6 +667,21 @@ class PyFixestExtractor:
     and fixed effects specifications.
     """
 
+    @staticmethod
+    def _state_or_legacy(model: Any, path: tuple[str, ...], legacy: Any) -> Any:
+        """Read typed state, probing legacy attributes only when it is absent."""
+        value = model
+        try:
+            for attr in path:
+                value = getattr(value, attr)
+        except AttributeError:
+            # Optional state (for example a non-IV fit's first stage) may be
+            # absent on typed results; this does not justify legacy reads.
+            if hasattr(model, "sample_info"):
+                return None
+            return _get_attr(model, legacy)
+        return value
+
     def can_handle(self, model: Any) -> bool:
         """Check if model is a pyfixest model type."""
         if not _from_package(model, "pyfixest"):
@@ -709,27 +724,22 @@ class PyFixestExtractor:
 
     def depvar(self, model: Any) -> str:
         """Extract dependent variable name from pyfixest model."""
-        return getattr(model, "_depvar", "y")
+        return self._state_or_legacy(model, ("model", "depvar"), "_depvar") or "y"
 
     def fixef_string(self, model: Any) -> str | None:
         """Extract fixed effects specification string from pyfixest model."""
-        return getattr(model, "_fixef", None)
+        return self._state_or_legacy(model, ("model", "fixef"), "_fixef") or None
 
     # Build a clean map of unified stat keys -> pyfixest attributes/callables
     STAT_MAP: ClassVar[dict[str, Any]] = {
         "N": "_N",
-        "n_clusters": lambda m: (
-            m._G[0] if hasattr(m, "_G") and m._G and len(m._G) > 0 else None
-        ),
-        "se_type": lambda m: (
-            "by: " + "+".join(getattr(m, "_clustervar", []))
-            if getattr(m, "_vcov_type", None) == "CRV"
-            and getattr(m, "_clustervar", None)
-            else getattr(m, "_vcov_type", None)
-        ),
+        "n_clusters": "_G",
+        "se_type": "_vcov_type",
         "r2": "_r2",
         # pyfixest >=0.60 names it _adj_r2; keep the old name as a fallback
-        "adj_r2": lambda m: getattr(m, "_adj_r2", getattr(m, "_r2_adj", None)),
+        "adj_r2": lambda m: (
+            m._adj_r2 if hasattr(m, "_adj_r2") else getattr(m, "_r2_adj", None)
+        ),
         "r2_within": "_r2_within",
         "adj_r2_within": "_adj_r2_within",
         "rmse": "_rmse",
@@ -737,6 +747,19 @@ class PyFixestExtractor:
         "f_statistic": "_f_stat_1st_stage",
         # pyfixest may return a sequence; take the first element
         "deviance": lambda m: _first_if_sequence(getattr(m, "deviance", None)),
+    }
+
+    STATE_STAT_PATHS: ClassVar[dict[str, tuple[str, ...]]] = {
+        "N": ("sample_info", "n_obs"),
+        "n_clusters": ("variance_covariance", "G"),
+        "r2": ("fitstat", "r2"),
+        "adj_r2": ("fitstat", "adj_r2"),
+        "r2_within": ("fitstat", "r2_within"),
+        "adj_r2_within": ("fitstat", "adj_r2_within"),
+        "rmse": ("fitstat", "rmse"),
+        "fvalue": ("wald", "f_statistic"),
+        "f_statistic": ("first_stage", "diagnostics", "f_stat"),
+        "deviance": ("fitstat", "deviance"),
     }
 
     def stat(self, model: Any, key: str) -> Any:
@@ -754,7 +777,25 @@ class PyFixestExtractor:
         spec = self.STAT_MAP.get(key)
         if spec is None:
             return None
-        val = _get_attr(model, spec)
+        if key == "se_type":
+            info = self.vcov_info(model)
+            clusters = info["clustervar"]
+            return (
+                "by: " + "+".join(clusters)
+                if info["vcov_type"] == "CRV" and clusters
+                else info["vcov_type"]
+            )
+
+        path = self.STATE_STAT_PATHS.get(key)
+        val = (
+            self._state_or_legacy(model, path, spec) if path else _get_attr(model, spec)
+        )
+        if key == "n_clusters":
+            val = _first_if_sequence(val) if val is not None and len(val) else None
+        # Typed fit statistics use NaN for quantities an estimator does not
+        # define. They must not advertise support or resurrect legacy values.
+        if val is None or (np.isscalar(val) and pd.isna(val)):
+            return None
         if key == "N" and val is not None:
             try:
                 return int(val)
@@ -764,13 +805,24 @@ class PyFixestExtractor:
 
     def vcov_info(self, model: Any) -> dict[str, Any]:
         """Extract variance-covariance matrix type and clustering information."""
+        clusters = self._state_or_legacy(
+            model, ("variance_covariance", "spec", "clustervar"), "_clustervar"
+        )
         return {
-            "vcov_type": getattr(model, "_vcov_type", None),
-            "clustervar": getattr(model, "_clustervar", None),
+            "vcov_type": self._state_or_legacy(
+                model, ("variance_covariance", "spec", "vcov_type"), "_vcov_type"
+            ),
+            "clustervar": list(clusters) if clusters is not None else None,
         }
 
     def sample_split(self, model: Any) -> str | None:
         """Return the split value or None if not a split model."""
+        description = getattr(model, "model", None)
+        if hasattr(description, "sample_split"):
+            split = description.sample_split
+            if split is None:
+                return None
+            return "all" if split.value is None else str(split.value)
         if getattr(model, "_sample_split_var", None) is None:
             # PyFixest always sets _sample_split_value
             # We identify an actual sample split based on _sample_split_var
@@ -790,9 +842,7 @@ class PyFixestExtractor:
 
     def supported_stats(self, model: Any) -> set[str]:
         """Return set of statistics available for the given pyfixest model."""
-        return {
-            k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
-        }
+        return {key for key in self.STAT_MAP if self.stat(model, key) is not None}
 
     def stat_labels(self, model: Any) -> dict[str, str] | None:
         """Provide human-friendly labels for model statistics, or None."""

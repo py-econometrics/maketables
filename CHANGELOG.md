@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- pyfixest tables now read typed fitted-model state while retaining support for legacy attributes. Dependent-variable labels, fixed-effect rows, observation counts, fit statistics, clustering and full-sample split headers remain available; undefined (`NaN`) statistics are treated as absent.
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
