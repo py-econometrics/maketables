@@ -583,16 +583,19 @@ class ETable(MTable):
     ) -> tuple[pd.DataFrame, str]:
         lbcode = self.DEFAULT_LINEBREAK
 
-        # Get column names from first model to validate tokens
-        first_tidy = self._extract_tidy_df(models[0])
-        available_columns = set(first_tidy.columns)
+        # Tokens are recognized if any model provides them: models may come
+        # from different packages whose coef tables carry different columns.
+        tidies = [self._extract_tidy_df(model) for model in models]
+        all_columns = list(dict.fromkeys(c for t in tidies for c in t.columns))
         coef_fmt_elements, coef_fmt_title = _parse_coef_fmt(
-            coef_fmt, custom_stats, available_columns
+            coef_fmt, custom_stats, set(all_columns)
         )
 
+        # Columns a model lacks become NaN, which formats as "-".
+        tidies = [t.reindex(columns=all_columns) for t in tidies]
+
         cols_per_model = []
-        for i, model in enumerate(models):
-            tidy = self._extract_tidy_df(model)
+        for i, tidy in enumerate(tidies):
             stars = self._compute_stars(tidy["p"], signif_code)
 
             cell = pd.Series("", index=tidy.index, dtype=object)
