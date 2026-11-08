@@ -75,7 +75,8 @@ class MTable:
         group_header_format,.... See DEFAULT_TEX_STYLE for full options.
     typst_style : dict, optional
         Typst style overrides for auto-display in notebooks. Can include any parameter
-        from DEFAULT_TYPST_STYLE such as: first_col_width, tab_width, data_align,
+        from DEFAULT_TYPST_STYLE such as: first_col_width, tab_width, row_height,
+        data_align, first_row_addlinespace, data_addlinespace, rgroup_addlinespace,
         group_header_format, notes_font_size. See DEFAULT_TYPST_STYLE for full options.
     docx_style : dict, optional
         DOCX style overrides for auto-display in notebooks. Can include any parameter
@@ -168,13 +169,15 @@ class MTable:
         "tab_width": "100%",  # Target width for table (e.g., "100%", "15cm")
         "first_col_width": None,  # Column width for first column (e.g., "3cm")
         # Row height
-        "row_height": "auto",  # Row height (e.g., "auto", "10pt")
+        "row_height": "auto",  # Height of every row (e.g., "auto", "10pt")
         # Alignment
         "data_align": "center",  # left | center | right for data columns
-        # Spacing
-        "first_row_addlinespace": None,  # spacing before first row of each row group
-        "data_addlinespace": None,  # spacing between data rows
-        "rgroup_addlinespace": None,  # spacing between row groups
+        # Extra vertical space (Typst lengths, None disables), added to the top
+        # inset of a row, below any rule at its top. With a fixed row_height the
+        # row does not grow, so the space pushes its content down instead.
+        "first_row_addlinespace": None,  # before first data row of each row group
+        "data_addlinespace": None,  # between data rows within a row group
+        "rgroup_addlinespace": None,  # before each row group after the first
         # Row-group header formatting
         "group_header_format": "%s",  # plain formatting for group headers
         # Notes font size
@@ -1721,7 +1724,13 @@ class MTable:
             gutter_str = ", ".join(gutter_specs)
             lines.append(f"  column-gutter: ({gutter_str}),")
 
-        lines.append("  stroke: none, row-gutter: 0.2em,")
+        row_height = s.get("row_height")
+        rows_str = "" if row_height in (None, "auto") else f" rows: {row_height},"
+        lines.append(f"  stroke: none, row-gutter: 0.2em,{rows_str}")
+        # Placeholder for the per-row inset that implements the *_addlinespace
+        # keys; filled in once all rows are known
+        inset_line_idx = len(lines)
+        lines.append("")
         lines.append("  table.hline(stroke: 0.08em),")
 
         # Header rows with spanners (MultiIndex columns)
@@ -1764,6 +1773,17 @@ class MTable:
         # Midrule after headers
         lines.append("  table.hline(stroke: 0.05em),")
 
+        # Extra space above each table row (header rows first), as Typst
+        # lengths: Typst has no \addlinespace, so it goes into the row's top
+        # inset, which keeps it below any rule drawn at the top of that row
+        n_header_rows = (
+            dfs.columns.nlevels if isinstance(dfs.columns, pd.MultiIndex) else 1
+        )
+        row_space: list[list[object]] = [[] for _ in range(n_header_rows)]
+        first_row_space = s.get("first_row_addlinespace")
+        data_space = s.get("data_addlinespace")
+        rgroup_space = s.get("rgroup_addlinespace")
+
         # Data rows (with optional row groups)
         def _row_line(cells_list: list[str]) -> str:
             return "  " + ", ".join(cells_list) + ","
@@ -1789,6 +1809,7 @@ class MTable:
                     # Use single cell spanning all columns to avoid line breaks in long
                     # headers
                     lines.append(f"  [#table.cell(colspan: {total_cols})[{gtext}]],")
+                    row_space.append([rgroup_space] if gi > 0 else [])
 
                 # Add bottom separator for row group (if 'b' in rgroup_sep)
                 if "b" in self.rgroup_sep:
@@ -1802,6 +1823,12 @@ class MTable:
                         cell_val = str(dfs.iloc[ridx, j])
                         row_parts.append(_format_typst_cell(cell_val))
                     lines.append(_row_line(row_parts))
+                    if ridx > start:
+                        row_space.append([data_space])
+                    elif gi > 0 and not self.rgroup_display:
+                        row_space.append([rgroup_space, first_row_space])
+                    else:
+                        row_space.append([first_row_space])
 
                 start = end
         else:
@@ -1812,6 +1839,7 @@ class MTable:
                     cell_val = str(dfs.iloc[ridx, j])
                     row_parts.append(_format_typst_cell(cell_val))
                 lines.append(_row_line(row_parts))
+                row_space.append([data_space] if ridx > 0 else [first_row_space])
 
         # Add bottom rule, then optional notes row below the rule, then close table
         lines.append("  table.hline(stroke: 0.08em),")
@@ -1824,7 +1852,28 @@ class MTable:
             )
         lines.append(")")
 
+        # 5pt is Typst's default table inset; rows after the listed ones (the
+        # notes row) get no extra space
+        row_extra = [
+            " + ".join(str(v) for v in sp if v is not None) for sp in row_space
+        ]
+        if any(row_extra):
+            extra = ", ".join(e or "0pt" for e in row_extra)
+            lines[inset_line_idx] = (
+                f"  inset: (x, y) => (x: 5pt, bottom: 5pt, "
+                f"top: 5pt + if y < {len(row_extra)} {{ ({extra},).at(y) }} "
+                f"else {{ 0pt }}),"
+            )
+        else:
+            del lines[inset_line_idx]
+
         typst_table = "\n".join(lines)
+
+        tab_width = s.get("tab_width")
+        if tab_width not in (None, "100%"):
+            # Typst tables have no width; their 1fr columns fill the enclosing
+            # block, so a block of the requested width sets the table width
+            typst_table = f"#block(width: {tab_width})[\n{typst_table}\n]"
 
         # Add caption and/or reference label if present
         if self.caption is not None or self.tab_label is not None:

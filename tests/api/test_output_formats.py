@@ -14,9 +14,11 @@ All layers run against the ``sample_table`` fixture family from conftest.py
 formatted, merged-header and wide tables.
 """
 
+import itertools
 import shutil
 import subprocess
 
+import pandas as pd
 import pytest
 from helpers import normalize_latex, normalize_typst
 
@@ -153,3 +155,77 @@ class TestDocxOutput:
             "tables": docx_table_text(document),
             "paragraphs": docx_paragraph_text(document),
         } == snapshot
+
+
+def _grouped_table():
+    index = pd.MultiIndex.from_tuples(
+        [("Coefs", "alpha"), ("Coefs", "beta"), ("Stats", "gamma"), ("Stats", "delta")]
+    )
+    return mt.MTable(
+        pd.DataFrame([["1"], ["2"], ["3"], ["4"]], index=index, columns=["(1)"])
+    )
+
+
+def _typst_word_boxes(table, tmp_path, typst_style):
+    """Compile ``table`` with ``typst_style``; return {word: (x0, x1, top)}."""
+    import pdfplumber
+
+    typ_path = tmp_path / "out.typ"
+    typ_path.write_text(
+        table.make(type="typst", typst_style=typst_style), encoding="utf-8"
+    )
+    subprocess.run(
+        ["typst", "compile", typ_path.name, "out.pdf"],
+        cwd=tmp_path,
+        capture_output=True,
+        check=True,
+    )
+    with pdfplumber.open(tmp_path / "out.pdf") as pdf:
+        words = pdf.pages[0].extract_words()
+    return {w["text"]: (w["x0"], w["x1"], w["top"]) for w in words}
+
+
+def _row_gaps(boxes):
+    """Vertical distances between consecutive rows of ``_grouped_table``."""
+    rows = ["(1)", "Coefs", "alpha", "beta", "Stats", "gamma", "delta"]
+    tops = [boxes[r][2] for r in rows]
+    gaps = [b - a for a, b in itertools.pairwise(tops)]
+    return dict(zip(rows[1:], gaps, strict=True))
+
+
+@needs_typst
+class TestTypstStyleKeys:
+    """Each documented DEFAULT_TYPST_STYLE key changes the compiled layout."""
+
+    def test_tab_width(self, tmp_path):
+        def width(style):
+            boxes = _typst_word_boxes(_grouped_table(), tmp_path, style)
+            return boxes["(1)"][1] - boxes["alpha"][0]
+
+        full, half = width({}), width({"tab_width": "50%"})
+        assert half < 0.6 * full
+
+    def test_row_height(self, tmp_path):
+        base = _row_gaps(_typst_word_boxes(_grouped_table(), tmp_path, {}))
+        tall = _row_gaps(
+            _typst_word_boxes(_grouped_table(), tmp_path, {"row_height": "40pt"})
+        )
+        assert all(tall[row] > base[row] + 15 for row in base)
+
+    @pytest.mark.parametrize(
+        ("key", "spaced_rows"),
+        [
+            ("first_row_addlinespace", {"alpha", "gamma"}),
+            ("data_addlinespace", {"beta", "delta"}),
+            ("rgroup_addlinespace", {"Stats"}),
+        ],
+    )
+    def test_addlinespace(self, key, spaced_rows, tmp_path):
+        base = _row_gaps(_typst_word_boxes(_grouped_table(), tmp_path, {}))
+        spaced = _row_gaps(_typst_word_boxes(_grouped_table(), tmp_path, {key: "20pt"}))
+        added = {row: spaced[row] - base[row] for row in base}
+        for row, extra in added.items():
+            assert extra == pytest.approx(20 if row in spaced_rows else 0, abs=0.5), (
+                row,
+                added,
+            )
