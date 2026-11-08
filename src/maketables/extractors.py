@@ -1501,3 +1501,95 @@ class LifelinesExtractor:
 
 # Register lifelines extractor
 register_extractor(LifelinesExtractor())
+
+
+class DuckRegExtractor:
+    """
+    Extractor for duckreg regression models (DuckRegression).
+
+    duckreg only exposes point estimates and a variance-covariance matrix, so
+    t-statistics and p-values are computed from them assuming a normal
+    distribution.
+    """
+
+    def can_handle(self, model: Any) -> bool:
+        """Check if model is a fitted duckreg regression."""
+        if not _from_package(model, "duckreg"):
+            return False
+        return (
+            getattr(model, "point_estimate", None) is not None
+            and getattr(model, "vcov", None) is not None
+        )
+
+    def coef_table(self, model: Any) -> pd.DataFrame:
+        """
+        Extract coefficient table from a duckreg model.
+
+        duckreg prepends the intercept to the coefficient vector.
+
+        Returns
+        -------
+            DataFrame indexed by coefficient name with columns b, se, t, p.
+        """
+        from math import erfc, sqrt
+
+        names = ["Intercept", *map(str, getattr(model, "covars", []))]
+        b = np.asarray(model.point_estimate, dtype=float).ravel()
+        se = np.sqrt(np.diag(np.asarray(model.vcov, dtype=float)))
+        if not len(names) == len(b) == len(se):
+            raise ValueError(
+                "DuckRegExtractor: coefficient names, estimates and vcov "
+                "dimensions do not match."
+            )
+        t = b / se
+        p = np.array([erfc(abs(x) / sqrt(2)) for x in t])
+        df = pd.DataFrame({"b": b, "se": se, "t": t, "p": p}, index=names)
+        df.index.name = "Coefficient"
+        return df
+
+    def depvar(self, model: Any) -> str:
+        """Extract dependent variable name from duckreg model."""
+        outcomes = getattr(model, "outcome_vars", None)
+        return str(outcomes[0]) if outcomes else "y"
+
+    def fixef_string(self, model: Any) -> str | None:
+        """Duckreg has no absorbed fixed effects."""
+        return None
+
+    def stat(self, model: Any, key: str) -> Any:
+        """Extract a statistic; duckreg only provides the number of observations."""
+        if key == "N":
+            df = getattr(model, "df_compressed", None)
+            if isinstance(df, pd.DataFrame) and "count" in df.columns:
+                return int(df["count"].sum())
+        return None
+
+    def vcov_info(self, model: Any) -> dict[str, Any]:
+        """Extract variance-covariance information from a duckreg model."""
+        cluster_col = getattr(model, "cluster_col", None)
+        vcov_type = "cluster" if cluster_col else getattr(model, "se", None)
+        return {"vcov_type": vcov_type, "clustervar": cluster_col or None}
+
+    def var_labels(self, model: Any) -> dict[str, str] | None:
+        """Duckreg models do not retain the original data."""
+        return None
+
+    def supported_stats(self, model: Any) -> set[str]:
+        """Return the set of statistics available for the given model."""
+        return {"N"} if self.stat(model, "N") is not None else set()
+
+    def default_stat_keys(self, model: Any) -> list[str] | None:
+        """Return default statistics for duckreg models."""
+        return ["N"]
+
+    def stat_labels(self, model: Any) -> dict[str, str] | None:
+        """Use ETable's default stat labels."""
+        return None
+
+    def sample_split(self, model: Any) -> str | None:
+        """Return None: duckreg models are not sample splits."""
+        return None
+
+
+# Register duckreg extractor
+register_extractor(DuckRegExtractor())

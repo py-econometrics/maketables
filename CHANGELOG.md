@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ETable` supports [duckreg](https://github.com/py-econometrics/duckreg) `DuckRegression` models. duckreg only returns point estimates and a variance-covariance matrix, so t-statistics and p-values are computed assuming a normal distribution, and the only model statistic available is the number of observations.
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

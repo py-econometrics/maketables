@@ -128,6 +128,7 @@ docs = { features = [ "docs", "py313" ], solve-group = "py313" }
 pystata = { features = [ "pystata", "docs", "py313" ], solve-group = "py313" }
 linearmodels = { features = [ "linearmodels", "docs", "py313" ], solve-group = "py313" }
 lifelines = { features = [ "lifelines", "docs", "py313" ], solve-group = "py313" }
+duckreg = { features = [ "duckreg", "dev", "py313" ], solve-group = "duckreg" }
 publish = { features = [ "publish", "py313" ], solve-group = "py313" }
 py310 = { features = [ "dev", "py310" ], solve-group = "py310" }
 py311 = { features = [ "dev", "py311" ], solve-group = "py311" }
@@ -161,6 +162,10 @@ run-all-notebooks = """\
   """
 docs-preview = "quarto preview"
 docs-install-tex = "quarto install tinytex"
+[tool.pixi.feature.duckreg.pypi-dependencies]
+duckreg = ">=0.4"
+# ibis (a duckreg dependency) does not yet support duckdb 2.0
+duckdb = "<1.4"
 [tool.pixi.feature.publish.pypi-dependencies]
 build = ">=1.0"
 twine = ">=5.0"
