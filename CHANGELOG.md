@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- statsmodels models fit on numpy arrays (`sm.OLS(y, X)` rather than formulas or DataFrames) crashed `ETable` (`'int' object is not iterable`) and had normal-approximation confidence intervals (±1.96·se) instead of the model's own, e.g. t-based, intervals. Coefficients are now named from `model.exog_names` (`const`, `x1`, ...) and `ci95`/`ci90` always come from the model's `conf_int()`; if `conf_int()` fails the bounds are left empty instead of approximated
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
