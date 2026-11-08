@@ -53,8 +53,8 @@ class BTable(DTable):
         VCV for the p-value models ("iid", "hetero", "HC1", "HC2", "HC3" or
         {"CRV1": "cluster"}). Default "iid".
     fixed_effects : list[str] | None
-        Optional fixed effects for the p-value models (cosmetic in notes).
-        Default None.
+        Optional fixed effects absorbed in the p-value regressions and listed
+        in the notes. Default None.
     stats : list[str] | None
         Stats for DTable (default ["mean", "std"]).
     stats_labels : dict[str, str] | None
@@ -151,7 +151,7 @@ class BTable(DTable):
 
         fe_suffix = ""
         if fixed_effects:
-            fe_suffix = f" | {'.'.join(fixed_effects)}"
+            fe_suffix = f" | {' + '.join(fixed_effects)}"
 
         # With byrow set, self.df has one block of `vars` rows per byrow
         # level (in the order DTable actually laid them out), and the
@@ -182,16 +182,23 @@ class BTable(DTable):
                 feols_vcov = cast("PyfixestVcov | dict[str, str]", vcov)
                 model: Any = pf.feols(formula, data=block_df, vcov=feols_vcov)
 
-                if n_groups == 2:
+                # Select the group indicators by name: with fixed effects the
+                # model has no intercept, so they are not "every coefficient
+                # after the first".
+                group_idx = [
+                    j
+                    for j, name in enumerate(model._coefnames)
+                    if str(name).startswith(f"{pvalue_group}::")
+                ]
+                if len(group_idx) == 1:
                     # p-value of the single group indicator
-                    pval = float(model._pvalue[1])
+                    pval = float(model._pvalue[group_idx[0]])
                 else:
                     # Joint test of all group indicators
-                    k = model._k
-                    R = np.zeros((k - 1, k))
-                    for j in range(1, k):
-                        R[j - 1, j] = 1
-                    q = np.zeros(k - 1)
+                    R = np.zeros((len(group_idx), model._k))
+                    for row, j in enumerate(group_idx):
+                        R[row, j] = 1
+                    q = np.zeros(len(group_idx))
                     pval = float(model.wald_test(R, q, distribution="chi2").pvalue)
 
                 pvals.iloc[row_pos] = f"{pval:.{pdigits}f}"
