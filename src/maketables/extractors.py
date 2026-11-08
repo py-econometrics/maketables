@@ -617,6 +617,23 @@ def _follow(obj: Any, chain: list[str]) -> Any:
     return cur
 
 
+def _get_named_stat(model: Any, name: str) -> Any:
+    """Return ``model.<name>``, else ``model.model.<name>``, else None."""
+    for obj in (model, getattr(model, "model", None)):
+        try:
+            val = getattr(obj, name)
+        except AttributeError:
+            continue
+        except NotImplementedError:
+            # e.g. statsmodels RLMResults.llf: the result defines the
+            # statistic as unavailable.
+            return None
+        # Methods (e.g. RLM.deviance on the model) are not statistics.
+        if not callable(val):
+            return val
+    return None
+
+
 def _get_attr(model: Any, spec: Any) -> Any:
     """
     Resolve a STAT_MAP specification against a model object.
@@ -644,7 +661,7 @@ def _get_attr(model: Any, spec: Any) -> Any:
         _get_attr(model, lambda m: m.s2 ** 0.5)  # Returns computed RMSE
     """
     if isinstance(spec, str):
-        return getattr(model, spec, getattr(getattr(model, "model", None), spec, None))
+        return _get_named_stat(model, spec)
     if isinstance(spec, (list, tuple)):
         return _follow(model, list(spec))
     if callable(spec):
