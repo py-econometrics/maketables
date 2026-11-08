@@ -506,3 +506,24 @@ def test_display_styles_flow_into_bundle():
 
 def test_public_export():
     assert mt.MTable is MTable
+
+
+@pytest.mark.parametrize("value", [True, False])
+@pytest.mark.parametrize("cls", ["ETable", "DTable", "DTable_byrow", "BTable"])
+def test_subclasses_forward_rgroup_display(cls, value, fitted_model, simple_df):
+    """rgroup_display, documented as a forwarded keyword, overrides the default."""
+    if cls == "ETable":
+        t = mt.ETable(fitted_model, rgroup_display=value)
+    elif cls == "DTable":
+        t = mt.DTable(simple_df, ["x"], rgroup_display=value)
+    elif cls == "DTable_byrow":
+        t = mt.DTable(simple_df, ["x"], byrow="group", rgroup_display=value)
+    else:
+        t = mt.BTable(simple_df, ["x"], group="group", rgroup_display=value)
+    assert t.rgroup_display is value
+
+
+def test_subclass_rgroup_display_defaults(fitted_model, simple_df):
+    assert mt.ETable(fitted_model).rgroup_display is False
+    assert mt.DTable(simple_df, ["x"]).rgroup_display is False
+    assert mt.DTable(simple_df, ["x"], byrow="group").rgroup_display is True

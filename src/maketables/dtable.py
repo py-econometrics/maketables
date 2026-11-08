@@ -322,12 +322,12 @@ class DTable(MTable):
             new_index[-1] = ("nobs", stats_dict["count"])
             res.index = pd.MultiIndex.from_tuples(new_index)
 
-        rgroup_display = byrow is not None
+        kwargs.setdefault("rgroup_display", byrow is not None)
 
         # --- End dtable logic ---
 
         # Call MTable constructor with processed table and metadata
-        super().__init__(res, notes=notes, rgroup_display=rgroup_display, **kwargs)
+        super().__init__(res, notes=notes, **kwargs)
 
     def _format_number(
         self, x: float, format_spec: str | None = None, digits: int = 2
