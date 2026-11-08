@@ -74,6 +74,33 @@ def test_rgroup_sep_variants_render(fmt, sep):
     assert out is not None
 
 
+@pytest.mark.parametrize(
+    ("sep", "expected"),
+    [
+        (
+            "tb",
+            ["Coefs", "rule", "alpha", "beta", "rule", "Stats", "rule", "gamma", "d"],
+        ),
+        ("t", ["Coefs", "alpha", "beta", "rule", "Stats", "gamma", "d"]),
+        ("b", ["Coefs", "rule", "alpha", "beta", "Stats", "rule", "gamma", "d"]),
+        ("", ["Coefs", "alpha", "beta", "Stats", "gamma", "d"]),
+    ],
+)
+def test_tex_rgroup_sep_places_rules_like_typst(sep, expected):
+    """'t' rules above each row group but the first, 'b' below each group name."""
+    out = _table(grouped=True, rgroup_sep=sep).make(type="tex")
+    body = out.split("\\midrule\n", 1)[1].split("\\bottomrule")[0]
+    skeleton = []
+    for line in body.splitlines():
+        if line == "\\midrule":
+            skeleton.append("rule")
+        elif not line.startswith("\\addlinespace"):
+            skeleton.append(line.split(" ")[0].removeprefix("\\emph{").rstrip("}"))
+    assert skeleton == expected
+    typst = _table(grouped=True, rgroup_sep=sep).make(type="typst")
+    assert typst.count("0.03em") == skeleton.count("rule")
+
+
 def test_no_caption_no_notes():
     t = _table(caption=None, notes="", tab_label=None)
     assert "\\caption" not in t.make(type="tex")
