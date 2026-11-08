@@ -601,7 +601,11 @@ class ETable(MTable):
                 format_spec = element["format"]
                 add_stars = element["add_stars"]
 
-                if token == "b":
+                if element.get("literal"):
+                    # Checked first: a literal "t" (as in "joint") must not be
+                    # looked up as the t-statistic column.
+                    cell += token
+                elif token == "b":
                     # Add coefficient (with stars if marked with *)
                     formatted = tidy["b"].apply(_format_number, format_spec=format_spec)
                     if add_stars:
@@ -930,6 +934,32 @@ def _is_valid_format_spec(spec: str) -> bool:
     return True
 
 
+def _is_word_char(char: str) -> bool:
+    return char.isalnum() or char == "_"
+
+
+def _trim_format_spec(spec: str) -> str:
+    """Return the longest prefix of spec that _format_number can apply.
+
+    The spec scan stops only at a fixed set of delimiters, so text such as the
+    "}" in "{se:.3f}" is scanned into the spec. That makes the spec invalid,
+    and _format_number then falls back to default formatting, so both the "}"
+    and the requested precision are lost. Specs with no usable prefix are
+    returned unchanged, keeping that fallback for them.
+    """
+
+    def usable(s: str) -> bool:
+        # _format_number handles "d" itself; format(0.0, "d") would reject it.
+        return s == "d" or _is_valid_format_spec(s)
+
+    if usable(spec):
+        return spec
+    for end in range(len(spec) - 1, 0, -1):
+        if usable(spec[:end]):
+            return spec[:end]
+    return spec
+
+
 def _parse_coef_fmt(
     coef_fmt: str, custom_stats: dict[str, Any], available_columns: set[Any]
 ) -> tuple[list[dict[str, Any]], str]:
@@ -952,7 +982,8 @@ def _parse_coef_fmt(
     -------
     coef_fmt_elements: list
         List of parsed elements, each being a dict with 'token', 'format',
-        and 'add_stars' keys.
+        and 'add_stars' keys. Single literal characters also carry
+        'literal': True, so that a literal letter is never read as a token.
     coef_fmt_title: str
         The title for the coef_fmt string.
     """
@@ -1006,6 +1037,10 @@ def _parse_coef_fmt(
     coef_fmt_elements = []
     title_parts = []
     i = 0
+    # Whether the last parsed element was a letter, digit or "_" literal. Tracked
+    # instead of reading coef_fmt[i - 1] so that the two-character "\n" escape
+    # still separates tokens, as in "b\nse".
+    after_word_char = False
 
     while i < len(coef_fmt):
         found_token = False
@@ -1015,8 +1050,18 @@ def _parse_coef_fmt(
         # (e.g., "Std. Error" before "Std")
         for token in token_strings:
             if coef_fmt[i:].startswith(token):
-                # Check if followed by format specifier
                 after_token_pos = i + len(token)
+                # Tokens are whole words: the "t" in "joint" or the "p" in
+                # "pages" is text, not a statistic.
+                glued_left = _is_word_char(token[0]) and after_word_char
+                glued_right = (
+                    _is_word_char(token[-1])
+                    and after_token_pos < len(coef_fmt)
+                    and _is_word_char(coef_fmt[after_token_pos])
+                )
+                if glued_left or glued_right:
+                    continue
+                # Check if followed by format specifier
                 if after_token_pos < len(coef_fmt) and coef_fmt[after_token_pos] == ":":
                     # Find the end of the format specifier
                     format_start = after_token_pos + 1
@@ -1041,7 +1086,8 @@ def _parse_coef_fmt(
                     ):
                         format_end += 1
 
-                    format_spec = coef_fmt[format_start:format_end]
+                    format_spec = _trim_format_spec(coef_fmt[format_start:format_end])
+                    format_end = format_start + len(format_spec)
                     # Check if * follows (after format spec)
                     add_stars = False
                     if format_end < len(coef_fmt) and coef_fmt[format_end] == "*":
@@ -1067,9 +1113,11 @@ def _parse_coef_fmt(
                     title_parts.append(str(title_map.get(token, token)))
                     i = after_token_pos
                 found_token = True
+                after_word_char = False
                 break
 
         if not found_token:
+            after_word_char = False
             # Handle special sequences and single characters
             if coef_fmt[i : i + 2] == "\\n":
                 coef_fmt_elements.append(
@@ -1088,9 +1136,10 @@ def _parse_coef_fmt(
                 # Single character literal
                 char = coef_fmt[i]
                 coef_fmt_elements.append(
-                    {"token": char, "format": None, "add_stars": False}
+                    {"token": char, "format": None, "add_stars": False, "literal": True}
                 )
                 title_parts.append(char)
+                after_word_char = _is_word_char(char)
                 i += 1
 
     coef_fmt_title = "".join(title_parts)
