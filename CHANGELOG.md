@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `ETable(signif_code=[])` raised `ValueError` although the docstring documents an empty list as the way to disable significance stars. It now removes the stars and the significance-levels sentence from the default note
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

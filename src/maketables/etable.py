@@ -246,8 +246,11 @@ class ETable(MTable):
         drop = [] if drop is None else drop
 
         # --- checks  ---
-        if not (isinstance(signif_code, list) and len(signif_code) == 3):
-            raise ValueError("signif_code must be a list of three p-value cutoffs.")
+        if not (isinstance(signif_code, list) and len(signif_code) in (0, 3)):
+            raise ValueError(
+                "signif_code must be a list of three p-value cutoffs, or an "
+                "empty list to disable significance stars."
+            )
         if signif_code:
             if not all(0 < i < 1 for i in signif_code):
                 raise ValueError("signif_code values must be between 0 and 1.")
@@ -396,7 +399,7 @@ class ETable(MTable):
         if notes == "":
             note_parts = []
             # Only add significance levels explanation if format string contains stars
-            if "*" in coef_fmt:
+            if "*" in coef_fmt and signif_code:
                 note_parts.append(
                     f"Significance levels: * p < {signif_code[2]}, "
                     f"** p < {signif_code[1]}, *** p < {signif_code[0]}."
