@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `coef_fmt` tokens are matched as whole words: letters inside literal text are no longer replaced by statistics (e.g. `"(joint t:.2f)"` rendered `(join10.531 10.53)`, and `"best"` became `Coefficientest-stats` in the note)
+- A format specifier now ends where it stops being valid, so a following literal such as `}`, `>` or `;` is kept and the requested precision applies (e.g. `"{se:.5f}"` rendered `{0.1`, with the brace dropped and default precision used)
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed
