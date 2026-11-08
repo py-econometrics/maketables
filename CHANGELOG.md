@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- statsmodels multi-equation results such as `MNLogit` failed with pandas' `Data must be 1-dimensional`. They now raise a `TypeError` stating that multi-equation models (one coefficient column per equation) are not supported
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

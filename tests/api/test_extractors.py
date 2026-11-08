@@ -317,6 +317,25 @@ class TestStatsmodelsExtractor:
         assert df["ci90u"].iloc[0] == pytest.approx(2.645)
         assert df["t"].iloc[0] == 1.0
 
+    @pytest.mark.parametrize("formula", [True, False])
+    def test_multi_equation_model_raises_clear_error(self, simple_df, formula):
+        import statsmodels.api as sm
+        import statsmodels.formula.api as smf
+
+        from maketables import ETable
+
+        df = simple_df.assign(y=np.digitize(simple_df["y"], [-0.5, 0.5]))
+        if formula:
+            m = smf.mnlogit("y ~ x", data=df).fit(disp=0)
+        else:
+            m = sm.MNLogit(df["y"].to_numpy(), sm.add_constant(df[["x"]].to_numpy()))
+            m = m.fit(disp=0)
+        msg = "MNLogit results have one coefficient column per equation"
+        with pytest.raises(TypeError, match=msg):
+            StatsmodelsExtractor().coef_table(m)
+        with pytest.raises(TypeError, match=msg):
+            ETable(m)
+
     def test_stats(self, statsmodels_ols, statsmodels_logit):
         e = StatsmodelsExtractor()
         assert e.stat(statsmodels_ols, "N") == 100

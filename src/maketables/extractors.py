@@ -818,6 +818,14 @@ class StatsmodelsExtractor:
 
     def coef_table(self, model: Any) -> pd.DataFrame:
         """Extract coefficient table from statsmodels result with canonical tokens."""
+        if np.ndim(model.params) > 1:
+            name = type(getattr(model, "model", model)).__name__
+            msg = (
+                f"StatsmodelsExtractor: {name} results have one coefficient "
+                f"column per equation (params shape {np.shape(model.params)}). "
+                "Multi-equation models are not supported."
+            )
+            raise TypeError(msg)
         params = pd.Series(model.params)
         params.index.name = "Coefficient"
         se = pd.Series(getattr(model, "bse", np.nan), index=params.index)
