@@ -1,5 +1,6 @@
 """Snapshot tests for table statistics."""
 
+import pandas as pd
 import pytest
 from helpers import OUTPUT_TYPES, render_table
 
@@ -166,3 +167,37 @@ def test_is_dummy_series_detects_two_unique_nonmissing_values(
     }
 
     assert results == snapshot
+
+
+class _StatsResult:
+    """Minimal plug-in result object with fixed statistics."""
+
+    def __init__(self, stats):
+        self._stats = stats
+
+    @property
+    def __maketables_coef_table__(self):
+        return pd.DataFrame({"b": [0.5], "se": [0.1], "p": [0.01]}, index=["x"])
+
+    def __maketables_stat__(self, key):
+        return self._stats.get(key)
+
+
+def test_model_stat_rows_use_one_format_per_row():
+    models = [
+        _StatsResult({"N": 100.0, "r2": 0.5, "rmse": 1.5, "aic": 1234.5, "n_folds": 5}),
+        _StatsResult(
+            {"N": 2500, "r2": 0.512, "rmse": 0.85, "aic": 12.0, "n_folds": 10}
+        ),
+    ]
+    stats = mt.ETable(models, model_stats=["N", "r2", "rmse", "aic", "n_folds"]).df.loc[
+        "stats"
+    ]
+
+    assert stats.to_numpy().tolist() == [
+        ["100", "2,500"],
+        ["0.500", "0.512"],
+        ["1.500", "0.850"],
+        ["1,234.500", "12.000"],
+        ["5", "10"],
+    ]
