@@ -56,7 +56,9 @@ class ETable(MTable):
     model_stats : list[str], optional
         Bottom panel statistics to display (order is kept). Examples:
         'N', 'r2', 'adj_r2', 'r2_within', 'se_type'. If None, defaults to
-        ETable.DEFAULT_MODEL_STATS (currently ['N','r2']).
+        ETable.DEFAULT_MODEL_STATS (currently ['N','r2']). Each row uses one
+        number format: counts as integers, other values with three decimals
+        (see ETable.DEFAULT_STAT_FMT).
     model_stats_labels : dict[str, str], optional
         Mapping from stat key to display label (e.g., {'N': 'Observations'}).
         Defaults come from ETable.DEFAULT_STAT_LABELS; user-provided entries override.
@@ -180,6 +182,20 @@ class ETable(MTable):
         "rmse": "RMSE",
         "fstat_1st": "First-stage F",
     }
+    # Stat key -> format spec. Every cell in a stat row uses the same spec, so
+    # the row has one number of decimals. Keys not listed use
+    # DEFAULT_STAT_FMT_INT for integer values and DEFAULT_STAT_FMT_FLOAT
+    # otherwise.
+    DEFAULT_STAT_FMT: ClassVar[dict[str, str]] = {
+        "N": ",.0f",
+        "n_clusters": ",.0f",
+        "events": ",.0f",
+        "df_model": ",.0f",
+        "df_resid": ",.0f",
+        "llr_df": ",.0f",
+    }
+    DEFAULT_STAT_FMT_INT = ",d"
+    DEFAULT_STAT_FMT_FLOAT = ",.3f"
     DEFAULT_SHOW_SE_TYPE = True
     DEFAULT_SHOW_FE = True
     DEFAULT_HEAD_ORDER: ClassVar[HeadOrder] = "dh"
@@ -502,9 +518,13 @@ class ETable(MTable):
         if raw is None:
             return "-"
         if isinstance(raw, (int, np.integer)):
-            return _format_number(float(raw))
+            spec = self.DEFAULT_STAT_FMT.get(key, self.DEFAULT_STAT_FMT_INT)
+            return f"{raw:{spec}}"
         if isinstance(raw, (float, np.floating)):
-            return "-" if math.isnan(raw) else _format_number(float(raw))
+            if math.isnan(raw):
+                return "-"
+            spec = self.DEFAULT_STAT_FMT.get(key, self.DEFAULT_STAT_FMT_FLOAT)
+            return f"{float(raw):{spec}}"
         return str(raw)
 
     def _collect_labels_from_models(self, models: list[Any]) -> dict[str, str]:
