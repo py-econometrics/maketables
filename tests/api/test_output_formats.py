@@ -8,6 +8,8 @@ compiled artifacts byte-for-byte:
 - PDF: a compile smoke test (pass/fail) plus a pdfplumber text-content
   snapshot, skipped when the required CLI (pdflatex/typst) isn't on PATH -
   these are dev-only checks, not something CI is required to provide.
+- Text round trip: strings with markup characters in the caption, notes,
+  coefficient labels and model heads must appear unchanged in the PDF.
 
 All layers run against the ``sample_table`` fixture family from conftest.py
 (ETable, DTable and BTable variants), so each renderer sees plain, multi-model,
@@ -17,6 +19,7 @@ formatted, merged-header and wide tables.
 import shutil
 import subprocess
 
+import pandas as pd
 import pytest
 from helpers import normalize_latex, normalize_typst
 
@@ -153,3 +156,112 @@ class TestDocxOutput:
             "tables": docx_table_text(document),
             "paragraphs": docx_paragraph_text(document),
         } == snapshot
+
+
+# Text placed in a table must appear unchanged in the compiled PDF. Each case
+# puts one string with a markup character into one part of the table, so a
+# compile error and silently changed text both fail.
+
+# Each string has a word found nowhere else in the table, so a match can only
+# come from the part under test.
+STRINGS = {
+    "percent": "pct 50% share",
+    "ampersand": "amp R&D",
+    "underscore": "und log_wage",
+    "hash": "hsh No. #3",
+    "dollar": "dol $5 bill",
+    "brace": "brc set {a}",
+    "caret": "crt x^2 term",
+    "tilde": "tld approx ~ 1",
+    "less_than": "lth p < 0.07",
+    "at": "ats user@example",
+    "star": "str a * b",
+    "bracket": "brk [0, 1] range",
+}
+
+PARTS = ["caption", "notes", "coef_label", "model_head"]
+
+
+class _Result:
+    """Minimal plug-in result with one coefficient, x."""
+
+    @property
+    def __maketables_coef_table__(self):
+        return pd.DataFrame({"b": [0.5], "se": [0.1], "p": [0.01]}, index=["x"])
+
+    def __maketables_stat__(self, key):
+        return {"N": 100}.get(key)
+
+    @property
+    def __maketables_depvar__(self):
+        return "y"
+
+
+def _table(part, text):
+    kwargs = {
+        "caption": {"caption": text, "notes": "Plain note."},
+        "notes": {"notes": text},
+        "coef_label": {"labels": {"x": text}, "notes": "Plain note."},
+        "model_head": {"model_heads": [text], "notes": "Plain note."},
+    }[part]
+    return mt.ETable([_Result()], model_stats=["N"], **kwargs)
+
+
+def _squash(s):
+    return "".join(s.split())
+
+
+LATEX_UNESCAPED = {
+    "percent",
+    "ampersand",
+    "underscore",
+    "hash",
+    "dollar",
+    "brace",
+    "caret",
+    "tilde",
+    "less_than",
+}
+TYPST_UNESCAPED = {"dollar", "tilde", "at"}
+
+
+def _known_failure(fmt, part, key):
+    """Return why a case fails today, or None if it should pass."""
+    if fmt == "latex":
+        if part == "notes" and key == "percent":
+            return "% in notes starts a LaTeX comment (#99)"
+        if key in LATEX_UNESCAPED:
+            return "LaTeX output does not escape text"
+    if fmt == "typst" and (
+        key in TYPST_UNESCAPED or (key == "star" and part in {"caption", "model_head"})
+    ):
+        return "Typst output does not escape this character (#122)"
+    return None
+
+
+def _cases(fmt):
+    cases = []
+    for part in PARTS:
+        for key in STRINGS:
+            reason = _known_failure(fmt, part, key)
+            marks = [pytest.mark.xfail(reason=reason, strict=True)] if reason else []
+            cases.append(pytest.param(part, key, id=f"{part}-{key}", marks=marks))
+    return cases
+
+
+@needs_pdflatex
+@pytest.mark.parametrize(("part", "key"), _cases("latex"))
+def test_latex_pdf_shows_text(part, key, tmp_path):
+    text = STRINGS[key]
+    result = compile_pdflatex(_table(part, text), tmp_path, check=False)
+    assert result.returncode == 0, result.stdout[-1500:]
+    assert _squash(text) in _squash(pdf_text(tmp_path / "out.pdf"))
+
+
+@needs_typst
+@pytest.mark.parametrize(("part", "key"), _cases("typst"))
+def test_typst_pdf_shows_text(part, key, tmp_path):
+    text = STRINGS[key]
+    result = compile_typst(_table(part, text), tmp_path, check=False)
+    assert result.returncode == 0, result.stderr
+    assert _squash(text) in _squash(pdf_text(tmp_path / "out.pdf"))
