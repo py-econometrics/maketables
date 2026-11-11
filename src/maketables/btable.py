@@ -184,10 +184,10 @@ class BTable(DTable):
 
                 if n_groups == 2:
                     # p-value of the single group indicator
-                    pval = float(model._pvalue[1])
+                    pval = float(model.pvalue().iloc[1])
                 else:
                     # Joint test of all group indicators
-                    k = model._k
+                    k = len(model.coef())
                     R = np.zeros((k - 1, k))
                     for j in range(1, k):
                         R[j - 1, j] = 1

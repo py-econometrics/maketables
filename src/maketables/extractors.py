@@ -53,6 +53,22 @@ def _linearmodels_types() -> tuple[type, ...]:
     return (PanelResults, IVResults)
 
 
+def _pyfixest_uses_components(model: Any) -> bool:
+    """Detect the typed model description on an individual fitted model."""
+    description = getattr(model, "model", None)
+    return all(
+        hasattr(description, name) for name in ("depvar", "fixef", "sample_split")
+    )
+
+
+def _is_scalar_nan(value: Any) -> bool:
+    """Return True only for a scalar NaN; arrays and non-numbers are False."""
+    try:
+        return bool(np.isscalar(value) and pd.isna(value))
+    except (TypeError, ValueError):
+        return False
+
+
 @runtime_checkable
 class ModelExtractor(Protocol):
     """
@@ -709,10 +725,14 @@ class PyFixestExtractor:
 
     def depvar(self, model: Any) -> str:
         """Extract dependent variable name from pyfixest model."""
+        if _pyfixest_uses_components(model):
+            return model.model.depvar
         return getattr(model, "_depvar", "y")
 
     def fixef_string(self, model: Any) -> str | None:
         """Extract fixed effects specification string from pyfixest model."""
+        if _pyfixest_uses_components(model):
+            return model.model.fixef or None
         return getattr(model, "_fixef", None)
 
     # Build a clean map of unified stat keys -> pyfixest attributes/callables
@@ -739,6 +759,26 @@ class PyFixestExtractor:
         "deviance": lambda m: _first_if_sequence(getattr(m, "deviance", None)),
     }
 
+    COMPONENT_STAT_MAP: ClassVar[dict[str, Any]] = {
+        "N": ("sample_info", "n_obs"),
+        "n_clusters": lambda m: (
+            m.variance_covariance.G[0] if m.variance_covariance.G else None
+        ),
+        "se_type": lambda m: (
+            "by: " + "+".join(m.variance_covariance.spec.clustervar)
+            if m.variance_covariance.spec.vcov_type == "CRV"
+            and m.variance_covariance.spec.clustervar
+            else m.variance_covariance.spec.vcov_type
+        ),
+        "r2": ("fitstat", "r2"),
+        "adj_r2": ("fitstat", "adj_r2"),
+        "r2_within": ("fitstat", "r2_within"),
+        "adj_r2_within": ("fitstat", "adj_r2_within"),
+        "rmse": ("fitstat", "rmse"),
+        "f_statistic": ("first_stage", "diagnostics", "f_stat"),
+        "deviance": ("fitstat", "deviance"),
+    }
+
     def stat(self, model: Any, key: str) -> Any:
         """
         Extract a statistic from the pyfixest model using STAT_MAP.
@@ -751,10 +791,16 @@ class PyFixestExtractor:
         -------
             The requested statistic value, with special handling for sample size (N).
         """
-        spec = self.STAT_MAP.get(key)
+        components = _pyfixest_uses_components(model)
+        stat_map = self.COMPONENT_STAT_MAP if components else self.STAT_MAP
+        spec = stat_map.get(key)
         if spec is None:
             return None
         val = _get_attr(model, spec)
+        # pyfixest >= 0.70 stores NaN where an estimator defines no statistic
+        # (e.g. deviance for Feols); earlier versions returned None.
+        if components and _is_scalar_nan(val):
+            return None
         if key == "N" and val is not None:
             try:
                 return int(val)
@@ -764,6 +810,12 @@ class PyFixestExtractor:
 
     def vcov_info(self, model: Any) -> dict[str, Any]:
         """Extract variance-covariance matrix type and clustering information."""
+        if _pyfixest_uses_components(model):
+            spec = getattr(getattr(model, "variance_covariance", None), "spec", None)
+            return {
+                "vcov_type": getattr(spec, "vcov_type", None),
+                "clustervar": (list(spec.clustervar) or None) if spec else None,
+            }
         return {
             "vcov_type": getattr(model, "_vcov_type", None),
             "clustervar": getattr(model, "_clustervar", None),
@@ -771,6 +823,11 @@ class PyFixestExtractor:
 
     def sample_split(self, model: Any) -> str | None:
         """Return the split value or None if not a split model."""
+        if _pyfixest_uses_components(model):
+            split = model.model.sample_split
+            if split is None:
+                return None
+            return str(split.value if split.value is not None else "all")
         if getattr(model, "_sample_split_var", None) is None:
             # PyFixest always sets _sample_split_value
             # We identify an actual sample split based on _sample_split_var
@@ -780,6 +837,7 @@ class PyFixestExtractor:
 
     def var_labels(self, model: Any) -> dict[str, str] | None:
         """Extract variable labels from the model's data DataFrame when available."""
+        # Absent when the fit used lean=True or store_data=False.
         df = getattr(model, "_data", None)
         if isinstance(df, pd.DataFrame):
             try:
@@ -790,9 +848,14 @@ class PyFixestExtractor:
 
     def supported_stats(self, model: Any) -> set[str]:
         """Return set of statistics available for the given pyfixest model."""
-        return {
-            k for k, spec in self.STAT_MAP.items() if _get_attr(model, spec) is not None
-        }
+        components = _pyfixest_uses_components(model)
+        stat_map = self.COMPONENT_STAT_MAP if components else self.STAT_MAP
+        available = set()
+        for key, spec in stat_map.items():
+            value = _get_attr(model, spec)
+            if value is not None and not (components and _is_scalar_nan(value)):
+                available.add(key)
+        return available
 
     def stat_labels(self, model: Any) -> dict[str, str] | None:
         """Provide human-friendly labels for model statistics, or None."""

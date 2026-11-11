@@ -92,9 +92,10 @@ class ETable(MTable):
     labels : dict, optional
         Variable labels for relabeling dependent vars, regressors, and (if not
         provided in felabels) fixed effects. If None, labels are collected from
-        each model's source DataFrame via the extractor (e.g., PyFixest: model._data;
-        Statsmodels: result.model.data.frame), merged across models (first seen wins),
-        and any missing entries are filled from MTable.DEFAULT_LABELS.
+        each model's source DataFrame via the extractor (e.g., PyFixest: model._data,
+        unless fit with lean=True or store_data=False; Statsmodels:
+        result.model.data.frame), merged across models (first seen wins), and any
+        missing entries are filled from MTable.DEFAULT_LABELS.
     cat_template : str, optional
         Template to relabel categorical terms, using placeholders
         '{variable}' and '{value}'. Default ETable.DEFAULT_CAT_TEMPLATE
