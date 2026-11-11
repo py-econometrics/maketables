@@ -126,9 +126,12 @@ def fitted_models(simple_df):
     """Create multiple fitted pyfixest models for multi-column tables."""
     import pyfixest as pf
 
-    np.random.seed(42)
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
     df = simple_df.copy()
-    df["y"] = 2 * df["x"] + np.random.randn(len(df)) * 0.1
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
 
     return [
         pf.feols("y ~ x", data=df),
@@ -141,9 +144,12 @@ def fitted_model_fe(simple_df):
     """Create a pyfixest model with fixed effects."""
     import pyfixest as pf
 
-    np.random.seed(42)
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
     df = simple_df.copy()
-    df["y"] = 2 * df["x"] + np.random.randn(len(df)) * 0.1
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
 
     # Model with group fixed effects
     return pf.feols("y ~ x | group", data=df)
@@ -157,9 +163,12 @@ def statsmodels_ols(simple_df):
     """Create a statsmodels OLS model."""
     import statsmodels.formula.api as smf
 
-    np.random.seed(42)
+    # Independent generator: re-seeding with 42 would reproduce the draw behind
+    # simple_df["x"] and give y = 2.1 * x, a perfect fit whose p-values are
+    # floating-point noise (stars then differ between platforms).
+    rng = np.random.default_rng(0)
     df = simple_df.copy()
-    df["y"] = 2 * df["x"] + np.random.randn(len(df)) * 0.1
+    df["y"] = 2 * df["x"] + rng.standard_normal(len(df)) * 0.1
     return smf.ols("y ~ x", data=df).fit()
 
 
@@ -227,8 +236,7 @@ def panel_df():
     )
 
     # Set MultiIndex for panel structure
-    df = df.set_index(["entity", "time"])
-    return df
+    return df.set_index(["entity", "time"])
 
 
 @pytest.fixture
@@ -312,3 +320,56 @@ def linearmodels_iv2sls():
     # IV2SLS: y ~ x_exog + [x_endog ~ z]
     mod = IV2SLS.from_formula("y ~ 1 + x_exog + [x_endog ~ z]", data=df)
     return mod.fit(cov_type="robust")
+
+
+# Sample-table family shared by the output-format tests
+
+SAMPLE_TABLE_IDS = [
+    "etable_plain",
+    "etable_multi_model",
+    "etable_formatted",
+    "etable_merged_heads",
+    "etable_wide",
+    "dtable_plain",
+    "dtable_grouped",
+    "btable",
+]
+
+
+@pytest.fixture(params=SAMPLE_TABLE_IDS)
+def sample_table(request):
+    """Build one table of each kind: plain, multi-model, formatted, merged heads.
+
+    Parametrized so every output-format test runs against the whole family.
+    Fixtures are requested lazily, so each table only needs what it uses.
+    """
+    import maketables as mt
+
+    def get(name):
+        return request.getfixturevalue(name)
+
+    builders = {
+        "etable_plain": lambda: mt.ETable([get("fitted_model")]),
+        "etable_multi_model": lambda: mt.ETable(get("fitted_models")),
+        "etable_formatted": lambda: mt.ETable(
+            get("fitted_models"),
+            coef_fmt="b:.1f \n (se:.1f)",
+            labels={"x": "Regressor", "y": "Outcome"},
+            caption="Regression results",
+            notes="Custom note.",
+        ),
+        "etable_merged_heads": lambda: mt.ETable(
+            get("fitted_models"),
+            model_heads=[["Panel A", "Panel A"], ["Spec 1", "Spec 2"]],
+            head_order="h",
+        ),
+        "etable_wide": lambda: mt.ETable(get("fitted_models") * 3),
+        "dtable_plain": lambda: mt.DTable(get("simple_df"), vars=["x", "y"]),
+        "dtable_grouped": lambda: mt.DTable(
+            get("simple_df"), vars=["x", "y"], bycol=["group"]
+        ),
+        "btable": lambda: mt.BTable(
+            get("simple_df"), vars=["x", "y"], group="group", stats=["mean"]
+        ),
+    }
+    return builders[request.param]()

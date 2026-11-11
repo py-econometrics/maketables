@@ -28,7 +28,7 @@ Example Usage:
     table = mt.ETable([result], caption="Stata Regression Results")
 """
 
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -37,7 +37,7 @@ from .extractors import register_extractor
 
 # Optional import for PyStata
 try:
-    import pystata
+    import pystata  # ty: ignore[unresolved-import]
 
     PYSTATA_AVAILABLE = True
 except ImportError:
@@ -60,14 +60,15 @@ class StataResultWrapper:
         depvar: str,
         cmd: str = "",
         fixed_effects: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize Stata result wrapper.
 
         Parameters
         ----------
         coefficients : pd.DataFrame
-            Coefficient table with canonical columns: b, se, t, p (t and p may be missing for some commands)
+            Coefficient table with canonical columns: b, se, t, p (t and p
+            may be missing for some commands)
         stats : dict
             Dictionary of model statistics (N, r2, adj_r2, etc.)
         depvar : str
@@ -83,6 +84,7 @@ class StataResultWrapper:
         self.cmd = cmd
         self.fixed_effects = fixed_effects
         self._var_labels = {}
+        self._value_labels: dict[str, dict[int, str]] = {}
 
     @classmethod
     def from_current(
@@ -100,8 +102,9 @@ class StataResultWrapper:
             If True: '2.price_cat' -> 'C(price_cat)[T.2]'
             If False: keep original Stata names like '2.price_cat'
         use_var_labels : bool, default True
-            Whether to replace categorical variable numbers with their value labels.
-            If True: '2.price_cat' with label "High" -> 'C(price_cat)[T.High]' or '2.price_cat (High)'
+            Whether to replace categorical variable numbers with their value
+            labels. If True: '2.price_cat' with label "High" ->
+            'C(price_cat)[T.High]' or '2.price_cat (High)'
             If False: keep numeric codes like '2.price_cat'
 
         Returns
@@ -148,14 +151,14 @@ class StataResultWrapper:
                 cls._extract_value_labels() if use_var_labels else {}
             )
 
-            return wrapper
-
         except Exception as e:
-            raise RuntimeError(f"Failed to extract Stata results: {e}")
+            raise RuntimeError(f"Failed to extract Stata results: {e}") from e
+        else:
+            return wrapper
 
     @staticmethod
     def _convert_stata_to_formulaic(
-        stata_name: str, value_labels: dict[str, dict[int, str]] = None
+        stata_name: str, value_labels: dict[str, dict[int, str]] | None = None
     ) -> str:
         """
         Convert Stata coefficient naming to formulaic/patsy-style expressions.
@@ -163,7 +166,8 @@ class StataResultWrapper:
         Converts Stata's factor variable and interaction syntax to Python-style:
         - '2.price_cat' -> 'C(price_cat)[T.2]' or 'C(price_cat)[T.High]' (with labels)
         - '1.foreign' -> 'C(foreign)[T.1]' or 'C(foreign)[T.Domestic]' (with labels)
-        - '1.foreign#c.weight' -> 'C(foreign)[T.1]:weight' or 'C(foreign)[T.Domestic]:weight' (with labels)
+        - '1.foreign#c.weight' -> 'C(foreign)[T.1]:weight' or
+          'C(foreign)[T.Domestic]:weight' (with labels)
         - 'weight' -> 'weight' (unchanged for continuous vars)
         - '_cons' -> 'Intercept' (standard rename)
 
@@ -194,10 +198,11 @@ class StataResultWrapper:
             """Get value label for variable/level or return level if no label exists."""
             try:
                 level_int = int(level)
+            except (ValueError, KeyError):
+                return level
+            else:
                 if var in value_labels and level_int in value_labels[var]:
                     return value_labels[var][level_int]
-                return level
-            except (ValueError, KeyError):
                 return level
 
         # Handle interaction terms: split on '#'
@@ -220,7 +225,8 @@ class StataResultWrapper:
 
             return ":".join(converted_parts)
 
-        # Handle single factor variables: '2.price_cat' -> 'C(price_cat)[T.2]' or 'C(price_cat)[T.High]'
+        # Handle single factor variables: '2.price_cat' ->
+        # 'C(price_cat)[T.2]' or 'C(price_cat)[T.High]'  # noqa: ERA001
         if re.match(r"\d+\.", stata_name):
             level, var = stata_name.split(".", 1)
             label = get_label_or_level(var, level)
@@ -237,9 +243,9 @@ class StataResultWrapper:
     def _extract_coefficients(
         formulaic_names: bool = True, use_var_labels: bool = True
     ) -> pd.DataFrame:
-        """Extract coefficient table from Stata's e(b) and e(V) matrices using sfi API."""
+        """Extract coefficient table from Stata's e(b)/e(V) matrices via sfi."""
         try:
-            from sfi import Matrix
+            from sfi import Matrix  # ty: ignore[unresolved-import]
 
             # Extract coefficient values using sfi.Matrix (more robust)
             b_matrix = Matrix.get("e(b)")
@@ -275,7 +281,8 @@ class StataResultWrapper:
                     std_errors = np.sqrt(np.diag(vcov_array))
                     # Calculate t-statistics manually
                     t_stats = coef_vals / std_errors
-                    # Use normal approximation for p-values (Stata default for large samples)
+                    # Use normal approximation for p-values
+                    # (Stata default for large samples)
                     from scipy.stats import norm
 
                     p_values = 2 * (1 - norm.cdf(np.abs(t_stats)))
@@ -297,13 +304,14 @@ class StataResultWrapper:
             # Extract coefficient names using sfi.Matrix to get colnames from e(b)
             # This works for all estimation commands (regress, xtreg, logit, etc.)
             try:
-                from sfi import Matrix
+                from sfi import Matrix  # ty: ignore[unresolved-import]
 
                 # Get coefficient matrix colnames - this is the robust Stata way
                 coef_names = Matrix.getColNames("e(b)")
                 if coef_names and len(coef_names) == len(coef_vals):
                     # Filter out base categories (reference levels) that end with 'b.'
-                    # These are Stata's base categories that are always zero and not displayed
+                    # These are Stata's base categories that are always zero
+                    # and not displayed
                     filtered_indices = []
                     filtered_coef_vals = []
                     filtered_std_errors = []
@@ -311,8 +319,9 @@ class StataResultWrapper:
                     filtered_p_values = []
 
                     for i, name in enumerate(coef_names):
-                        # Skip base categories: coefficients that match Stata's base category pattern
-                        # Base categories have pattern: digit + 'b' + '.' (e.g., '1b.price_cat', '0b.foreign')
+                        # Skip coefficients that match Stata's base category pattern
+                        # Base categories have pattern:
+                        # digit + 'b' + '.' (e.g., '1b.price_cat', '0b.foreign')
                         import re
 
                         if re.search(r"\d+b\.", name):
@@ -373,17 +382,22 @@ class StataResultWrapper:
             if p_values is not None and len(p_values) > 0:
                 data["p"] = p_values
 
-            df = pd.DataFrame(data, index=index)
+            df = pd.DataFrame(data, index=cast("Any", index))
             df.index.name = "Coefficient"
-
-            return df
 
         except Exception:
             # Fallback: create minimal table with available info
             return pd.DataFrame(
-                {"b": [np.nan], "se": [np.nan], "t": [np.nan], "p": [np.nan]},
-                index=["coef"],
+                {
+                    "b": [np.nan],
+                    "se": [np.nan],
+                    "t": [np.nan],
+                    "p": [np.nan],
+                },
+                index=cast("Any", ["coef"]),
             )
+        else:
+            return df
 
     @staticmethod
     def _extract_statistics() -> dict[str, Any]:
@@ -391,7 +405,7 @@ class StataResultWrapper:
         stats = {}
 
         try:
-            from sfi import Scalar
+            from sfi import Scalar  # ty: ignore[unresolved-import]
 
             # Map common statistics - use sfi.Scalar for robust access
             stat_mapping = {
@@ -459,19 +473,20 @@ class StataResultWrapper:
     def _extract_depvar() -> str:
         """Extract dependent variable name from Stata using sfi API."""
         try:
-            from sfi import Macro
+            from sfi import Macro  # ty: ignore[unresolved-import]
 
             # Use sfi.Macro for robust access to e(depvar)
             depvar = Macro.getGlobal("e(depvar)")
-            return depvar if depvar else "y"
         except Exception:
             return "y"
+        else:
+            return depvar or "y"
 
     @staticmethod
     def _extract_command() -> str:
         """Extract the Stata command used for estimation using sfi API."""
         try:
-            from sfi import Macro
+            from sfi import Macro  # ty: ignore[unresolved-import]
 
             # Use sfi.Macro for robust access to e(cmd)
             return Macro.getGlobal("e(cmd)")
@@ -482,7 +497,7 @@ class StataResultWrapper:
     def _extract_fixed_effects() -> str | None:
         """Extract fixed effects information if available using sfi API."""
         try:
-            from sfi import Macro
+            from sfi import Macro  # ty: ignore[unresolved-import]
 
             # Check common fixed effects indicators using sfi.Macro
             absorb = Macro.getGlobal("e(absorb)")
@@ -497,10 +512,11 @@ class StataResultWrapper:
             # For xtreg and other panel commands, extract the panel ID variable
             cmd = Macro.getGlobal("e(cmd)")
             if cmd and "xtreg" in cmd.lower():
-                # For xtreg, if we have panel data statistics, it's likely a fixed effects model
+                # For xtreg, if we have panel data statistics,
+                # it's likely a fixed effects model
                 # Check for presence of within R-squared as indicator of FE model
                 try:
-                    from sfi import Scalar
+                    from sfi import Scalar  # ty: ignore[unresolved-import]
 
                     r2_w = Scalar.getValue("e(r2_w)")
                     if r2_w is not None:
@@ -511,7 +527,8 @@ class StataResultWrapper:
                 except Exception:
                     pass
 
-                # Alternative: always extract panel var for xtreg since it implies panel structure
+                # Alternative: always extract panel var for xtreg,
+                # since it implies panel structure
                 panel_var = Macro.getGlobal("e(ivar)")
                 if panel_var:
                     return f"{panel_var}"
@@ -527,9 +544,9 @@ class StataResultWrapper:
                     panel_var = Macro.getGlobal("e(ivar)")
                     if panel_var:
                         return f"{panel_var}"
-
-            return None
         except Exception:
+            return None
+        else:
             return None
 
     @staticmethod
@@ -547,7 +564,7 @@ class StataResultWrapper:
             Returns empty dict if no labels available or if extraction fails.
         """
         try:
-            from sfi import Data
+            from sfi import Data  # ty: ignore[unresolved-import]
 
             nvars = Data.getVarCount()
             labels = {}
@@ -556,9 +573,10 @@ class StataResultWrapper:
                 label = Data.getVarLabel(i)
                 if label:  # Only store non-empty labels
                     labels[name] = label
-            return labels
         except Exception:
             return {}
+        else:
+            return labels
 
     @staticmethod
     def _extract_value_labels() -> dict[str, dict[int, str]]:
@@ -576,7 +594,7 @@ class StataResultWrapper:
             Returns empty dict if no value labels available or if extraction fails.
         """
         try:
-            from sfi import Data
+            from sfi import Data  # ty: ignore[unresolved-import]
 
             nvars = Data.getVarCount()
             nobs = Data.getObsTotal()
@@ -603,7 +621,9 @@ class StataResultWrapper:
 
                         # Get formatted value with labels
                         formatted_val = Data.getFormattedValue(
-                            name, obs, True
+                            name,
+                            obs,
+                            True,
                         )  # True = use value labels
 
                         # If formatted differs from numeric, we have a value label
@@ -622,9 +642,10 @@ class StataResultWrapper:
                 if var_labels:
                     value_labels[name] = var_labels
 
-            return value_labels
         except Exception:
             return {}
+        else:
+            return value_labels
 
 
 class PyStataExtractor:
@@ -687,7 +708,7 @@ class PyStataExtractor:
 
     def var_labels(self, model: StataResultWrapper) -> dict[str, str] | None:
         """Extract variable labels from Stata result."""
-        return model._var_labels if model._var_labels else None
+        return model._var_labels or None
 
     def supported_stats(self, model: StataResultWrapper) -> set[str]:
         """Return set of statistics available for the Stata model."""
@@ -704,7 +725,16 @@ class PyStataExtractor:
 
         return available_stats | mapped_stats
 
+    def stat_labels(self, model: StataResultWrapper) -> dict[str, str] | None:
+        """Provide human-friendly labels for model statistics, or None."""
+        return None
+
+    def default_stat_keys(self, model: StataResultWrapper) -> list[str] | None:
+        """Return preferred ordering of statistic keys for display, or None."""
+        return None
+
     def sample_split(self, model: StataResultWrapper) -> str | None:
+        """Return a short label for a sample split/subgroup, or None."""
         return None
 
 
@@ -733,7 +763,8 @@ def rstata(
         If False: keep original Stata names like '2.price_cat'
     use_var_labels : bool, default True
         Whether to replace categorical variable numbers with their value labels.
-        If True: '2.price_cat' with label "High" -> 'C(price_cat)[T.High]' or '2.price_cat (High)'
+        If True: '2.price_cat' with label "High" -> 'C(price_cat)[T.High]'
+        or '2.price_cat (High)'
         If False: keep numeric codes like '2.price_cat'
 
     Returns
@@ -762,15 +793,15 @@ def rstata(
         # Run the Stata code
         pystata.stata.run(stata_code, quietly=quietly)
 
+    except Exception as e:
+        raise RuntimeError("Failed to run Stata regression") from e
+
+    else:
         if auto_extract:
             return StataResultWrapper.from_current(
                 formulaic_names=formulaic_names, use_var_labels=use_var_labels
             )
-        else:
-            return None
-
-    except Exception as e:
-        raise RuntimeError(f"Failed to run Stata regression: {e}")
+        return None
 
 
 def extract_current_stata_results(

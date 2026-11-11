@@ -1,0 +1,10 @@
+[run]
+# Keep in sync with `ignore:` in codecov.yml.
+omit =
+    */maketables/_version.py
+    */maketables/pystata_extractor.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
