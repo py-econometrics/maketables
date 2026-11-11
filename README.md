@@ -17,7 +17,7 @@ A Python package for creating publication-ready tables from regression results (
 MakeTables provides a unified interface for generating tables such as:
 
 - Regression tables from [Statsmodels](https://www.statsmodels.org/stable/index.html), [PyFixest](https://py-econometrics.github.io/pyfixest/pyfixest.html), [Linearmodels](https://bashtage.github.io/linearmodels/) and [Stata](https://www.stata.com/python/pystata19/)
-- Descriptive statistics 
+- Descriptive statistics
 - Balance tables
 
 The package supports multiple output formats including:
@@ -29,7 +29,7 @@ The package supports multiple output formats including:
 
 ## Model Support
 
-`maketables` supports creating regression tables for models from the following packages: 
+`maketables` supports creating regression tables for models from the following packages:
 
 - [PyFixest](https://github.com/py-econometrics/pyfixest)
 - [statsmodels](https://github.com/statsmodels/statsmodels)
@@ -102,7 +102,7 @@ import statsmodels.formula.api as smf
 df["foreign_i"] = (df["foreign"] == "Foreign")*1
 mt.set_var_labels(df, {"foreign_i": "Foreign (indicator)"})
 
-# Fit your models 
+# Fit your models
 est1 = smf.ols("foreign_i ~ weight + length + price", data=df).fit()
 est2 = smf.probit("foreign_i ~ weight + length + price", data=df).fit(disp=0)
 
@@ -130,7 +130,7 @@ Extends MTable for descriptive statistics:
 
 ### `ETable`
 Extends MTable for econometric model results:
-- Support for statsmodels, pyfixest, and (more experimental) linearmodels 
+- Support for statsmodels, pyfixest, and (more experimental) linearmodels
 - Many layout options (relabelling of variables, keep/drop, choice of reported statistics, column headings,...)
 
 ### `BTable`

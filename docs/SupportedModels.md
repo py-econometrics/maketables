@@ -1,6 +1,6 @@
 # Supported Models
 
-`maketables` currently supports creating regression tables for models from the following packages: 
+`maketables` currently supports creating regression tables for models from the following packages:
 
 - [PyFixest](https://github.com/py-econometrics/pyfixest)
 - [statsmodels](https://github.com/statsmodels/statsmodels)
@@ -14,6 +14,6 @@ There are two ways to make a statistical packages compatible with `ETables` in `
 
 - *Custom Extractor Implementation:* Implement a custom extractor following the `ModelExtractor` protocol and register it in `maketables/extractors.py`. This approach requires code changes to `maketables` itself.
 
-- *Plug-in Extractor Format:*: If you want your package to work with maketables out of the box, implement a few standard attributes and methods on your model result class (`__maketables_coef_table__`, `__maketables_stat__`, etc.). 
+- *Plug-in Extractor Format:*: If you want your package to work with maketables out of the box, implement a few standard attributes and methods on your model result class (`__maketables_coef_table__`, `__maketables_stat__`, etc.).
 
 See [Adding Model Classes](AddingModelClasses.ipynb) for a guide on implementing either of the two approaches.

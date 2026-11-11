@@ -1,7 +1,8 @@
 """Snapshot tests for ETable coefficient selection (keep/drop)."""
 
-import maketables as mt
 from helpers import normalize_html
+
+import maketables as mt
 
 
 class TestETableCoefSelection:

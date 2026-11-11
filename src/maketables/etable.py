@@ -8,12 +8,7 @@ from typing import Any, ClassVar, Literal
 import numpy as np
 import pandas as pd
 
-from .extractors import (
-    ModelExtractor,
-    PyFixestExtractor,
-    _pyfixest_uses_components,
-    get_extractor,
-)
+from .extractors import ModelExtractor, get_extractor
 from .mtable import MTable
 
 HeadOrder = Literal["dh", "hd", "d", "h", ""]
@@ -92,10 +87,10 @@ class ETable(MTable):
     labels : dict, optional
         Variable labels for relabeling dependent vars, regressors, and (if not
         provided in felabels) fixed effects. If None, labels are collected from
-        each model's source DataFrame when available via the extractor, merged across
-        models (first seen wins). PyFixest 0.70 and later do not expose the source
-        DataFrame publicly, so pass labels explicitly for those models. Labels
-        not found are filled from MTable.DEFAULT_LABELS.
+        each model's source DataFrame via the extractor (e.g., PyFixest: model._data,
+        unless fit with lean=True or store_data=False; Statsmodels:
+        result.model.data.frame), merged across models (first seen wins), and any
+        missing entries are filled from MTable.DEFAULT_LABELS.
     cat_template : str, optional
         Template to relabel categorical terms, using placeholders
         '{variable}' and '{value}'. Default ETable.DEFAULT_CAT_TEMPLATE
@@ -654,14 +649,7 @@ class ETable(MTable):
                 has = (
                     (fx_str != "")
                     and (fx in fx_str.split("+"))
-                    and not (
-                        getattr(m, "_use_mundlak", False)
-                        if not (
-                            isinstance(self._get_extractor(m), PyFixestExtractor)
-                            and _pyfixest_uses_components(m)
-                        )
-                        else False
-                    )
+                    and not getattr(m, "_use_mundlak", False)
                 )
                 row.append(
                     self.DEFAULT_FE_MARKER[0] if has else self.DEFAULT_FE_MARKER[1]

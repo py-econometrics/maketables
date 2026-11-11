@@ -64,7 +64,9 @@ def import_dta(
     --------
     >>> df = import_dta("../data/auto.dta")
     >>> df.attrs["variable_labels"]["price"]
-    >>> df, labels = import_dta("../data/auto.dta", update_mtable_defaults=True, return_labels=True)
+    >>> df, labels = import_dta(
+    ...     "../data/auto.dta", update_mtable_defaults=True, return_labels=True
+    ... )
     """
     try:
         with StataReader(path, convert_categoricals=convert_categoricals) as rdr:
@@ -311,4 +313,3 @@ def set_var_labels(
                 if v and k not in merged:
                     merged[k] = v
             MTable.DEFAULT_LABELS = merged
-
