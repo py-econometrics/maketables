@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- pyfixest models with multiway clustering showed only one cluster count in the `n_clusters` row; all counts are now shown as `G1+G2+G12`
+
 ## [0.2.0] - 2026-10-19
 
 ### Fixed

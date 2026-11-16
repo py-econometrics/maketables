@@ -53,6 +53,15 @@ def _linearmodels_types() -> tuple[type, ...]:
     return (PanelResults, IVResults)
 
 
+def _pyfixest_cluster_counts(model: Any) -> int | str | None:
+    """Return the cluster count, or ``G1+G2+G12`` for two-way clustering."""
+    cluster_df = getattr(model, "_cluster_df", None)
+    if not isinstance(cluster_df, pd.DataFrame) or cluster_df.empty:
+        return None
+    counts = [str(n) for n in cluster_df.nunique()]
+    return int(counts[0]) if len(counts) == 1 else "+".join(counts)
+
+
 @runtime_checkable
 class ModelExtractor(Protocol):
     """
@@ -718,9 +727,7 @@ class PyFixestExtractor:
     # Build a clean map of unified stat keys -> pyfixest attributes/callables
     STAT_MAP: ClassVar[dict[str, Any]] = {
         "N": "_N",
-        "n_clusters": lambda m: (
-            m._G[0] if hasattr(m, "_G") and m._G and len(m._G) > 0 else None
-        ),
+        "n_clusters": _pyfixest_cluster_counts,
         "se_type": lambda m: (
             "by: " + "+".join(getattr(m, "_clustervar", []))
             if getattr(m, "_vcov_type", None) == "CRV"

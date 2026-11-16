@@ -682,6 +682,35 @@ class TestPyFixestExtractor:
         assert e.stat(m, "n_clusters") == 2
         assert e.vcov_info(m)["clustervar"] == ["group"]
 
+    def test_multiway_clustered_n_clusters(self):
+        import pyfixest as pf
+
+        rng = np.random.default_rng(0)
+        n = 200
+        df = pd.DataFrame(
+            {
+                "x": rng.standard_normal(n),
+                "g1": rng.integers(0, 10, n),
+                "g2": rng.integers(0, 7, n),
+            }
+        )
+        df["y"] = df["x"] + rng.standard_normal(n)
+        m = pf.feols("y ~ x", data=df, vcov={"CRV1": "g1+g2"})
+        n_g1, n_g2 = df["g1"].nunique(), df["g2"].nunique()
+        n_g12 = len(df[["g1", "g2"]].drop_duplicates())
+        assert PyFixestExtractor().stat(m, "n_clusters") == f"{n_g1}+{n_g2}+{n_g12}"
+
+    def test_n_clusters_single_column_is_int(self):
+        m = types.SimpleNamespace(_cluster_df=pd.DataFrame({"g": [1, 1, 2, 3]}))
+        out = PyFixestExtractor().stat(m, "n_clusters")
+        assert out == 3
+        assert isinstance(out, int)
+
+    @pytest.mark.parametrize("cluster_df", [None, pd.DataFrame()], ids=repr)
+    def test_n_clusters_without_cluster_data(self, cluster_df):
+        m = types.SimpleNamespace(_cluster_df=cluster_df)
+        assert PyFixestExtractor().stat(m, "n_clusters") is None
+
     def test_sample_split(self, simple_df):
         import pyfixest as pf
 
